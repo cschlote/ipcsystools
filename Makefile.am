@@ -2,7 +2,7 @@
 ## Created by Anjuta - will be overwritten
 ## If you don't want it to overwrite it,
 ## 	Please disable it in the Anjuta project configuration
-
+ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src
 
 AM_CPPFLAGS = -DPKGLIBDIR=\"$(pkglibdir)/\" -DPKGDATADIR=\"$(pkgdatadir)/\" -DPKGBLDDATE=\"`date +%F-%R`\" -DPKGBLDREV=\"$(strip $(shell svnversion))\" @CPPFLAGS@

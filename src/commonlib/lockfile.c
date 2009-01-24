@@ -30,6 +30,7 @@
 
 int CreateLockfile(const char* strLockfile, const char* strDevice)
 {
+	int rc;
 	int bRet = 0;
 
 	int nLockFD = open(strLockfile, O_RDWR | O_CREAT | O_EXCL, 0444);
@@ -38,7 +39,7 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 		// Lockfile does not exist
 		char strPid [ 12 ];
 		sprintf(strPid, "%10d\n", getpid());
-		write(nLockFD, strPid, strlen(strPid));
+		rc = write(nLockFD, strPid, strlen(strPid));
 		close(nLockFD);
 		bRet = 1;
 		syslog(LOG_DEBUG, "Locking serial device '%s'", strDevice);
