@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#log "Current-IP: " $PPP_IFACE $PPP_LOCAL
+
+/usr/bin/firewall.sh start
+

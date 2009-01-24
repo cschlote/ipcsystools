@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# log "time: " $CONNECT_TIME  "| rcvd: " $BYTES_RCVD "| sent: " $BYTES_SENT
+
+/usr/bin/firewall.sh stop
+

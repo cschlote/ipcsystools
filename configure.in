@@ -1,0 +1,28 @@
+# Process this file with autoconf to produce a configure script.
+
+AC_INIT(mcbsystools, 1.0)
+
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE([foreign])
+
+AC_LANG_C
+AC_PROG_CC
+
+AC_ISC_POSIX
+AC_PROG_CC
+AC_HEADER_STDC
+
+AC_PROG_CPP
+
+AM_PROG_LIBTOOL
+
+AC_OUTPUT([
+Makefile
+src/Makefile
+src/commonlib/Makefile
+src/utils/Makefile
+src/utils/scripts/Makefile
+src/utils/umtscardtool/Makefile
+src/etc/Makefile
+])
+
