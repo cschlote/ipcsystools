@@ -9,5 +9,9 @@ DISTCLEANFILES = Makefile.in
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/etc/
-	$(INSTALL_DATA) mcbctl.conf $(DESTDIR)/etc/mcbctl.conf	
-# AA	$(INSTALL_DATA) init.d/umtscontrold-initscript $(DESTDIR)/etc/umtscontrold-initscript
+	$(mkinstalldirs) $(DESTDIR)/etc/mcb/
+	$(mkinstalldirs) $(DESTDIR)/etc/init.d/
+	$(INSTALL_DATA) mcbctl.conf $(DESTDIR)/etc/mcbctl.conf
+	$(INSTALL_DATA) init.d/mcb-startup $(DESTDIR)/etc/init.d/mcb-startup
+	$(INSTALL_DATA) mcb/default-sim.conf $(DESTDIR)/etc/mcb/default-sim.conf
+

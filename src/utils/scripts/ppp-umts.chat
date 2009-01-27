@@ -1,0 +1,5 @@
+''      ATZ
+#OK     at_opsys=3
+OK      AT+CGDCONT=1,"IP","web.vodafone.de"
+OK      ATDT*99***1#
+CONNECT ''

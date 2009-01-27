@@ -6,5 +6,12 @@ bin_SCRIPTS = \
 
 DISTCLEANFILES = Makefile.in
 
-nobase_dist_pkgdata_DATA = firewall-up
+nobase_dist_pkgdata_DATA = \
+	checkconnection.sh \
+	mcb-startup.sh \
+	mcblib.inc \
+	options.umts \
+	ppp-umts.chat \
+	umts-connection.sh \
+	mcb-initsystem.sh
 

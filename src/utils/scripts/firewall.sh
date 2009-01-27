@@ -1,7 +1,10 @@
-#! /bin/sh
+#! /bin/bash
 
-# Variablen definieren
-IF_EXT=ppp0
+# Variablen definieren    
+	IF_EXT=`route | grep ^default | awk '{print $8}'`
+	if (test "$IF_EXT" == ""); then 
+	  IF_EXT=ppp0
+	fi
 
 case "$1" in
 
