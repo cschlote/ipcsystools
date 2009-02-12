@@ -42,11 +42,11 @@
 
 #define UMTS_MAX_FILEDLENGTH      256
 
-#define UMTS_OP_RESULTS_FILE      PKGDATADIR "logfiles/op.results"
-#define UMTS_OP_OPERATORS_FILE    PKGDATADIR "configs/operators"
+#define UMTS_OP_RESULTS_FILE      "/var/log/op.results"
+#define UMTS_OP_OPERATORS_FILE    "/var/run/operators"
 
-#define UMTS_NI_RESULTS_FILE      PKGDATADIR "logfiles/ni.results"
-#define UMTS_NI_PROVIDER_FILE     PKGDATADIR "configs/provider"
+#define UMTS_NI_RESULTS_FILE      "/var/log/ni.results"
+#define UMTS_NI_PROVIDER_FILE     "/var/run/provider"
 
 /* Global variables */
 extern int nSerFD;              //!< Serial File Handle
