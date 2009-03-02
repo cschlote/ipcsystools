@@ -1,15 +1,20 @@
-#! /bin/bash
-
-# Dieses Script erstellt eine neue Verbindung mit den
-# Vodafone APN-Knoten. Dieses Script ist so angelegt,
-# dass die MCB immer eine Verbindung aufbaut, egal
-# ob die Karte gesperrt ist oder andere PPPD's darauf
-# laufen
+#!/bin/bash
+#**********************************************************************************
+#
+#        FILE: umts-connection.sh
+#
+#       USAGE: umts-connection.sh start || stop
+#
+# DESCRIPTION: Script starts the UMTS Connection
+#
+#      AUTHOR: Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
+#     COMPANY: konzeptpark GmbH, 35633 Lahnau
+#
+#**********************************************************************************
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # Basis Bibliothek für die MCB-2
-#. /usr/local/bin/mcblib.inc
 . /usr/share/mcbsystools/mcblib.inc
 
 # PID - File für das Skript
@@ -232,6 +237,9 @@ case "$1" in
 
   start)
 
+    # LED 3g Timer blinken
+    /usr/share/mcbsystools/leds.sh 3g timer
+
     # Ist die Datenkarte noch "gelockt"?
     # DeleteDataCardLock
 
@@ -250,7 +258,7 @@ case "$1" in
       if [ $? -eq 0 ]; then
 
         # Default Gateway entfernen wird beim Starten der ppp-Verbindung neu gesetzt
-        route del default > /dev/null
+#        route del default > /dev/null
 
         StartPPPD
 
@@ -260,11 +268,17 @@ case "$1" in
         # Wenn PPP0 Device vorhanden -> OpenVPN starten
         if [ $? -eq 1 ]; then
           log "PPP0 Up..."
+        else
+          # 3g LED ausschalten
+          /usr/share/mcbsystools/leds.sh 3g off
         fi
 
       fi
     else
       log "Datenkarte konnte nicht initialisiert werden (timeout)"
+
+      # 3g LED ausschalten
+      /usr/share/mcbsystools/leds.sh 3g off
 
       # Haben wir wirklich keine Verbindung oder liegt ein Fehler im Netz vor
       $UMTS_FS
