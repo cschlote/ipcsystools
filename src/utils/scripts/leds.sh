@@ -12,7 +12,7 @@
 #
 #**********************************************************************************
 
-#ALL_LEDS=( power ready error vpn gsm 3g gpsfix option1 option2 service gsm-fs gps-fs bar0 bar1 bar2 bar3 bar4 bar5 bar6 bar7 )
+ALL_LEDS=( ready error vpn gsm 3g gpsfix option1 option2 service gsm-fs gps-fs bar0 bar1 bar2 bar3 bar4 bar5 bar6 bar7 )
 BAR_LEDS=( bar0 bar1 bar2 bar3 bar4 bar5 bar6 bar7 )
 
 LED_CMD_ON_OFF="/sys/class/leds/leds:%s/brightness\n"
@@ -21,6 +21,15 @@ LED_CMD_TIMER_DON="/sys/class/leds/leds:%s/delay_on\n"
 LED_CMD_TIMER_DOFF="/sys/class/leds/leds:%s/delay_off\n"
 LED_ON=255
 LED_OFF=0
+
+# Alle LED's ausschalten
+led_all_off()
+{
+  for i in "${ALL_LEDS[@]}"
+  do
+    led_off $i
+  done
+}
 
 # Alle LED's der Balkenanzeige ausschalten
 led_bar_off()
@@ -139,6 +148,11 @@ case "$1" in
     led_bar_off
     led_gpsfs
   ;;
+
+	# Alle LED's
+	"all-off")
+		led_all_off		
+	;;
 
   # Default
   *) 
