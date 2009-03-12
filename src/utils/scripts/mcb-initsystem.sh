@@ -10,7 +10,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # Firewall start/stop PPPD Script
 [ ! -d /etc/ppp/ip-up.d/ ] && mkdir /etc/ppp/ip-up.d/
-FILENAME=/etc/ppp/ip-up.d/firewall-up
+FILENAME=/etc/ppp/ip-up.d/99_firewall-up
 if ( ! test -f $FILENAME ); then	
 	echo "Create $FILENAME ..."
 	echo "#! /bin/bash" > $FILENAME
@@ -21,7 +21,7 @@ fi
 
 # /etc/ppp/ip-down.d/firewall-down
 [ ! -d /etc/ppp/ip-down.d/ ] && mkdir /etc/ppp/ip-down.d/
-FILENAME=/etc/ppp/ip-down.d/firewall-down
+FILENAME=/etc/ppp/ip-down.d/99_firewall-down
 if ( ! test -f $FILENAME ); then	
 	echo "Create $FILENAME ..."
 	echo "#! /bin/bash" > $FILENAME

@@ -1,4 +1,16 @@
-#! /bin/bash
+#!/bin/bash
+#**********************************************************************************
+#
+#        FILE: checkconnection.sh
+#
+#       USAGE: checkconnection.sh
+#
+# DESCRIPTION: Monitor the UMTS Connection
+#
+#      AUTHOR: Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
+#     COMPANY: konzeptpark GmbH, 35633 Lahnau
+#
+#**********************************************************************************
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
@@ -78,6 +90,14 @@ function IsUMST_Connection_Script_Run ()
 
 # UMTS aktiviert?
 if (test $START_UMTS_ENABLED -eq 1); then
+
+  # Feldstärke auf der MCB aktualisieren	
+  $UMTS_FS
+  field_strength=$?
+	if (test $field_strength -lt 32); then
+    /usr/share/mcbsystools/leds.sh gsmfs $field_strength
+	fi
+
   # Option für die Prüfung aktiviert?
   if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
 
@@ -100,7 +120,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
     # UMTS Skript noch aktiv?
     IsUMST_Connection_Script_Run
     if ( test $? -eq 0 ); then
-
+	
       # ppp0 vorhanden?      
       if (systool -c net | grep ppp0 > /dev/null); then    
         debuglog "PPP Verbindung ok!"
@@ -126,7 +146,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
         debuglog "PPP Verbindung nicht ok!"
 
         # pppd eliminieren, könnte noch vorhanden sein!
-				/root/umtstools/umts-connection.sh stop
+				/usr/share/mcbsystools/umts-connection.sh stop
 
         # Verbindungszähler erhöhen
         CONNECTION_FAULT=$[CONNECTION_FAULT+1]

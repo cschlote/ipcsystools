@@ -251,14 +251,16 @@ case "$1" in
 
       # Feldstärke ausgeben
       $UMTS_FS
-      log "Prüfung der Feldstärke: " $?
+      field_strength=$?
+			if [ $field_strength -lt 32 ]; then
+				/usr/share/mcbsystools/leds.sh gsmfs $field_strength
+			fi
+
+      log "Prüfung der Feldstärke: " $field_strength      
 
       # pppd starten
       IsPPPDAlive
       if [ $? -eq 0 ]; then
-
-        # Default Gateway entfernen wird beim Starten der ppp-Verbindung neu gesetzt
-#        route del default > /dev/null
 
         StartPPPD
 
