@@ -46,18 +46,25 @@ int  nSerFD;                        //!< Serial File Handle
 enum CardCommand
 {
 	GETHELP,
-	GETOP, SETOP, GETNI, GETFS, SETPIN,
+	GETOP, 
+	SETOP, 
+	GETNI, 
+	GETFS, 
+	SETPIN, 
+	CUSTOMCMD,
 	MAXCMD
 };
-int      nCardCommand = GETHELP;
+int nCardCommand = GETHELP;
 
 int nMode;
 char strOperator[ UMTS_MAX_FILEDLENGTH ];
 
 char strPin [ UMTS_MAX_FILEDLENGTH ];
 
-//int nLogLevel = LOG_DEBUG;
-int nLogLevel = LOG_WARNING;
+char strATCommand [ UMTS_MAX_FILEDLENGTH ];
+
+int nLogLevel = LOG_DEBUG;
+//int nLogLevel = LOG_WARNING;
 
 
 /**-----------------------------------------------------------------------------
@@ -125,6 +132,10 @@ int ExecuteCardCommand(void)
 	case GETNI  : rc = GetNetInfo(); break;
 	case GETFS  : rc = GetFieldStrength(); break;
 	case SETPIN : rc = SetPin(); break;
+	
+	// Customer AT Command
+	case CUSTOMCMD : rc = SendCustomCommand(strATCommand); break;
+	
 	default:
 		syslog(LOG_ERR, "Unknown cardcommand %d", nCardCommand);
 		break;
@@ -146,6 +157,7 @@ static void ShowVersion(void)
 {
 	printf("%s, version %s (svn:%s)\n\n", UMTS_APPNAME, UMTS_VERSION, PKGBLDREV);
 }
+
 static void ShowHelp(void)
 {
 	ShowVersion();
@@ -155,7 +167,7 @@ static void ShowHelp(void)
 		"\t--setoperator      -O   Set Operator\n"
 		"\t--getnetinfo       -i   Get net info\n"
 		"\t--getfieldstrength -f   Get fieldstrength info\n"
-		"\t--setping          -p   Set PIN\n"
+		"\t--setpin           -p   Set PIN\n"
 		"\t--loglevel         -l   Set Loglevel (0..7)\n"
 		"\t--version          -v   Show version\n"
 		"\t--help             -h   Show this help\n"
@@ -170,7 +182,7 @@ bool GetOptions(int argc, char* argv [])
 	bool rc = false;
 	int nOpt;
 
-	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:vh")) != -1)
+	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:s:vh")) != -1)
 	{
 		switch (nOpt)
 		{
@@ -180,7 +192,15 @@ bool GetOptions(int argc, char* argv [])
 		case 'i' : nCardCommand = GETNI;  rc=true; break;
 		case 'f' : nCardCommand = GETFS;  rc=true; break;
 		case 'p' : nCardCommand = SETPIN; strPin[0]=0; rc=true; break;
-
+		
+		// Custom AT Commands
+		case 's' : 
+			nCardCommand = CUSTOMCMD; 
+			// strATCommand[0] = '\0';
+			strcpy(strATCommand, optarg);			
+			rc=true; 
+			break; 
+		// Define the log level
 		case 'l' :
 			nLogLevel = atoi(optarg);
 			if ((nLogLevel < 0) || (nLogLevel > 7))
@@ -191,9 +211,11 @@ bool GetOptions(int argc, char* argv [])
 			}
 			break;
 			
-		case 'd' : strcpy(CommandDevice, optarg);				   
-				   rc=true; 
-				   break;	
+		// Define the modem device 	
+		case 'd' : 
+			strcpy(CommandDevice, optarg);				   
+			rc=true; 
+			break;	
 				   
 		case 'v' : ShowVersion(); rc=true; break;
 
@@ -203,6 +225,7 @@ bool GetOptions(int argc, char* argv [])
 		}
 	}
 
+	// Werte aus der Commandline übernehmen
 	switch (nCardCommand)
 	{
 	case SETOP :
@@ -211,13 +234,24 @@ bool GetOptions(int argc, char* argv [])
 		else
 			strcpy(strOperator,"");
 		break;
+		
 	case SETPIN :
 		if (optind < argc)
 			snprintf(strPin, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
 		else
 			strcpy(strPin, "");
 		break;
-
+	/*	
+	case CUSTOMCMD: 
+		if (optind < argc)
+		{			
+			printf("case CUSTOMCMD: %s", argv [ optind ]);
+			snprintf(strATCommand, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
+		}			
+		else
+			strcpy(strATCommand, "TEST");		
+		break;
+	*/	
 	default:
 		break;
 	}

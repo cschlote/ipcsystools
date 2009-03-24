@@ -1,9 +1,9 @@
 /*******************************************************************************
  *
- * Copyright © 2004-2007
+ * Copyright Â© 2004-2007
  *
  * konzeptpark GmbH
- * Georg-Ohm-Straße 2
+ * Georg-Ohm-StraÃŸe 2
  * 35633 Lahnau, Germany
  *
  * No part of the source code may be copied or reproduced without the written
@@ -24,11 +24,7 @@
 #include <errno.h>
 #include <sys/fcntl.h>
 
-//#include <moxadevice.h>
-
 #include "types.h"
-
-#define FIELD_LEN 256
 
 const char* strAT      = "AT";
 const char* strATOK    = "OK\r\n";
@@ -36,6 +32,7 @@ const char* strATERROR = "ERROR";
 
 /* Modem IO */
 
+// Set serial params and ray tty mode
 void SetupDevice(int nSerFD)
 {
 	struct termios Tty;
@@ -58,7 +55,7 @@ void SetupDevice(int nSerFD)
 	tcsetattr(nSerFD, TCSANOW, &Tty);
 };
 
-
+// Liste bis OK oder ERROR
 bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 {
 	bool bRet = false;
@@ -86,6 +83,7 @@ bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 }
 
 
+// Sends AT command to the modem device
 bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResult, int nResultSize, bool* pOk, bool* pError)
 {
 	int nRes;
@@ -94,32 +92,52 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	int i;
 
 	memset(strCmd, 0, sizeof(strCmd));
-	strcpy (strCmd, strAT);
-	strncat(strCmd, strCommand, nCommandSize);
-	strcat (strCmd, "\r");
+		
+	// Command starts with ... AT				
+	if(strncasecmp(strCommand, strAT, 2) == 0)
+	{		
+		strncpy (strCmd, strCommand, nCommandSize);
+	}
+	else
+	{
+		strcpy(strCmd, strAT);	
+		strncat(strCmd, strCommand, nCommandSize);
+	}
+			
+	strcat(strCmd, "\r");
 	for (i = 0; i < strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
 
 	memset(strResult, 0, nResultSize);
 
 	nRes = write(nSerFD, strCmd, strlen(strCmd));
 	syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
-	if (nRes == strlen(strCmd)) {
+	
+	if (nRes == strlen(strCmd)) 
+	{
 		nRes = 0;
-		while (nRes<strlen(strCmd)) {
+		while (nRes < strlen(strCmd)) 
+		{
 			i = read(nSerFD, &strResult[nRes], strlen(strCmd) - nRes);
 			if (i>=0)
 			    nRes += i;
-			    syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes,i );
+				
+			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
 		}
+		
 		nRes = 0;
-		while (!ReadHasFinished(strResult, nRes, pOk, pError)) {
-			i = read(nSerFD, &strResult[nRes], nResultSize-1 - nRes);
-			if (i>=0)
-			    nRes += i;
-			    syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes,i );
+		
+		// TODO: TIMEOUT integrieren
+		while (!ReadHasFinished(strResult, nRes, pOk, pError)) 
+		{
+			i = read(nSerFD, &strResult[nRes], nResultSize -1 -nRes);
+			if (i >= 0) 
+				nRes += i;
+				
+			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
 		}
 
-		if (*pOk) {
+		if (*pOk) 
+		{
 			bRes = true;
 		}
 	}

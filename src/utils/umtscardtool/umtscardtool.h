@@ -1,9 +1,9 @@
 /*******************************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright Â© 2004-2008
  *
  * konzeptpark GmbH
- * Georg-Ohm-Straße 2
+ * Georg-Ohm-StraÃŸe 2
  * 35633 Lahnau, Germany
  *
  * No part of the source code may be copied or reproduced without the written
@@ -18,10 +18,10 @@
 #define UMTSCARDTOOL_H 1
 
 #define UMTS_APPNAME "umtscardtool"
-#define UMTS_VERSION "1.1"
+#define UMTS_VERSION "1.2"
 #define UMTS_BUILD PKGBUILDREV
 
-#define UMTS_WATCHDOG_TIME 60000     //!< Absolute timeout for watchdog (ms)
+#define UMTS_WATCHDOG_TIME	60000     //!< Absolute timeout for watchdog (ms)
 
 #define UMTS_RESULT_LIMITED        2
 #define UMTS_RESULT_FAILED         1
@@ -52,8 +52,8 @@
 extern int nSerFD;              //!< Serial File Handle
 
 extern int nMode;
-extern char strOperator[ UMTS_MAX_FILEDLENGTH ];
 
+extern char strOperator[ UMTS_MAX_FILEDLENGTH ];
 extern char strPin[ UMTS_MAX_FILEDLENGTH ];
 
 /* Extern Functions to process command */
@@ -62,5 +62,6 @@ extern int SetOperator(int nMode, char *strOperator);
 extern int GetNetInfo(void);
 extern int GetFieldStrength(void);
 extern int SetPin(void);
+extern int SendCustomCommand(const char* strCommand);
 
 #endif
