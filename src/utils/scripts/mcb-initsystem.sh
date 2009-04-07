@@ -1,6 +1,6 @@
 #! /bin/bash
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 # Basis Bibliothek für die MCB-2
 #. /usr/shared/mcbsystools/mcblib.inc
@@ -14,7 +14,7 @@ FILENAME=/etc/ppp/ip-up.d/99_firewall-up
 if ( ! test -f $FILENAME ); then	
 	echo "Create $FILENAME ..."
 	echo "#! /bin/bash" > $FILENAME
-	echo "PATH=/bin:/usr/bin:/sbin:/usr/sbin" >> $FILENAME
+	echo "PATH=/sbin:/usr/sbin:/bin:/usr/bin" >> $FILENAME
 	echo "/usr/share/mcbsystools/firewall.sh start" >> $FILENAME
 	chmod 755 $FILENAME
 fi
@@ -25,7 +25,7 @@ FILENAME=/etc/ppp/ip-down.d/99_firewall-down
 if ( ! test -f $FILENAME ); then	
 	echo "Create $FILENAME ..."
 	echo "#! /bin/bash" > $FILENAME
-	echo "PATH=/bin:/usr/bin:/sbin:/usr/sbin" >> $FILENAME
+	echo "PATH=/sbin:/usr/sbin:/bin:/usr/bin" >> $FILENAME
 	echo "/usr/share/mcbsystools/firewall.sh stop" >> $FILENAME
 	chmod 755 $FILENAME
 fi

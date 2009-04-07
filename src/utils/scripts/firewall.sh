@@ -20,7 +20,7 @@ case "$1" in
 	    fi
     done
     if [ "$FOUND" = "no" ]; then
-      # Module für die ip_tables
+      # Module fï¿½r die ip_tables
       modprobe ip_tables
       modprobe ip_conntrack
       modprobe iptable_nat
@@ -41,15 +41,12 @@ case "$1" in
     fi
 
     # IP-Forward aktivieren
-    echo "1" > /proc/sys/net/ipv4/ip_forward
+    echo "1" > /proc/sys/net/ipv4/ip_forward    
 
-    modprobe ipt_DF
-    iptables -t mangle -A PREROUTING -j DF --clear
-
-    # Regeln für die IP-Tables löschen
+    # Regeln fï¿½r die IP-Tables lï¿½schen
     iptables -F && iptables -X && iptables -t nat -F && iptables -t nat -X
 
-    # Gesamten NetBios traffic über die PPP Schnittstelle blockieren
+    # Gesamten NetBios traffic ï¿½ber die PPP Schnittstelle blockieren
     iptables -A FORWARD -p tcp --sport 137:139 -o $IF_EXT -j DROP
     iptables -A FORWARD -p udp --sport 137:139 -o $IF_EXT -j DROP
     iptables -A OUTPUT -p tcp --sport 137:139 -o $IF_EXT -j DROP
@@ -62,7 +59,7 @@ case "$1" in
   stop)
     echo "Stopping firewall..."
 
-    # Regeln für die IP-Tables löschen
+    # Regeln fï¿½r die IP-Tables lï¿½schen
     iptables -F
     iptables -t nat -F
   	iptables -X
