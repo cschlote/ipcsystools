@@ -14,7 +14,6 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-up.d/
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-down.d/
 	$(INSTALL_DATA) mcbctl.conf $(DESTDIR)/etc/mcbctl.conf	
-	$(INSTALL_DATA) mcb/default-sim.conf $(DESTDIR)/etc/mcb/default-sim.conf
 	$(INSTALL_DATA) ppp/01-3g-led-on $(DESTDIR)/etc/ppp/ip-up.d/01-3g-led-on
 	$(INSTALL_DATA) ppp/01-3g-led-off $(DESTDIR)/etc/ppp/ip-down.d/01-3g-led-off
 
