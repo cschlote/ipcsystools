@@ -1,3 +1,13 @@
+#**********************************************************************************
+#
+#        FILE: mcblib.sh
+#
+# DESCRIPTION: Include file for bash scripts
+#
+#      AUTHOR: Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
+#     COMPANY: konzeptpark GmbH, 35633 Lahnau
+#
+#**********************************************************************************
 
 # Basisverzeichnis für der UMTS Tools
 MCB_TOOLS_DIR=/usr/bin
@@ -18,6 +28,7 @@ CONNECTION_LOG_FILE=/var/log/connection.log
 START_UMTS_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_umts_enabled | cut -d"=" -f2`
 START_VPN_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_vpn_enabled | cut -d"=" -f2`
 LOG_LEVEL=`cat $MCBCTL_CONFIG | grep general.log_level | cut -d"=" -f2`
+CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep general.check_connection_enabled | cut -d"=" -f2`
 
 # Sektion [WATCHDOG-UMTS]
 CHECK_CONNECTION_RESTART=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_restart | cut -d"=" -f2`
@@ -25,7 +36,6 @@ CHECK_CONNECTION_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_
 MAX_CONNECTION_LOST=`cat $MCBCTL_CONFIG | grep watchdog.3g.max_connection_lost | cut -d"=" -f2`
 
 # Sektion [WATCHDOG-PING]
-CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_connection_enabled | cut -d"=" -f2`
 CHECK_PING_ENABLED=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_enabled | cut -d"=" -f2`
 CHECK_PING_IP=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_ip | cut -d"=" -f2`
 CHECK_PING_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_reboot | cut -d"=" -f2`
@@ -103,6 +113,7 @@ function debuglog ()
     echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
   fi
 }
+
 #-------------------------------------------------------------------------------
 function RebootMCB ()
 {
@@ -113,9 +124,44 @@ function RebootMCB ()
 
   sleep 5
 }
+
 #-------------------------------------------------------------------------------
 function RefreshDatacardDevice ()
 {
   CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
+
 #-------------------------------------------------------------------------------
+# Write the radio access technology (RAT) mode to a file
+function WriteConnectionRATModeFile ()
+{
+	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk '{print $2}'`
+	echo $connectionmode > /var/run/connection_mode
+}
+
+#-------------------------------------------------------------------------------
+# Write the current network mode to a file
+function WriteConnectionNetworkModeFile ()
+{
+	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT*CNTI=0 | grep *CNTI: | awk -F"," '{print $2}'`
+	echo $connectionmode > /var/run/connection_mode
+}
+
+#-------------------------------------------------------------------------------
+# Write the UMTS Field strength to a file and update the LEDBAR
+function WriteConnectionFieldStrengthFile ()
+{
+	# Feldstärke auf der MCB aktualisieren	
+  $UMTS_FS
+  field_strength=$?
+	
+	debuglog "Prüfung der Feldstärke: " $field_strength   
+
+	# Feldstärke Datei aktualisieren
+	echo $field_strength > /var/run/connection_fs
+
+	# LED's aktualisieren
+  /usr/share/mcbsystools/leds.sh gsmfs $field_strength	
+}
+#-------------------------------------------------------------------------------
+

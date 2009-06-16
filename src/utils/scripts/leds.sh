@@ -67,13 +67,16 @@ led_timer()
 # Balkenanzeige für GSM Signalstaerke
 led_gsmfs()
 {
-  local fsnorm    
+  local fsnorm
+	local delay_on=`printf $LED_CMD_TIMER_DON gsm-fs`
 
   # Normierung der Feldstärke
   case "$1" in
     0|1) 
-      fsnorm=1;;
-    2|3|4|5)
+      fsnorm=0;;
+		2|3)
+			fsnorm=1;;
+    4|5)
       fsnorm=2;;
     6|7|8|9)
       fsnorm=3;;    
@@ -87,11 +90,17 @@ led_gsmfs()
       fsnorm=7;;
     26|27|28|29|30|31)
       fsnorm=8;;
-    #99? unknown!
+    99)
+      fsnorm=0;;
   esac  
 
   # GSM-FS Led on
-  led_on gsm-fs
+  if [ $1 -eq 99 ]; then
+    led_timer gsm-fs 1000 2000
+  else 		
+		test -e $delay_on && led_off gsm-fs
+    led_on gsm-fs
+  fi
 
   # Balkenanzeige LED's on
   local i=0

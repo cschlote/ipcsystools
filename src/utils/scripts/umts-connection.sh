@@ -14,14 +14,14 @@
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-# Basis Bibliothek für die MCB-2
+# Basis Bibliothek fï¿½r die MCB-2
 . /usr/share/mcbsystools/mcblib.inc
 
-# PID - File für das Skript
+# PID - File fï¿½r das Skript
 UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 
 #-------------------------------------------------------------------------------
-# Überprüft ob der PPPD aktiv ist
+# ï¿½berprï¿½ft ob der PPPD aktiv ist
 function IsPPPDAlive ()
 {
   if (pidof pppd > /dev/null) ; then
@@ -31,20 +31,18 @@ function IsPPPDAlive ()
   fi
 }
 #-------------------------------------------------------------------------------
-# PPPD für UMTS starten
+# PPPD fï¿½r UMTS starten
 function StartPPPD ()
 {
   log "PPPD starten..."
 
   # Device der UMTS Karte aktualisieren
-  RefreshDatacardDevice  
+  RefreshDatacardDevice
   local device=$CONNECTION_DEVICE
 
   log "Device " $device
 	
   pppd $device 460800 connect "/usr/sbin/chat -v -f /usr/share/mcbsystools/ppp-umts.chat" &
-
-  #pppd call gsm885 &
 }
 #-------------------------------------------------------------------------------
 # PPPD stoppen
@@ -63,17 +61,17 @@ function StopPPPD ()
   # Alle PPPD's killen!
   kill -TERM $pids > /dev/null
 
-  # Alle pid's löschen
+  # Alle pid's lï¿½schen
   if [ ! "$?" = "0" ]; then
-    # Alle pid's löschen
+    # Alle pid's lï¿½schen
     rm -f /var/run/ppp*.pid > /dev/null
   fi
 }
 #-------------------------------------------------------------------------------
-# Wartet bis das ppp0 device verfügbar ist
+# Wartet bis das ppp0 device verfï¿½gbar ist
 function WaitForPPP0Device ()
 {
-  # Counter für die Durchläufe
+  # Counter fï¿½r die Durchlï¿½ufe
   local count_timeout=0
   local count_timeout_max=12
   local sleeptime=5
@@ -81,9 +79,9 @@ function WaitForPPP0Device ()
 
   while [ true ] ; do
 
-    # ppp0 device prüfen        
+    # ppp0 device prï¿½fen        
     if (systool -c net | grep ppp0 > /dev/null); then    
-      log "device ppp0 verfügbar"
+      log "device ppp0 verfï¿½gbar"
 
     	# Nach dem UMTS Startskript Zeit aktualisieren
     	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
@@ -91,7 +89,7 @@ function WaitForPPP0Device ()
       break
     fi
 
-    # Timeout überprüfen
+    # Timeout ï¿½berprï¿½fen
     if [ $count_timeout -ge $count_timeout_max ]; then
       reached_timeout=1
       break
@@ -112,17 +110,17 @@ function WaitForPPP0Device ()
 }
 #-------------------------------------------------------------------------------
 # Abfragen ob eine PCMCIA Karte im Sockel steckt.
-# Wenn keine Karte steckt ist eine Verbindung unmöglich.
+# Wenn keine Karte steckt ist eine Verbindung unmï¿½glich.
 # Deshalb wird sofort mit Error beendet.
 function WaitForDataCard ()
 {
-  # Counter für die Durchläufe
+  # Counter fï¿½r die Durchlï¿½ufe
   local count_timeout=0
   local count_timeout_max=12
   local sleeptime=5
   local reached_timeout=0
 
-  # Prüfung, ob Karte vorhanden und durch das System erkannt
+  # Prï¿½fung, ob Karte vorhanden und durch das System erkannt
   while [ true ]; do
   
     # Es wurde eine Karte in dem PCMCIA Slot gefunden
@@ -179,15 +177,15 @@ function WaitForDataCard ()
 
   debuglog "ni_state in WaitForDataCard: " $ni_state;
 
-  # Karte auf Verbindung (eingebucht) prüfen
+  # Karte auf Verbindung (eingebucht) prï¿½fen
   while [ $ni_state -ne 0 ]; do
 
-    # Erhöhe die Anzahl der Versuche auf 18, falls Limited Service (d.h. ni_state==2) als Netz zurueckgegeben wird
+    # Erhï¿½he die Anzahl der Versuche auf 18, falls Limited Service (d.h. ni_state==2) als Netz zurueckgegeben wird
     if [ $ni_state -eq 2 ]; then
       count_timeout_max=18
     fi
 
-    # Timeout überprüfen
+    # Timeout ï¿½berprï¿½fen
     if [ $count_timeout -ge $count_timeout_max ]; then
       reached_timeout=1
       break
@@ -243,25 +241,23 @@ case "$1" in
     # Ist die Datenkarte noch "gelockt"?
     # DeleteDataCardLock
 
-    # Funktion wartet bis die Datenkarte vom System erkannt wurde
+    # Funktion wartet bis die Datenkarte vom System erkannt wurde und eingebucht ist
     WaitForDataCard
     if [ $? -eq 1 ]; then
       # Wegen dem Einbuchen in das UMTS-Netz warten
       sleep 5
 
-      # Feldstärke ausgeben
-      $UMTS_FS
-      field_strength=$?
-			if [ $field_strength -lt 32 ]; then
-				/usr/share/mcbsystools/leds.sh gsmfs $field_strength
-			fi
+      # Feldstï¿½rke ausgeben
+			WriteConnectionFieldStrengthFile
 
-      log "Prüfung der Feldstärke: " $field_strength      
+			# Netzmode ausgeben GPRS...HSDPA
+			WriteConnectionNetworkModeFile
 
       # pppd starten
       IsPPPDAlive
       if [ $? -eq 0 ]; then
-
+				
+				# Starts the pppd
         StartPPPD
 
         # Warte bis ppp0 device vorhanden oder timeout!
@@ -284,10 +280,10 @@ case "$1" in
 
       # Haben wir wirklich keine Verbindung oder liegt ein Fehler im Netz vor
       $UMTS_FS
-      debuglog "Prüfung der Feldstärke: (timeout) " $?
+      debuglog "Prï¿½fung der Feldstï¿½rke: (timeout) " $?
     fi
 
-    # Prozessdatei löschen
+    # Prozessdatei lï¿½schen
     rm -f $UMTS_CONNECTION_PID_FILE
 
     exit 0
@@ -298,7 +294,7 @@ case "$1" in
     # Alle PPPD's eliminieren
     StopPPPD
 
-    # Prozessdatei löschen
+    # Prozessdatei lï¿½schen
     rm -f $UMTS_CONNECTION_PID_FILE
 
     exit 0

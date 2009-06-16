@@ -14,11 +14,11 @@
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-# Basis Bibliothek für die MCB-2
+# Basis Bibliothek fï¿½r die MCB-2
 . /usr/share/mcbsystools/mcblib.inc
 
 #-------------------------------------------------------------------------------
-# Überprüft ob das Skript bereits aktiv ist
+# ï¿½berprï¿½ft ob das Skript bereits aktiv ist
 function IsSelfRunOnce ()
 {
   # Anzahl der aktiven Prozesse
@@ -46,13 +46,13 @@ function CheckExternConnection ()
     echo $last_ping > $LAST_PING_FILE
   fi
 
-  # Zeit überschritten -> ping absetzen
+  # Zeit ï¿½berschritten -> ping absetzen
   if ( test $[$timestamp - $last_ping] -gt $CHECK_PING_TIME ); then
 
     # Timestamp schreiben
     echo `date +%s` > $LAST_PING_FILE
 
-    # Externen Server überprüfen
+    # Externen Server ï¿½berprï¿½fen
     if ping -c 1 -W 5 -s 8 $CHECK_PING_IP >& /dev/null ; then
 
       if ( test $LOG_LEVEL -ge 1 ); then
@@ -61,7 +61,7 @@ function CheckExternConnection ()
 
       echo 0 > $PING_FAULT_FILE
     else
-      # Anzahl der Fehler in der Datei erhöhen
+      # Anzahl der Fehler in der Datei erhï¿½hen
       PING_FAULT=$[$PING_FAULT+1];
       echo $PING_FAULT > $PING_FAULT_FILE;
 
@@ -88,20 +88,19 @@ function IsUMST_Connection_Script_Run ()
 # Skript muss exklusiv laufen
 # IsSelfRunOnce integrieren??!!
 
-# UMTS aktiviert?
+# Feldstaerke auf der MCB aktualisieren	
+WriteConnectionFieldStrengthFile
+
+# Write Network Mode
+WriteConnectionNetworkModeFile
+
+# Autom. Start UMTS aktiviert?
 if (test $START_UMTS_ENABLED -eq 1); then
 
-  # Feldstärke auf der MCB aktualisieren	
-  $UMTS_FS
-  field_strength=$?
-	if (test $field_strength -lt 32); then
-    /usr/share/mcbsystools/leds.sh gsmfs $field_strength
-	fi
-
-  # Option für die Prüfung aktiviert?
+  # Option fï¿½r die Prï¿½fung aktiviert?
   if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
 
-    # Absoluter Notfall nichts geht mehr Hardware abgestürt oder so!
+    # Absoluter Notfall nichts geht mehr Hardware abgestï¿½rt oder so!
     if ( test $MAX_CONNECTION_LOST -gt 0 ); then
 
       LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
@@ -109,7 +108,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
 
       debuglog "Letzter ppp0: " $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE]
 
-      # Maximaler Zeitraum überschritten -> reboot des System
+      # Maximaler Zeitraum ï¿½berschritten -> reboot des System
       if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
         log "Maximaler Wartezeitraum erreicht: " $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE]
         RebootMCB
@@ -125,10 +124,10 @@ if (test $START_UMTS_ENABLED -eq 1); then
       if (systool -c net | grep ppp0 > /dev/null); then    
         debuglog "PPP Verbindung ok!"
 
-        # Verbindungsstatus für das Starten der MCB eintragen
+        # Verbindungsstatus fï¿½r das Starten der MCB eintragen
         echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 
-        # Date für die Fehlversuche zurücksetzen
+        # Date fï¿½r die Fehlversuche zurï¿½cksetzen
         echo 0 > $CONNECTION_FAULT_FILE
 
         # PING auf eine beliebige Internetadresse
@@ -137,7 +136,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
 
           # Grenzwert erreicht?
           if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then
-            log "Externe Überwachung fehlgeschlagen (ping)"
+            log "Externe ï¿½berwachung fehlgeschlagen (ping)"
             RebootMCB
             exit 1
           fi
@@ -145,17 +144,17 @@ if (test $START_UMTS_ENABLED -eq 1); then
       else
         debuglog "PPP Verbindung nicht ok!"
 
-        # pppd eliminieren, könnte noch vorhanden sein!
+        # pppd eliminieren, kï¿½nnte noch vorhanden sein!
 				/usr/share/mcbsystools/umts-connection.sh stop
 
-        # Verbindungszähler erhöhen
+        # Verbindungszï¿½hler erhï¿½hen
         CONNECTION_FAULT=$[CONNECTION_FAULT+1]
         echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
 
         # Noch etwas Zeit geben bis alles erledigt ist
         sleep 5
 
-        # Anzahl der Fehlversuche überschritten -> reboot des Systems
+        # Anzahl der Fehlversuche ï¿½berschritten -> reboot des Systems
         if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ); then
           RebootMCB
           exit 1
