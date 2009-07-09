@@ -1,6 +1,6 @@
  /*******************************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright © 2004-2009
  *
  * konzeptpark GmbH
  * Georg-Ohm-Straße 2
@@ -14,6 +14,7 @@
  *
  *******************************************************************************
  */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -163,14 +164,16 @@ static void ShowHelp(void)
 	ShowVersion();
 	printf(
 		"umtscardtool <options> [ <operator> | <pin> ]\n"
-		"\t--getoperator      -o   Get Operator List\n"
-		"\t--setoperator      -O   Set Operator\n"
-		"\t--getnetinfo       -i   Get net info\n"
-		"\t--getfieldstrength -f   Get fieldstrength info\n"
-		"\t--setpin           -p   Set PIN\n"
-		"\t--loglevel         -l   Set Loglevel (0..7)\n"
-		"\t--version          -v   Show version\n"
-		"\t--help             -h   Show this help\n"
+		"\t-o   Get Operator List\n"
+		"\t-O   Set Operator\n"
+		"\t-i   Get net info\n"
+		"\t-f   Get fieldstrength info\n"
+		"\t-p   Set PIN\n"
+		"\t-d   Set the modem device\n"
+		"\t-s   Send a custom AT command\n"
+		"\t-l   Set Loglevel (0..7)\n"
+		"\t-v   Show version\n"
+		"\t-h   Show this help\n"
 		"\n"
 		"  <operator>  := Operator ID (if not set, operator is selected automatically)\n"
 		"\n"
@@ -182,7 +185,7 @@ bool GetOptions(int argc, char* argv [])
 	bool rc = false;
 	int nOpt;
 
-	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:s:vh")) != -1)
+	while ((nOpt = getopt(argc, argv, "oOm:ifp:l:d:s:vh")) != -1)
 	{
 		switch (nOpt)
 		{
@@ -191,15 +194,21 @@ bool GetOptions(int argc, char* argv [])
 		case 'm' : nMode = atoi(optarg); break;
 		case 'i' : nCardCommand = GETNI;  rc=true; break;
 		case 'f' : nCardCommand = GETFS;  rc=true; break;
-		case 'p' : nCardCommand = SETPIN; strPin[0]=0; rc=true; break;
 		
+		// SIM PIN
+		case 'p' : 
+			nCardCommand = SETPIN;						
+			strcpy(strPin, optarg);
+			rc=true; 
+			break; 
+
 		// Custom AT Commands
 		case 's' : 
-			nCardCommand = CUSTOMCMD; 
-			// strATCommand[0] = '\0';
+			nCardCommand = CUSTOMCMD;
 			strcpy(strATCommand, optarg);			
 			rc=true; 
 			break; 
+
 		// Define the log level
 		case 'l' :
 			nLogLevel = atoi(optarg);
@@ -234,24 +243,7 @@ bool GetOptions(int argc, char* argv [])
 		else
 			strcpy(strOperator,"");
 		break;
-		
-	case SETPIN :
-		if (optind < argc)
-			snprintf(strPin, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
-		else
-			strcpy(strPin, "");
-		break;
-	/*	
-	case CUSTOMCMD: 
-		if (optind < argc)
-		{			
-			printf("case CUSTOMCMD: %s", argv [ optind ]);
-			snprintf(strATCommand, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
-		}			
-		else
-			strcpy(strATCommand, "TEST");		
-		break;
-	*/	
+
 	default:
 		break;
 	}

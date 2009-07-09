@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright © 2004-2009
  *
  * konzeptpark GmbH
  * Georg-Ohm-Straﬂe 2
@@ -46,18 +46,6 @@
 static const char* COMMAND_GET = "+CPIN?";
 static const char* COMMAND_SET = "+CPIN=";
 
-//static const int WATCHDOG_TIME = 1000; // msec
-//static const int RES_NO_AUTH     =  1;
-//static const int RES_OK          =  0;
-//static const int ERR_SER         = -1;
-//static const int ERR_AT_GET      = -2;
-//static const int ERR_NO_PIN      = -3;
-//static const int ERR_AT_SET      = -4;
-//static const int ERR_SIM_LOCKED  = -5;
-//static const int ERR_UNKNOWN     = -6;
-//static const int ERR_LOCK        = -7;
-//static const int ERR_WATCHDOG    = -8;
-//static const int ERR_INVALID_PIN = -9;
 
 static int ProcessResult(char *strResult)
 {
@@ -85,30 +73,13 @@ int SetPin(void)
 	{
 		bOk = false;
 
-		char* strTokens [ MAX_TOKENS ] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-		int nIndex = 0;
-		char* strToken = strtok(strResult, " ");
-		while (strToken && (nIndex < MAX_TOKENS))
-		{
-			strTokens [ nIndex++ ] = strToken;
-			strToken = strtok(NULL, " ");
-		}
-		const int nTokenCount = nIndex;
-
 		bool bPinRequired = false;
 		bool bPukRequired = false;
 
-		for (nIndex = 0; nIndex < nTokenCount; nIndex++)
-		{
-			if (strTokens [ nIndex ])
-			{
-				if (!bPinRequired)
-					bPinRequired = (strcasecmp("PIN", strTokens [ nIndex ]) == 0);
-
-				if (!bPukRequired)
-					bPukRequired = (strcasecmp("PUK", strTokens [ nIndex ]) == 0);
-			}
-		}
+		// +CPIN: SIM PIN
+		bPinRequired = (strstr(strResult, "SIM PIN") != NULL);
+		// +CPIN: SIM PUK
+		bPukRequired = (strstr(strResult, "SIM PUK") != NULL);
 
 		if (bPinRequired)
 		{
@@ -120,7 +91,6 @@ int SetPin(void)
 				memset(strCommand, '\0', sizeof(strCommand));
 				strcpy(strCommand, COMMAND_SET);
 				strcat(strCommand, strPin);
-
 				memset(strResult, '\0', sizeof(strResult));
 
 				syslog (LOG_DEBUG, "Sending raw '%s'", strCommand);
@@ -150,7 +120,7 @@ int SetPin(void)
 		{
 			if (bPukRequired)
 			{
-				syslog(LOG_NOTICE, "PUK or SuperPIN required");
+				syslog(LOG_NOTICE, "PUK or SuperPIN required. Your SIM is locked. Unlock it manually");
 				nResult = UMTS_RESULT_ERR_SIM_LOCKED;
 			}
 			else
