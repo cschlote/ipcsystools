@@ -27,7 +27,7 @@ CONNECTION_DEVICE_FILE=/var/run/connection_dev
 MODEM_STATUS_FILE=/var/run/modem_status
 
 # Status for the modem
-MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected atcmderror )
+MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected )
 # IDs for the modem state
 no_modemID=0
 detectedID=1
@@ -98,9 +98,10 @@ function RebootMCB ()
   sleep 5
 }
 #-------------------------------------------------------------------------------
-function RefreshDatacardDevice ()
+function RefreshModemDevices ()
 {
-  CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
+	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
+	CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
 #-------------------------------------------------------------------------------
 function WriteConnectionAvailableFile ()
@@ -125,11 +126,13 @@ function WriteConnectionNetworkModeFile ()
 {
 	local connectionmode
 	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
+	
 	# *CNTI: +CME ERROR: no network service
-	if [ `expr index "$cnti" "ERROR"` > 0 ]; then
-		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
+	local err=`expr index "$cnti" "ERROR"`
+	if [ $err -eq 0 ]; then
+		connectionmode=`echo $cnti | awk -F"," '{print $2}'`	
 	else
-		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
+		connectionmode=`echo $cnti | awk -F":" '{print $3}'`		
 	fi
 	echo $connectionmode > /var/run/connection_mode
 }
@@ -208,16 +211,6 @@ function CheckNIState ()
   return $ni
 }
 #-------------------------------------------------------------------------------
-function InitializeModem ()
-{
-	DetectModemCard
-	if [ $? -eq 0 ]; then
-		SetSIMPIN
-		sleep 1
-		WriteConnectionFieldStrengthFile
-	fi
-}
-#-------------------------------------------------------------------------------
 function ReadModemStatus ()
 {
 	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
@@ -225,8 +218,20 @@ function ReadModemStatus ()
 #-------------------------------------------------------------------------------
 # Sets current radio access technology (RAT)
 function SetConnectionRAT ()
-{
-	echo "SetConnectionRAT"
+{	
+	ratcode=`cat $MCBCTL_CONFIG | grep modem.connectionmode | cut -d"=" -f2`
+	RefreshModemDevices
+	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode	
 }
 #-------------------------------------------------------------------------------
-
+function InitializeModem ()
+{
+	DetectModemCard
+	if [ $? -eq 0 ]; then
+		SetConnectionRAT		
+		SetSIMPIN
+		sleep 1
+		WriteConnectionFieldStrengthFile
+	fi
+}
+#-------------------------------------------------------------------------------

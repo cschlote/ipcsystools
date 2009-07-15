@@ -35,9 +35,8 @@ function IsPPPDAlive ()
 function StartPPPD ()
 {
   log "PPPD starten..."
-
-  # Device der UMTS Karte aktualisieren
-  RefreshDatacardDevice
+  # Device des Modems aktualisieren
+  RefreshModemDevices
   local device=$CONNECTION_DEVICE
   pppd $device 460800 connect "/usr/sbin/chat -v -f /usr/share/mcbsystools/ppp-umts.chat" &
 }
@@ -219,6 +218,9 @@ case "$1" in
 			  debuglog "Pruefung der Feldstuerke: (timeout) " $?
 			fi		  
 		fi
+
+		# Prozessdatei loeschen
+		rm -f $UMTS_CONNECTION_PID_FILE
 	  exit 0
 	;;
 
@@ -226,6 +228,9 @@ case "$1" in
 	  # Alle PPPD's eliminieren
 	  StopPPPD
 		CheckNIState
+
+		# Prozessdatei loeschen
+		rm -f $UMTS_CONNECTION_PID_FILE
 	  exit 0
 	;;
 
@@ -236,8 +241,5 @@ case "$1" in
 
 # case
 esac
-
-# Prozessdatei lueschen
-rm -f $UMTS_CONNECTION_PID_FILE
 
 
