@@ -1,4 +1,4 @@
-#!/bin/bash
+#! /bin/sh
 #**********************************************************************************
 #
 #        FILE: umts-connection.sh
@@ -14,14 +14,14 @@
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-# Basis Bibliothek f�r die MCB-2
+# Basis Bibliothek fuer die MCB-2
 . /usr/share/mcbsystools/mcblib.inc
 
-# PID - File f�r das Skript
+# PID - File fuer das Skript
 UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 
 #-------------------------------------------------------------------------------
-# �berpr�ft ob der PPPD aktiv ist
+# ueberprueft ob der PPPD aktiv ist
 function IsPPPDAlive ()
 {
   if (pidof pppd > /dev/null) ; then
@@ -31,7 +31,7 @@ function IsPPPDAlive ()
   fi
 }
 #-------------------------------------------------------------------------------
-# PPPD f�r UMTS starten
+# PPPD fuer UMTS starten
 function StartPPPD ()
 {
   log "PPPD starten..."
@@ -39,9 +39,6 @@ function StartPPPD ()
   # Device der UMTS Karte aktualisieren
   RefreshDatacardDevice
   local device=$CONNECTION_DEVICE
-
-  log "Device " $device
-	
   pppd $device 460800 connect "/usr/sbin/chat -v -f /usr/share/mcbsystools/ppp-umts.chat" &
 }
 #-------------------------------------------------------------------------------
@@ -61,17 +58,17 @@ function StopPPPD ()
   # Alle PPPD's killen!
   kill -TERM $pids > /dev/null
 
-  # Alle pid's l�schen
+  # Alle pid's lueschen
   if [ ! "$?" = "0" ]; then
-    # Alle pid's l�schen
+    # Alle pid's lueschen
     rm -f /var/run/ppp*.pid > /dev/null
   fi
 }
 #-------------------------------------------------------------------------------
-# Wartet bis das ppp0 device verf�gbar ist
+# Wartet bis das ppp0 device verfuegbar ist
 function WaitForPPP0Device ()
 {
-  # Counter f�r die Durchl�ufe
+  # Counter fuer die Durchlueufe
   local count_timeout=0
   local count_timeout_max=12
   local sleeptime=5
@@ -79,17 +76,17 @@ function WaitForPPP0Device ()
 
   while [ true ] ; do
 
-    # ppp0 device pr�fen        
+    # ppp0 device pruefen        
     if (systool -c net | grep ppp0 > /dev/null); then    
-      log "device ppp0 verf�gbar"
+      log "device ppp0 verfuegbar"
 
     	# Nach dem UMTS Startskript Zeit aktualisieren
-    	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+    	WriteConnectionAvailableFile
 
       break
     fi
 
-    # Timeout �berpr�fen
+    # Timeout ueberpruefen
     if [ $count_timeout -ge $count_timeout_max ]; then
       reached_timeout=1
       break
@@ -109,83 +106,34 @@ function WaitForPPP0Device ()
   fi
 }
 #-------------------------------------------------------------------------------
-# Abfragen ob eine PCMCIA Karte im Sockel steckt.
-# Wenn keine Karte steckt ist eine Verbindung unm�glich.
-# Deshalb wird sofort mit Error beendet.
+# Wartet bis das Modem eingebucht ist
 function WaitForDataCard ()
 {
-  # Counter f�r die Durchl�ufe
+  # Counter fuer die Durchlueufe
   local count_timeout=0
   local count_timeout_max=12
   local sleeptime=5
   local reached_timeout=0
+	  
+	# Check SIM PIN
+	SetSIMPIN
 
-  # Pr�fung, ob Karte vorhanden und durch das System erkannt
-  while [ true ]; do
-  
-    # Es wurde eine Karte in dem PCMCIA Slot gefunden
-    #if /sbin/cardctl status | grep "ready" >/dev/null; then
-    #  debuglog "Datenkarte wurde gefunden"
-      
-      # Sierra Wireless Modems
-      if lsusb -d 1199: > /dev/null; then      
-        debuglog "Sierra Wireless Modem wurden von dem System erkannt"        
-        echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
-        echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE                      
-        break
-      fi
+	#TODO: Set operator selection
 
-      # Option Modems
-      if lsusb -d 0af0: > /dev/null; then
-        debuglog "Option Modem wurden von dem System erkannt"
-        echo "/dev/ttyUSB0" > $CONNECTION_DEVICE_FILE
-        echo "/dev/ttyUSB2" > $COMMAND_DEVICE_FILE
-        break
-      fi
-      
-    #fi
-
-    sleep $sleeptime
-  done
-
-#  local pin_count=1
-#  $UMTS_PIN $SIM_PIN
-#  local pin_state=$?
-#  while [ $pin_count -lt 10 ] && [ $pin_state -eq 254 ]
-#  do
-#    # Warten bis Karte eingebucht
-#    sleep 1
-#    $UMTS_PIN $SIM_PIN
-#    pin_state=$?
-#    pin_count=$[pin_count+1]
-#  done
-
-#  debuglog "pin_state in WaitForDataCard: " $pin_state;
-
-#  local setop_state=0
-#  if [ $OPERATOR_SELECTION -eq 0 ]; then
-#    $UMTS_SETOP
-#  else
-#    $UMTS_SETOP $OPERATOR_ID
-#  fi
-#  local setop_state=$?
-#
-#  debuglog "setop_state in WaitForDataCard: " $setop_state;
-
-  $UMTS_NI
+	CheckNIState
   local ni_state=$?
 
   debuglog "ni_state in WaitForDataCard: " $ni_state;
 
-  # Karte auf Verbindung (eingebucht) pr�fen
+  # Karte auf Verbindung (eingebucht) pruefen
   while [ $ni_state -ne 0 ]; do
 
-    # Erh�he die Anzahl der Versuche auf 18, falls Limited Service (d.h. ni_state==2) als Netz zurueckgegeben wird
+    # Erhoehe die Anzahl der Versuche auf 18, falls Limited Service (d.h. ni_state==2) als Netz zurueckgegeben wird
     if [ $ni_state -eq 2 ]; then
       count_timeout_max=18
     fi
 
-    # Timeout �berpr�fen
+    # Timeout ueberpruefen
     if [ $count_timeout -ge $count_timeout_max ]; then
       reached_timeout=1
       break
@@ -194,7 +142,7 @@ function WaitForDataCard ()
     sleep $sleeptime
 
     # Ist die Karte eingebucht?
-    $UMTS_NI
+		CheckNIState
     ni_state=$?
 
     count_timeout=$[count_timeout+1]
@@ -208,19 +156,7 @@ function WaitForDataCard ()
     return 1
   fi
 }
-#-------------------------------------------------------------------------------
-# Die Karte setzt ein Lock-File im Filesystem. Dieses
-# Lock sichert die einmaligkeit des Zugriffes zu. Falls
-# dieses Lock besteht muss es entfernt werden da ansonsten
-# nicht auf die Karte zugegriffen werden kann.
-function DeleteDataCardLock ()
-{
-  if [ -e /var/lock/LCK..ttyUSB0 ]; then
-    rm -f /var/lock/LCK..ttyUSB0 > /dev/null
 
-    sleep 20
-  fi
-}
 
 #-------------------------------------------------------------------------------
 #
@@ -233,78 +169,75 @@ echo $$ > $UMTS_CONNECTION_PID_FILE
 
 case "$1" in
 
-  start)
+	start)
+		# Status des Modem
+		ReadModemStatus
+		if ( [ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] || \
+				 [ $MODEM_STATUS == ${MODEM_STATES[readyID]} ] || \
+				 [ $MODEM_STATUS == ${MODEM_STATES[registeredID]} ] ); then
 
-    # LED 3g Timer blinken
-    /usr/share/mcbsystools/leds.sh 3g timer
+			# LED 3g Timer blinken
+			/usr/share/mcbsystools/leds.sh 3g timer
 
-    # Ist die Datenkarte noch "gelockt"?
-    # DeleteDataCardLock
+			# Funktion wartet bis die Datenkarte vom System erkannt wurde und eingebucht ist
+			WaitForDataCard
+			if [ $? -eq 1 ]; then
+			  # Wegen dem Einbuchen in das UMTS-Netz warten
+			  sleep 1
 
-    # Funktion wartet bis die Datenkarte vom System erkannt wurde und eingebucht ist
-    WaitForDataCard
-    if [ $? -eq 1 ]; then
-      # Wegen dem Einbuchen in das UMTS-Netz warten
-      sleep 5
+			  # Feldstuerke ausgeben
+				WriteConnectionFieldStrengthFile
 
-      # Feldst�rke ausgeben
-			WriteConnectionFieldStrengthFile
+				# Netzmode ausgeben GPRS...HSDPA
+				WriteConnectionNetworkModeFile
 
-			# Netzmode ausgeben GPRS...HSDPA
-			WriteConnectionNetworkModeFile
+			  # pppd starten
+			  IsPPPDAlive
+			  if [ $? -eq 0 ]; then			
+					# Starts the pppd
+			    StartPPPD
 
-      # pppd starten
-      IsPPPDAlive
-      if [ $? -eq 0 ]; then
-				
-				# Starts the pppd
-        StartPPPD
+			    # Warte bis ppp0 device vorhanden oder timeout!
+			    WaitForPPP0Device
 
-        # Warte bis ppp0 device vorhanden oder timeout!
-        WaitForPPP0Device
+			    # PPPD konnte nicht gestartet werden
+					if [ $? -eq 1 ]; then		
+						WriteToModemStatusFile ${MODEM_STATES[connected]}
+					else
+			      # 3g LED ausschalten
+			      /usr/share/mcbsystools/leds.sh 3g off
+			    fi
+			  fi
+			else
+			  log "Datenkarte konnte nicht initialisiert werden (timeout)"
 
-        # Wenn PPP0 Device vorhanden -> OpenVPN starten
-        if [ $? -eq 1 ]; then
-          log "PPP0 Up..."
-        else
-          # 3g LED ausschalten
-          /usr/share/mcbsystools/leds.sh 3g off
-        fi
+			  # 3g LED ausschalten
+			  /usr/share/mcbsystools/leds.sh 3g off
 
-      fi
-    else
-      log "Datenkarte konnte nicht initialisiert werden (timeout)"
+			  # Haben wir wirklich keine Verbindung oder liegt ein Fehler im Netz vor
+			  $UMTS_FS
+			  debuglog "Pruefung der Feldstuerke: (timeout) " $?
+			fi		  
+		fi
+	  exit 0
+	;;
 
-      # 3g LED ausschalten
-      /usr/share/mcbsystools/leds.sh 3g off
+	stop)
+	  # Alle PPPD's eliminieren
+	  StopPPPD
+		CheckNIState
+	  exit 0
+	;;
 
-      # Haben wir wirklich keine Verbindung oder liegt ein Fehler im Netz vor
-      $UMTS_FS
-      debuglog "Pr�fung der Feldst�rke: (timeout) " $?
-    fi
-
-    # Prozessdatei l�schen
-    rm -f $UMTS_CONNECTION_PID_FILE
-
-    exit 0
-  ;;
-
-  stop)    
-
-    # Alle PPPD's eliminieren
-    StopPPPD
-
-    # Prozessdatei l�schen
-    rm -f $UMTS_CONNECTION_PID_FILE
-
-    exit 0
-  ;;
-
-
-  *)
-    echo "Usage: $0 {start|stop}"
-    exit 1
-    ;;
+	*)
+	  echo "Usage: $0 {start|stop}"
+	  exit 1
+	  ;;
 
 # case
 esac
+
+# Prozessdatei lueschen
+rm -f $UMTS_CONNECTION_PID_FILE
+
+

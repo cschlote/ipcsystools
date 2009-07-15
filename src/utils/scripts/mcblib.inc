@@ -21,56 +21,21 @@ MCB_STATUSFILE_DIR=/var/run
 # Log file für die Verbindung
 CONNECTION_LOG_FILE=/var/log/connection.log
 
-#-------------------------------------------------------------------------------
-# Auslesen der Parameter aus mcbctl.conf
-
-# Sektion [GENERAL]
-START_UMTS_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_umts_enabled | cut -d"=" -f2`
-START_VPN_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_vpn_enabled | cut -d"=" -f2`
-LOG_LEVEL=`cat $MCBCTL_CONFIG | grep general.log_level | cut -d"=" -f2`
-CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep general.check_connection_enabled | cut -d"=" -f2`
-
-# Sektion [WATCHDOG-UMTS]
-CHECK_CONNECTION_RESTART=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_restart | cut -d"=" -f2`
-CHECK_CONNECTION_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_reboot | cut -d"=" -f2`
-MAX_CONNECTION_LOST=`cat $MCBCTL_CONFIG | grep watchdog.3g.max_connection_lost | cut -d"=" -f2`
-
-# Sektion [WATCHDOG-PING]
-CHECK_PING_ENABLED=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_enabled | cut -d"=" -f2`
-CHECK_PING_IP=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_ip | cut -d"=" -f2`
-CHECK_PING_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_reboot | cut -d"=" -f2`
-CHECK_PING_TIME=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_time | cut -d"=" -f2`
-
-#-------------------------------------------------------------------------------
-# Statusdateien der MCB
-
-# Lokale Variablen für die Überwachung PPP Verbindung
-CONNECTION_FAULT_FILE=$MCB_STATUSFILE_DIR/connection.fault
-if [ ! -e $CONNECTION_FAULT_FILE ] ; then
-  echo 0 > $CONNECTION_FAULT_FILE
-fi
-CONNECTION_FAULT=`cat $CONNECTION_FAULT_FILE`
-
-# Speichert den Zeitpunkt wann die Verbindung das letzte Mal verfügbar war
-CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
-if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
-  # Letzte Verfügbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
-  echo `date +%s` > $CONNECTION_AVAILABLE_FILE
-fi
-
-# Lokale Variablen für die Überwachung externe Verbindung
-PING_FAULT_FILE=$MCB_STATUSFILE_DIR/ping.fault
-if [ ! -e $PING_FAULT_FILE ] ; then
-  echo 0 > $PING_FAULT_FILE
-fi
-PING_FAULT=`cat $PING_FAULT_FILE`
-
-# Lokale Variablen fuer die Devices des internen Modems
+# Globale Variablen fuer die Devices des internen Modems
 COMMAND_DEVICE_FILE=/var/run/command_dev
 CONNECTION_DEVICE_FILE=/var/run/connection_dev
+MODEM_STATUS_FILE=/var/run/modem_status
 
-# Zeitpunkt des letzten abgesetzten "ping"
-LAST_PING_FILE=$MCB_STATUSFILE_DIR/last_ping_time
+# Status for the modem
+MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected atcmderror )
+# IDs for the modem state
+no_modemID=0
+detectedID=1
+sim_not_insertedID=2
+sim_pinID=3
+readyID=4
+registeredID=5
+connected=6
 
 # Programm zur Netzidentifizierung
 UMTS_NI="$MCB_TOOLS_DIR/umtscardtool -i"
@@ -79,11 +44,19 @@ UMTS_NI="$MCB_TOOLS_DIR/umtscardtool -i"
 UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
-UMTS_PIN="$MCB_TOOLS_DIR/pin"
+UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
 
-# Programm zum Setzen des Operators
-UMTS_SETOP="$MCB_TOOLS_DIR/setop"
+#TODO Programm zum Setzen des Operators
 
+
+#-------------------------------------------------------------------------------
+# Auslesen der GENERAL-Parameter aus mcbctl.conf
+
+# Sektion [GENERAL]
+START_UMTS_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_umts_enabled | cut -d"=" -f2`
+START_VPN_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_vpn_enabled | cut -d"=" -f2`
+LOG_LEVEL=`cat $MCBCTL_CONFIG | grep general.log_level | cut -d"=" -f2`
+CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep general.check_connection_enabled | cut -d"=" -f2`
 
 #-------------------------------------------------------------------------------
 #
@@ -117,51 +90,143 @@ function debuglog ()
 #-------------------------------------------------------------------------------
 function RebootMCB ()
 {
-  log "MCB wird neu gestartet."  
+  log "MCB wird neu gestartet."
 
   # Reboot ausführen
   /sbin/reboot
 
   sleep 5
 }
-
 #-------------------------------------------------------------------------------
 function RefreshDatacardDevice ()
 {
   CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
-
+#-------------------------------------------------------------------------------
+function WriteConnectionAvailableFile ()
+{
+	# Speichert den Zeitpunkt wann die Verbindung das letzte Mal verfügbar war
+	CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
+	if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
+		# Letzte Verfügbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
+		echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+	fi
+}
 #-------------------------------------------------------------------------------
 # Write the radio access technology (RAT) mode to a file
 function WriteConnectionRATModeFile ()
 {
-	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk '{print $2}'`
+	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
 	echo $connectionmode > /var/run/connection_mode
 }
-
 #-------------------------------------------------------------------------------
 # Write the current network mode to a file
 function WriteConnectionNetworkModeFile ()
 {
-	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT*CNTI=0 | grep *CNTI: | awk -F"," '{print $2}'`
+	local connectionmode
+	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
+	# *CNTI: +CME ERROR: no network service
+	if [ `expr index "$cnti" "ERROR"` > 0 ]; then
+		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
+	else
+		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
+	fi
 	echo $connectionmode > /var/run/connection_mode
 }
-
 #-------------------------------------------------------------------------------
 # Write the UMTS Field strength to a file and update the LEDBAR
 function WriteConnectionFieldStrengthFile ()
 {
-	# Feldstärke auf der MCB aktualisieren	
+	# Feldstärke auf der MCB aktualisieren
   $UMTS_FS
   field_strength=$?
-	
-	debuglog "Prüfung der Feldstärke: " $field_strength   
 
 	# Feldstärke Datei aktualisieren
 	echo $field_strength > /var/run/connection_fs
 
 	# LED's aktualisieren
-  /usr/share/mcbsystools/leds.sh gsmfs $field_strength	
+  /usr/share/mcbsystools/leds.sh gsmfs $field_strength
+}
+#-------------------------------------------------------------------------------
+function WriteToModemStatusFile ()
+{
+	MODEM_STATUS=$1
+	echo $MODEM_STATUS > $MODEM_STATUS_FILE
+}
+#-------------------------------------------------------------------------------
+# Detect the Modemcard and write the device
+function DetectModemCard ()
+{
+	# Sierra Wireless Modems
+	if lsusb -d 1199: > /dev/null; then
+		debuglog "Sierra Wireless Modem wurden von dem System erkannt"
+		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
+		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
+
+		WriteToModemStatusFile ${MODEM_STATES[detectedID]}
+		return 0
+	else
+		WriteToModemStatusFile ${MODEM_STATES[no_modemID]}
+		return 1
+	fi
+}
+#-------------------------------------------------------------------------------
+# Sets the PIN for the SIM card
+function SetSIMPIN ()
+{
+	local sim_pin=`grep 'sim.pin' /etc/mcbctl.conf | cut -d"=" -f2`
+
+	$UMTS_PIN $sim_pin
+	local pin_state=$?
+
+	#  1: PIN angegeben, musste aber nicht gesetzt werden
+	#  2: SIM Karte wurde nicht erkannt
+	#  3: Der PIN wird benötigt, wurde aber nicht angegeben
+	#  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+	#  5: Die eingegebene PIN war falsch.
+	#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
+	case $pin_state in
+		0|1)
+			WriteToModemStatusFile ${MODEM_STATES[readyID]} ;;
+		2)
+			WriteToModemStatusFile ${MODEM_STATES[sim_not_insertedID]} ;;
+		3)
+			WriteToModemStatusFile ${MODEM_STATES[sim_pinID]} ;;
+		*)
+			WriteToModemStatusFile "errorcode: $pin_state" ;;
+	esac
+}
+#-------------------------------------------------------------------------------
+# Ist die Karte eingebucht?
+function CheckNIState ()
+{
+  $UMTS_NI
+	local ni=$?
+	if [ $ni -eq 0 ]; then
+		WriteToModemStatusFile ${MODEM_STATES[registeredID]}
+	fi
+  return $ni
+}
+#-------------------------------------------------------------------------------
+function InitializeModem ()
+{
+	DetectModemCard
+	if [ $? -eq 0 ]; then
+		SetSIMPIN
+		sleep 1
+		WriteConnectionFieldStrengthFile
+	fi
+}
+#-------------------------------------------------------------------------------
+function ReadModemStatus ()
+{
+	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
+}
+#-------------------------------------------------------------------------------
+# Sets current radio access technology (RAT)
+function SetConnectionRAT ()
+{
+	echo "SetConnectionRAT"
 }
 #-------------------------------------------------------------------------------
 

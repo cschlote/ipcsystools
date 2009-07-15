@@ -23,9 +23,6 @@
 
 #define UMTS_WATCHDOG_TIME	60000     //!< Absolute timeout for watchdog (ms)
 
-#define UMTS_RESULT_LIMITED        2
-#define UMTS_RESULT_FAILED         1
-#define UMTS_RESULT_NO_AUTH        1
 #define UMTS_RESULT_OK             0 //!< Everything went ok
 #define UMTS_RESULT_ERR_SER       -1 //!< Can't obtain serial port to modem
 #define UMTS_RESULT_ERR_AT        -2 //!< Can't communicate with a modem
@@ -34,11 +31,17 @@
 #define UMTS_RESULT_ERR_LOCK      -5 //!< Can't obtain lock for modem serial
 #define UMTS_RESULT_ERR_WATCHDOG  -6 //!< Can't obtain a watchdog
 
-#define UMTS_RESULT_ERR_AT_SET    -4
-#define UMTS_RESULT_ERR_INVALID_PIN -9
-#define UMTS_RESULT_ERR_NO_PIN -3
-#define UMTS_RESULT_ERR_SIM_LOCKED -5
+/* Results for PIN */
+#define UMTS_RESULT_NO_PIN           1
+#define UMTS_RESULT_ERR_NO_SIM       2
+#define UMTS_RESULT_ERR_PIN_MISSING	 3
+#define UMTS_RESULT_ERR_SIM_LOCKED   4
+#define UMTS_RESULT_ERR_INVALID_PIN  5
+#define UMTS_RESULT_ERR_AT_SET       6
 
+/* Results for NI */ 
+#define UMTS_RESULT_LIMITED        2
+#define UMTS_RESULT_FAILED         1
 
 #define UMTS_MAX_FILEDLENGTH      256
 

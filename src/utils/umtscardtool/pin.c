@@ -16,19 +16,22 @@
  */
 
 /*
- * Prft, ob eine PIN eingegeben werden muss und bergibt diese ggf. ber den USB-Port 2 an die UMTS/GPRS Karte.
- * Bei Misserfolg wird ein (negativer) Fehlercode zurckgegeben:
- *  1:  PIN angegeben, musste aber nicht gesetzt werden
+ * Prueft, ob eine PIN eingegeben werden muss und bergibt diese ggf. ber den USB-Port 2 an die UMTS/GPRS Karte.
+ * Bei Misserfolg wird ein (negativer) Fehlercode zurueckgegeben: 
  *  0:  Alles ok
  * -1:  Serieller Port konnte nicht geöffnet werden
  * -2:  Der AT-Befehl zum Prüfen, ob eine PIN eingegeben werden muss, hat einen Fehler erzeugt.
  * -3:  Es muss eine PIN eingegeben werden, es wurde aber keine beim Aufruf übergeben
- * -4:  Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
- * -5:  PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
- * -6:  Unbekannter Fehler (sollte nie auftreten)
- * -7:  Die serielle Schnittstelle ist von einer anderen Applikation gelockt
- * -8:  Watchdog konnte nicht initialisiert werden
- * -9:  Die eingegebene PIN war falsch.
+ * -4:  Unbekannter Fehler	
+ * -5:  Die serielle Schnittstelle ist von einer anderen Applikation gelockt
+ * -6:  Watchdog konnte nicht initialisiert werden
+ *
+ *  1: PIN angegeben, musste aber nicht gesetzt werden
+ *  2: SIM Karte wurde nicht erkannt
+ *  3: Der PIN wird benötigt, wurde aber nicht angegeben
+ *  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+ *  5: Die eingegebene PIN war falsch.
+ *  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
  */
 
 #include <stdio.h>
@@ -114,7 +117,7 @@ int SetPin(void)
 			}
 			else
 				syslog(LOG_ERR, "PIN required but missing"),
-				nResult = UMTS_RESULT_ERR_NO_PIN;
+				nResult = UMTS_RESULT_ERR_PIN_MISSING;
 		}
 		else
 		{
@@ -128,7 +131,7 @@ int SetPin(void)
 				if (strlen(strPin) > 0)
 				{
 					syslog(LOG_NOTICE, "No PIN required");
-					nResult = UMTS_RESULT_NO_AUTH;
+					nResult = UMTS_RESULT_NO_PIN;
 				}
 				else
 					nResult = UMTS_RESULT_OK;
@@ -138,9 +141,17 @@ int SetPin(void)
 	else
 	{
 		if (bError)
-		{
-			syslog(LOG_ERR, "Error during AT command");
-			nResult = UMTS_RESULT_ERR_AT;
+		{			
+			if (strstr(strResult, "SIM not inserted") != NULL)
+			{
+				syslog(LOG_ERR, "SIM not inserted");
+				nResult = UMTS_RESULT_ERR_NO_SIM;
+			}
+			else
+			{
+				syslog(LOG_ERR, "Error during AT command");
+				nResult = UMTS_RESULT_ERR_AT;
+			}
 		}
 		else
 		{

@@ -185,67 +185,68 @@ bool GetOptions(int argc, char* argv [])
 	bool rc = false;
 	int nOpt;
 
-	while ((nOpt = getopt(argc, argv, "oOm:ifp:l:d:s:vh")) != -1)
+	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:s:vh")) != -1)
 	{
 		switch (nOpt)
 		{
-		case 'o' : nCardCommand = GETOP;  rc=true; break;
-		case 'O' : nCardCommand = SETOP;  strOperator[0]=0; rc=true; break;
-		case 'm' : nMode = atoi(optarg); break;
-		case 'i' : nCardCommand = GETNI;  rc=true; break;
-		case 'f' : nCardCommand = GETFS;  rc=true; break;
-		
-		// SIM PIN
-		case 'p' : 
-			nCardCommand = SETPIN;						
-			strcpy(strPin, optarg);
-			rc=true; 
-			break; 
+			case 'o' : nCardCommand = GETOP;  rc=true; break;
+			case 'O' : nCardCommand = SETOP;  strOperator[0]=0; rc=true; break;
+			case 'm' : nMode = atoi(optarg); break;
+			case 'i' : nCardCommand = GETNI;  rc=true; break;
+			case 'f' : nCardCommand = GETFS;  rc=true; break;
+			case 'p' : nCardCommand = SETPIN; strPin[0]=0; rc=true; break;
+				
+			// Custom AT Commands
+			case 's' : 
+				nCardCommand = CUSTOMCMD;
+				strcpy(strATCommand, optarg);			
+				rc=true; 
+				break; 
 
-		// Custom AT Commands
-		case 's' : 
-			nCardCommand = CUSTOMCMD;
-			strcpy(strATCommand, optarg);			
-			rc=true; 
-			break; 
-
-		// Define the log level
-		case 'l' :
-			nLogLevel = atoi(optarg);
-			if ((nLogLevel < 0) || (nLogLevel > 7))
-			{
-				syslog(LOG_ERR, "%s: invalid debug level: %s\n", argv [ 0 ], optarg);
-				fprintf(stderr, "%s: invalid debug level: %s\n", argv [ 0 ], optarg);
-				rc = false;
-			}
-			break;
+			// Define the log level
+			case 'l' :
+				nLogLevel = atoi(optarg);
+				if ((nLogLevel < 0) || (nLogLevel > 7))
+				{
+					syslog(LOG_ERR, "%s: invalid debug level: %s\n", argv [ 0 ], optarg);
+					fprintf(stderr, "%s: invalid debug level: %s\n", argv [ 0 ], optarg);
+					rc = false;
+				}
+				break;
 			
-		// Define the modem device 	
-		case 'd' : 
-			strcpy(CommandDevice, optarg);				   
-			rc=true; 
-			break;	
-				   
-		case 'v' : ShowVersion(); rc=true; break;
+			// Define the modem device 	
+			case 'd' : 
+				strcpy(CommandDevice, optarg);				   
+				rc=true; 
+				break;	
+						 
+			case 'v' : ShowVersion(); rc=true; break;
 
-		case 'h':  break;
+			case 'h':  break;
 		
-		default :  printf("*** Unknown option '%c'\n", nOpt); break;
+			default :  printf("*** Unknown option '%c'\n", nOpt); break;
 		}
 	}
 
 	// Werte aus der Commandline übernehmen
 	switch (nCardCommand)
 	{
-	case SETOP :
-		if (optind < argc)
-			snprintf(strOperator, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
-		else
-			strcpy(strOperator,"");
-		break;
+		case SETOP :
+			if (optind < argc)
+				snprintf(strOperator, UMTS_MAX_FILEDLENGTH, ",\"%s\"", argv [ optind ]);
+			else
+				strcpy(strOperator,"");
+			break;
+	
+		case SETPIN :
+			if (optind < argc)
+				snprintf(strPin, UMTS_MAX_FILEDLENGTH, "%s", argv [ optind ]);
+			else
+				strcpy(strPin, "");
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 
 	if (!rc)
