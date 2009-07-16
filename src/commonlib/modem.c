@@ -23,12 +23,17 @@
 #include <syslog.h>
 #include <errno.h>
 #include <sys/fcntl.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 #include "types.h"
 
 const char* strAT      = "AT";
 const char* strATOK    = "OK\r\n";
 const char* strATERROR = "ERROR";
+
+#define TIMEOUTVAL 120
 
 /* Modem IO */
 
@@ -64,7 +69,7 @@ bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 	{
 		if (strncasecmp(&strResult [ nResultSize - strlen(strATOK)], strATOK, strlen(strATOK)) == 0)
 		{
-			*pOk = true;
+			if (pOk) *pOk = true;
 			bRet = true;
 		}
 		else
@@ -73,7 +78,7 @@ bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 			{
 				if (strstr(strResult, strATERROR))
 				{
-					*pError = true;
+					if (pError) *pError = true;
 					bRet = true;
 				}
 			}
@@ -83,63 +88,76 @@ bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 }
 
 
-// Sends AT command to the modem device
+/** Sends AT command to the modem device
+ *
+ * Messy function to send a Hays style AT command to a connected modem.
+ *
+ */
 bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResult, int nResultSize, bool* pOk, bool* pError)
 {
 	int nRes;
 	bool bRes = false;
 	char strCmd [ nCommandSize+4 ];
+	fd_set readfs;
+	struct timeval tv;
 	int i;
 
+	/* Setup command string in zeroed-out buffer.
+	 * Add AT prefix, if needed.
+	 * Add '\r' at end of command buffer.
+	 * Convert command string to uppercase.
+	 */
 	memset(strCmd, 0, sizeof(strCmd));
-		
-	// Command starts with ... AT				
-	if(strncasecmp(strCommand, strAT, 2) == 0)
-	{		
-		strncpy (strCmd, strCommand, nCommandSize);
-	}
-	else
+	if(strncasecmp(strCommand, strAT, 2) != 0)
 	{
-		strcpy(strCmd, strAT);	
-		strncat(strCmd, strCommand, nCommandSize);
+		strcpy(strCmd, strAT);
 	}
-			
+	strncat(strCmd, strCommand, nCommandSize);
 	strcat(strCmd, "\r");
 	for (i = 0; i < strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
 
-	memset(strResult, 0, nResultSize);
-
+	/* Send AT command */
 	nRes = write(nSerFD, strCmd, strlen(strCmd));
 	syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
-	
-	if (nRes == strlen(strCmd)) 
+	if (nRes == strlen(strCmd))
 	{
-		nRes = 0;
-		while (nRes < strlen(strCmd)) 
-		{
-			i = read(nSerFD, &strResult[nRes], strlen(strCmd) - nRes);
-			if (i>=0)
-			    nRes += i;
-				
-			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
-		}
-		
-		nRes = 0;
-		
-		// TODO: TIMEOUT integrieren
-		while (!ReadHasFinished(strResult, nRes, pOk, pError)) 
-		{
-			i = read(nSerFD, &strResult[nRes], nResultSize -1 -nRes);
-			if (i >= 0) 
-				nRes += i;
-				
-			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
-		}
+		memset(strResult, 0, nResultSize);
 
-		if (*pOk) 
+		/* Read and skip echoed command string */
+		nRes = 0;
+		while (nRes < strlen(strCmd))
 		{
-			bRes = true;
+			FD_SET(nSerFD, &readfs);
+			tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
+			i = select( nSerFD+1, &readfs, NULL, NULL, &tv );
+			if (i<=0)
+				return false;
+			if (i>0 && FD_ISSET(nSerFD, &readfs))
+			{
+				i = read(nSerFD, &strResult[nRes], strlen(strCmd) - nRes);
+				if (i >= 0)
+				    nRes += i;
+			}
+			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
 		}
+		/* Capture additional output */
+		nRes = 0;
+		while (!ReadHasFinished(strResult, nRes, pOk, pError))
+		{
+			FD_SET(nSerFD, &readfs);
+			tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
+			i = select( nSerFD+1, &readfs, NULL, NULL, &tv );
+			if (i<=0)
+				return false;
+			if (i>0 && FD_ISSET(nSerFD, &readfs))
+			{
+				i = read(nSerFD, &strResult[nRes], nResultSize -1 -nRes);
+				if (i >= 0)
+					nRes += i;
+			}
+			syslog(LOG_DEBUG,"modem-rx: %s (%d %d)\n", strResult, nRes, i);
+		}
+		bRes = true;
 	}
 	return bRes;
 }
