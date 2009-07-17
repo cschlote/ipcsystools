@@ -17,17 +17,40 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 # Basis Bibliothek f�r die MCB-2
 . /usr/share/mcbsystools/mcblib.inc
 
+# Read variables from config file
+# Sektion [WATCHDOG-UMTS]
+CHECK_CONNECTION_RESTART=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_restart | cut -d"=" -f2`
+CHECK_CONNECTION_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.3g.check_connection_reboot | cut -d"=" -f2`
+MAX_CONNECTION_LOST=`cat $MCBCTL_CONFIG | grep watchdog.3g.max_connection_lost | cut -d"=" -f2`
+
+# Sektion [WATCHDOG-PING]
+CHECK_PING_ENABLED=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_enabled | cut -d"=" -f2`
+CHECK_PING_IP=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_ip | cut -d"=" -f2`
+CHECK_PING_REBOOT=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_reboot | cut -d"=" -f2`
+CHECK_PING_TIME=`cat $MCBCTL_CONFIG | grep watchdog.ping.check_ping_time | cut -d"=" -f2`
+
+# Lokale Variablen fuer die Ueberwachung Internetverbindung (PPPD)
+CONNECTION_FAULT_FILE=$MCB_STATUSFILE_DIR/connection_fault
+if [ ! -e $CONNECTION_FAULT_FILE ]; then
+  echo 0 > $CONNECTION_FAULT_FILE
+fi
+CONNECTION_FAULT=`cat $CONNECTION_FAULT_FILE`
+
+# Lokale Variablen fuer die Ueberwachung externe Verbindung
+PING_FAULT_FILE=$MCB_STATUSFILE_DIR/connection_ping_fault
+if [ ! -e $PING_FAULT_FILE ]; then
+  echo 0 > $PING_FAULT_FILE
+fi
+PING_FAULT=`cat $PING_FAULT_FILE`
+
+# Zeitpunkt des letzten abgesetzten "ping"
+LAST_PING_FILE=$MCB_STATUSFILE_DIR/last_ping_time
+
 #-------------------------------------------------------------------------------
-# �berpr�ft ob das Skript bereits aktiv ist
+# Checkt, ob das Skript bereits aktiv ist
 function IsSelfRunOnce ()
-{
-  # Anzahl der aktiven Prozesse
-  run_pids=`ps ax | grep checkconnection.sh | grep -v grep -c`
-
-  # Dekrementieren wegen Kindprozess
-  run_pids=$[run_pids-1]
-
-  if ( test $run_pids -eq 1 ) ; then
+{  
+	if [ `ps ax | grep -c $0` -le 2 ] > /dev/null ; then
     return 1
   else
     return 0
@@ -125,7 +148,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
         debuglog "PPP Verbindung ok!"
 
         # Verbindungsstatus f�r das Starten der MCB eintragen
-        echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+				WriteConnectionAvailableFile
 
         # Date f�r die Fehlversuche zur�cksetzen
         echo 0 > $CONNECTION_FAULT_FILE
@@ -136,8 +159,8 @@ if (test $START_UMTS_ENABLED -eq 1); then
 
           # Grenzwert erreicht?
           if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then
-            log "Externe �berwachung fehlgeschlagen (ping)"
-            RebootMCB
+            log "Externe Ueberwachung fehlgeschlagen (ping)"
+	           RebootMCB
             exit 1
           fi
         fi

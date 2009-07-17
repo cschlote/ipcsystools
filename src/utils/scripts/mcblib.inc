@@ -9,16 +9,16 @@
 #
 #**********************************************************************************
 
-# Basisverzeichnis für der UMTS Tools
+# Basisverzeichnis fï¿½r der UMTS Tools
 MCB_TOOLS_DIR=/usr/bin
 
 # Konfigurationsdatei
 MCBCTL_CONFIG=/etc/mcbctl.conf
 
-# Basisverzeichnis für die Statusdateien
+# Basisverzeichnis fï¿½r die Statusdateien
 MCB_STATUSFILE_DIR=/var/run
 
-# Log file für die Verbindung
+# Log file fï¿½r die Verbindung
 CONNECTION_LOG_FILE=/var/log/connection.log
 
 # Globale Variablen fuer die Devices des internen Modems
@@ -40,7 +40,7 @@ connected=6
 # Programm zur Netzidentifizierung
 UMTS_NI="$MCB_TOOLS_DIR/umtscardtool -i"
 
-# Programm für das Messen der Feldstärke UMTS
+# Programm fï¿½r das Messen der Feldstï¿½rke UMTS
 UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
@@ -57,6 +57,14 @@ START_UMTS_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_umts_enabled | cut -
 START_VPN_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_vpn_enabled | cut -d"=" -f2`
 LOG_LEVEL=`cat $MCBCTL_CONFIG | grep general.log_level | cut -d"=" -f2`
 CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep general.check_connection_enabled | cut -d"=" -f2`
+
+#-------------------------------------------------------------------------------
+# Speichert den Zeitpunkt wann die Verbindung das letzte Mal verfï¿½gbar war	
+CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
+if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
+	# Letzte Verfï¿½gbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
+	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+fi
 
 #-------------------------------------------------------------------------------
 #
@@ -92,10 +100,8 @@ function RebootMCB ()
 {
   log "MCB wird neu gestartet."
 
-  # Reboot ausführen
+  # Reboot ausfï¿½hren
   /sbin/reboot
-
-  sleep 5
 }
 #-------------------------------------------------------------------------------
 function RefreshModemDevices ()
@@ -106,12 +112,8 @@ function RefreshModemDevices ()
 #-------------------------------------------------------------------------------
 function WriteConnectionAvailableFile ()
 {
-	# Speichert den Zeitpunkt wann die Verbindung das letzte Mal verfügbar war
-	CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
-	if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
-		# Letzte Verfügbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
-		echo `date +%s` > $CONNECTION_AVAILABLE_FILE
-	fi
+	# Letzte Verfï¿½gbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
+	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 }
 #-------------------------------------------------------------------------------
 # Write the radio access technology (RAT) mode to a file
@@ -140,11 +142,11 @@ function WriteConnectionNetworkModeFile ()
 # Write the UMTS Field strength to a file and update the LEDBAR
 function WriteConnectionFieldStrengthFile ()
 {
-	# Feldstärke auf der MCB aktualisieren
+	# Feldstï¿½rke auf der MCB aktualisieren
   $UMTS_FS
   field_strength=$?
 
-	# Feldstärke Datei aktualisieren
+	# Feldstï¿½rke Datei aktualisieren
 	echo $field_strength > /var/run/connection_fs
 
 	# LED's aktualisieren
@@ -184,8 +186,8 @@ function SetSIMPIN ()
 
 	#  1: PIN angegeben, musste aber nicht gesetzt werden
 	#  2: SIM Karte wurde nicht erkannt
-	#  3: Der PIN wird benötigt, wurde aber nicht angegeben
-	#  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+	#  3: Der PIN wird benï¿½tigt, wurde aber nicht angegeben
+	#  4: PUK oder SuperPIN benï¿½tigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
 	#  5: Die eingegebene PIN war falsch.
 	#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
 	case $pin_state in
