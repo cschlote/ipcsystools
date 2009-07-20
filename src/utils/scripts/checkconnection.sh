@@ -120,6 +120,8 @@ WriteConnectionNetworkModeFile
 # Autom. Start UMTS aktiviert?
 if (test $START_UMTS_ENABLED -eq 1); then
 
+	CheckOpenVPNPeer
+
   # Option f�r die Pr�fung aktiviert?
   if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
 

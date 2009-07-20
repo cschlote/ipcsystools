@@ -237,3 +237,14 @@ function InitializeModem ()
 	fi
 }
 #-------------------------------------------------------------------------------
+function CheckOpenVPNPeer ()
+{
+	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
+	if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
+		#echo `date` "  ;Externer Rechner ($openvpnIP) wurde erreicht"
+		/usr/share/mcbsystools/leds.sh vpn on
+	else
+		/usr/share/mcbsystools/leds.sh vpn off
+	fi	
+}
+#-------------------------------------------------------------------------------
