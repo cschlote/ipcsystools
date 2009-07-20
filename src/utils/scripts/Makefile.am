@@ -6,7 +6,7 @@ bin_SCRIPTS = \
 DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	checkconnection.sh \	
+	checkconnection.sh \
 	mcblib.inc \
 	options.umts \
 	ppp-umts.chat \
