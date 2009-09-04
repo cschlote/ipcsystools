@@ -90,12 +90,12 @@ led_gsmfs()
       fsnorm=7;;
     26|27|28|29|30|31)
       fsnorm=8;;
-    99)
+    *)
       fsnorm=0;;
   esac  
 
   # GSM-FS Led on
-  if [ $1 -eq 99 ]; then
+  if [ $1 -gt 32 ]; then
     led_timer gsm-fs 1000 2000
   else 		
 		test -e $delay_on && led_off gsm-fs

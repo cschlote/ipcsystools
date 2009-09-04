@@ -21,7 +21,7 @@
  * Ist die Kennung dagegen "Limited Service", so wird 2 zurückgegeben.
  * In allen anderen Fällen wird 0 zurückgegeben.
  *
- * Bei Misserfolg wird ein Fehlercode zurckgegeben (siehe umtscardtool.h)
+ * Bei Misserfolg wird ein Fehlercode zurueckgegeben (siehe umtscardtool.h)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -101,9 +101,9 @@ int GetNetInfo(void)
 	{
 		WriteResultFile((unsigned char*)strResult);
 
-		/* Must not be emtpy and must not be '0' */
+		/* Must not be emtpy and must be have char ',' */
 		if ((strlen(strResult) > 0) &&
-		    (strcmp(strResult, "0") != 0) )
+				(strstr(strResult, ",") != NULL))
 		{
 			/* Must not contain "Limited Service" */
 			if (strstr(strResult, "Limited Service") == NULL)
