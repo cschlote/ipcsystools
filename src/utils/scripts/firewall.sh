@@ -1,15 +1,20 @@
 #! /bin/bash
 
-# Variablen definieren    
-	IF_EXT=`route | grep ^default | awk '{print $8}'`
-	if (test "$IF_EXT" == ""); then 
-	  IF_EXT=ppp0
-	fi
+# Get default route interface
+IF_EXT=`route | grep ^default | awk '{print $8}'`
+if (test "$IF_EXT" == ""); then 
+  IF_EXT=ppp0
+fi
+
+# Definition file for the iptables rules
+FW_RULES_FILE=`grep 'save_file=' /etc/webmin/firewall/config | cut -d"=" -f2`
 
 case "$1" in
 
   start)
-    # Module laden
+		echo "Starting firewall..."
+
+    # Load iptables modules
     FOUND="no"
     for LINE in `lsmod | grep ip_`
     do
@@ -20,7 +25,7 @@ case "$1" in
 	    fi
     done
     if [ "$FOUND" = "no" ]; then
-      # Module f�r die ip_tables
+      # Module fuer die ip_tables
       modprobe ip_tables
       modprobe ip_conntrack
       modprobe iptable_nat
@@ -37,41 +42,45 @@ case "$1" in
       modprobe ipt_ah
       modprobe ipt_esp
       modprobe ipt_tos
-
     fi
 
-    # IP-Forward aktivieren
+    # Activate IP-Forward
     echo "1" > /proc/sys/net/ipv4/ip_forward    
 
-    # Regeln f�r die IP-Tables l�schen
-    iptables -F && iptables -X && iptables -t nat -F && iptables -t nat -X
+    # Flush all existing rules
+    iptables -F && iptables -X && iptables -t nat -F && iptables -t nat -X    
 
-    # Gesamten NetBios traffic �ber die PPP Schnittstelle blockieren
-    iptables -A FORWARD -p tcp --sport 137:139 -o $IF_EXT -j DROP
-    iptables -A FORWARD -p udp --sport 137:139 -o $IF_EXT -j DROP
-    iptables -A OUTPUT -p tcp --sport 137:139 -o $IF_EXT -j DROP
-    iptables -A OUTPUT -p udp --sport 137:139 -o $IF_EXT -j DROP
+		# Loading iptables settings 
+		/usr/sbin/iptables-restore < $FW_RULES_FILE 2>&1
+		
+		# Maskarading
+		if ! egrep $IF_EXT'.*MASQUERADE' $FW_RULES_FILE; then
+			iptables -t nat -A POSTROUTING -o $IF_EXT -j MASQUERADE
+		fi
 
-    # Maskarading
-    iptables -t nat -A POSTROUTING -o $IF_EXT -j MASQUERADE
-    ;;
+  ;;
 
   stop)
     echo "Stopping firewall..."
 
-    # Regeln f�r die IP-Tables l�schen
+    # Delete all existing rules 
     iptables -F
     iptables -t nat -F
   	iptables -X
   	iptables -P INPUT ACCEPT
   	iptables -P OUTPUT ACCEPT
   	iptables -P FORWARD ACCEPT
-    ;;
+  ;;
+
+	restart)
+		$0 stop
+		sleep 1
+		$0 start
+	;;
 
   *)
-    echo "Usage: $0 {start|stop}"
+    echo "Usage: $0 {start|stop|restart}"
     exit 1
     ;;
 esac
-
 

@@ -130,7 +130,7 @@ function WriteConnectionNetworkModeFile ()
 	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
 	
 	# *CNTI: +CME ERROR: no network service
-	local err=`expr index "$cnti" "ERROR"`
+	local err=`expr match "$cnti" ".*\ERROR"`
 	if [ $err -eq 0 ]; then
 		connectionmode=`echo $cnti | awk -F"," '{print $2}'`	
 	else
@@ -238,13 +238,14 @@ function InitializeModem ()
 }
 #-------------------------------------------------------------------------------
 function CheckOpenVPNPeer ()
-{
-	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
-	if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
-		#echo `date` "  ;Externer Rechner ($openvpnIP) wurde erreicht"
-		/usr/share/mcbsystools/leds.sh vpn on
-	else
-		/usr/share/mcbsystools/leds.sh vpn off
-	fi	
+{	
+	if [ -e /etc/openvpn/client.conf ] ; then
+		openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
+		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
+			/usr/share/mcbsystools/leds.sh vpn on
+		else
+			/usr/share/mcbsystools/leds.sh vpn off
+		fi
+	fi
 }
 #-------------------------------------------------------------------------------
