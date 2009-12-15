@@ -1,25 +1,26 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(mcbsystools, 1.0)
+AC_INIT([mcbsystools],[1.0])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_PREFIX_DEFAULT(/usr)
 
-AC_LANG_C
+AC_LANG([C])
 AC_PROG_CC
+AC_PROG_LIBTOOL
 
-AC_ISC_POSIX
+AC_SEARCH_LIBS([strerror],[cposix])
 AC_PROG_CC
 AC_HEADER_STDC
 
 AC_PROG_CPP
 
-AM_PROG_LIBTOOL
+LT_INIT
 
-AC_OUTPUT([
+AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/commonlib/Makefile
@@ -28,4 +29,5 @@ src/utils/scripts/Makefile
 src/utils/umtscardtool/Makefile
 src/etc/Makefile
 ])
+AC_OUTPUT
 

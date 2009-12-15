@@ -1,10 +1,12 @@
 
 ## Process this file with automake to produce Makefile.in
 
-INCLUDES = \
-  -I$(top_srcdir)/src/include $(all_includes)
-
-AM_CPPFLAGS = -DPKGLIBDIR=\"$(pkglibdir)/\" -DPKGDATADIR=\"$(pkgdatadir)/\" -DPKGBLDDATE=\"`date +%F-%R`\" -DPKGBLDREV=\"$(strip $(shell svnversion))\" @CPPFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir)/src/include $(all_includes) \
+   -DPKGLIBDIR=\"$(pkglibdir)/\" \
+   -DPKGDATADIR=\"$(pkgdatadir)/\" \
+   -DPKGBLDDATE=\"`date +%F-%R`\" \
+   -DPKGBLDREV=\"$(strip $(shell svnversion))\" \
+   @CPPFLAGS@ 
 AM_CFLAGS = -Wall -Werror
 AM_CXXFLAGS = -Wall -Werror
 AM_LDFLAGS = -L$(top_srcdir)/src/commonlib

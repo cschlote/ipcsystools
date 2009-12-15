@@ -1,5 +1,0 @@
-aclocal \
-&& libtoolize \
-&& autoheader \
-&& automake --gnu --add-missing \
-&& autoconf
