@@ -4,7 +4,7 @@ aclocal $ACLOCAL_FLAGS
 
 libtoolize --force --copy
 
-autoreconf \
+autoconf \
 	--force \
 	--install \
 	--warnings=cross \
