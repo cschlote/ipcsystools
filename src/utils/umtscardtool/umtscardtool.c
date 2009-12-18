@@ -64,8 +64,8 @@ char strPin [ UMTS_MAX_FILEDLENGTH ];
 
 char strATCommand [ UMTS_MAX_FILEDLENGTH ];
 
-int nLogLevel = LOG_DEBUG;
-//int nLogLevel = LOG_WARNING;
+// Default LogLevel for syslogd
+int nLogLevel = LOG_WARNING;
 
 
 /**-----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ int ExecuteCardCommand(void)
 {
 	int rc = UMTS_RESULT_OK;
 
-	syslog(LOG_INFO, "Execute cardcommand %d", nCardCommand);
+	syslog(LOG_NOTICE, "Execute AT-Command <%s>", strATCommand);
 
 	switch(nCardCommand)
 	{
@@ -325,7 +325,7 @@ int main(int argc, char* argv [])
 	else
 		rc = -1;
 
-	syslog(rc<0?LOG_INFO:LOG_ERR, UMTS_APPNAME " command %d ended (%d)", nCardCommand, rc);
+	syslog(rc<0?LOG_ERR:LOG_INFO, UMTS_APPNAME " command %d ended (%d)", nCardCommand, rc);
 	closelog();
 
 	return rc;

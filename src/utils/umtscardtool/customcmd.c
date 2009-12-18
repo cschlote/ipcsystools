@@ -1,6 +1,6 @@
 /*******************************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright © 2004-2009
  *
  * konzeptpark GmbH
  * Georg-Ohm-Straße 2
@@ -28,7 +28,9 @@
 // Indivisuellen AT Befehl an das Modem senden
 int SendCustomCommand(const char* strCommand)
 {
-	char strResult [ MODEM_IOBUFFSIZE ];	
+	// Need a large buffer for AT-Command AT+COPN	
+	// Size: 4096 * 8 => 32K
+	char strResult [ MODEM_IOBUFFSIZE * 8 ];
 	bool bError = false;
 	bool bOk = false;
 	int nResult = UMTS_RESULT_ERR_UNKNOWN;
@@ -39,7 +41,7 @@ int SendCustomCommand(const char* strCommand)
 	SendAT(nSerFD, strCommand, strlen(strCommand), strResult, sizeof(strResult), &bOk, &bError);	
 		
 	// Write to stdout
-	write(STDOUT_FILENO, strResult, sizeof(strResult));
+	write(STDOUT_FILENO, strResult, strlen(strResult));
 	
 	if (bOk)
 	{
