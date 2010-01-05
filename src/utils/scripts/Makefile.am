@@ -12,6 +12,5 @@ nobase_dist_pkgdata_DATA = \
 	ppp-umts.chat \
 	umts-connection.sh \
 	mcb-initsystem.sh \
-	firewall.sh \
 	leds.sh
 
