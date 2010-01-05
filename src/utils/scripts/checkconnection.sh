@@ -111,11 +111,8 @@ function IsUMST_Connection_Script_Run ()
 # Skript muss exklusiv laufen
 # IsSelfRunOnce integrieren??!!
 
-# Feldstaerke auf der MCB aktualisieren	
-WriteConnectionFieldStrengthFile
-
-# Write Network Mode
-WriteConnectionNetworkModeFile
+# Statusdateien für die GSM Verbindung aktualisieren
+WriteGSMConnectionInfoFiles
 
 # Autom. Start UMTS aktiviert?
 if (test $START_UMTS_ENABLED -eq 1); then

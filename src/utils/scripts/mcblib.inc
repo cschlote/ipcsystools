@@ -22,9 +22,13 @@ MCB_STATUSFILE_DIR=/var/run
 CONNECTION_LOG_FILE=/var/log/connection.log
 
 # Globale Variablen fuer die Devices des internen Modems
-COMMAND_DEVICE_FILE=/var/run/command_dev
-CONNECTION_DEVICE_FILE=/var/run/connection_dev
-MODEM_STATUS_FILE=/var/run/modem_status
+COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
+CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
+MODEM_STATUS_FILE=$MCB_STATUSFILE_DIR/modem_status
+CONNECTION_MODE_FILE=$MCB_STATUSFILE_DIR/connection_mode
+CONNECTION_FS_FILE=$MCB_STATUSFILE_DIR/connection_fs
+CONNECTION_GSMINFO_FILE=$MCB_STATUSFILE_DIR/connection_gsminfo
+VPN_STATE_FILE=$MCB_STATUSFILE_DIR/vpn_status
 
 # Status for the modem
 MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected )
@@ -120,7 +124,7 @@ function WriteConnectionAvailableFile ()
 function WriteConnectionRATModeFile ()
 {
 	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
-	echo $connectionmode > /var/run/connection_mode
+	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 #-------------------------------------------------------------------------------
 # Write the current network mode to a file
@@ -136,7 +140,7 @@ function WriteConnectionNetworkModeFile ()
 	else
 		connectionmode=`echo $cnti | awk -F":" '{print $3}'`		
 	fi
-	echo $connectionmode > /var/run/connection_mode
+	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 #-------------------------------------------------------------------------------
 # Write the UMTS Field strength to a file and update the LEDBAR
@@ -147,7 +151,7 @@ function WriteConnectionFieldStrengthFile ()
   field_strength=$?
 
 	# Feldst�rke Datei aktualisieren
-	echo $field_strength > /var/run/connection_fs
+	echo $field_strength > $CONNECTION_FS_FILE
 
 	# LED's aktualisieren
   /usr/share/mcbsystools/leds.sh gsmfs $field_strength
@@ -157,6 +161,29 @@ function WriteToModemStatusFile ()
 {
 	MODEM_STATUS=$1
 	echo $MODEM_STATUS > $MODEM_STATUS_FILE
+}
+#-------------------------------------------------------------------------------
+function WriteGSMCellInfoFile ()
+{
+	# Mobile Network Code schreiben	
+	local gsminfo=`$MCB_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
+	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
+
+	# Roaming schreiben
+	local roaming=`$MCB_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
+	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
+}
+#-------------------------------------------------------------------------------
+function WriteGSMConnectionInfoFiles ()
+{
+	# Update field strength
+	WriteConnectionFieldStrengthFile
+
+	# Write Network Mode
+	WriteConnectionNetworkModeFile
+
+	# Write GSM Information
+	WriteGSMCellInfoFile
 }
 #-------------------------------------------------------------------------------
 # Detect the Modemcard and write the device
@@ -209,6 +236,7 @@ function CheckNIState ()
 	local ni=$?
 	if [ $ni -eq 0 ]; then
 		WriteToModemStatusFile ${MODEM_STATES[registeredID]}
+		WriteGSMConnectionInfoFiles
 	fi
   return $ni
 }
@@ -223,14 +251,29 @@ function SetConnectionRAT ()
 {	
 	ratcode=`cat $MCBCTL_CONFIG | grep modem.connectionmode | cut -d"=" -f2`
 	RefreshModemDevices
-	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode	
+	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
+}
+#-------------------------------------------------------------------------------
+# Sets roaming option
+function SetSIMRoaming ()
+{	
+	local roaming=`grep "sim.roaming" $MCBCTL_CONFIG | cut -d"=" -f2`
+	case $roaming in
+		0|1)
+			$MCB_TOOLS_DIR/umtscardtool -s AT^SYSCONFIG=16,3,$roaming,4 >& /dev/null 
+		;;
+		*)	
+			log "Error: Setting roaming option"
+		;;
+		esac	
 }
 #-------------------------------------------------------------------------------
 function InitializeModem ()
 {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
-		SetConnectionRAT		
+		SetConnectionRAT
+		SetSIMRoaming
 		SetSIMPIN
 		sleep 1
 		WriteConnectionFieldStrengthFile
@@ -243,8 +286,10 @@ function CheckOpenVPNPeer ()
 		openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
 			/usr/share/mcbsystools/leds.sh vpn on
+			echo "up" > $VPN_STATE_FILE
 		else
 			/usr/share/mcbsystools/leds.sh vpn off
+			echo "down" > $VPN_STATE_FILE
 		fi
 	fi
 }
