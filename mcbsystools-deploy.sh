@@ -4,12 +4,12 @@ set -xe
 
 # Enviroment parameter
 MAJORVERSION="mcbsystools-2010.01"
-MINORVERSION="dev"
+MINORVERSION="0"
 TARBALL_NAME="$MAJORVERSION.$MINORVERSION.tar.gz"
 RSYNC_DEPLOY="root@kplanas01:/home/ftp/mcb-2/mcbsystools/"
 
 # Subversion parameter
-PROJECT_URL="http://kplanas01/svn/mcbsystools/trunk"
+PROJECT_URL="http://kplanas01/svn/mcbsystools/branches/prod-v2010.01.x"
 SVN=/usr/bin/svn
 
 # PATH parameter
