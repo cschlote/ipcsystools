@@ -3,6 +3,7 @@
 ####################################
 noipdefault
 defaultroute
+replacedefaultroute
 noauth
 crtscts
 lock
