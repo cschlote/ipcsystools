@@ -254,26 +254,11 @@ function SetConnectionRAT ()
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
 #-------------------------------------------------------------------------------
-# Sets roaming option
-function SetSIMRoaming ()
-{	
-	local roaming=`grep "sim.roaming" $MCBCTL_CONFIG | cut -d"=" -f2`
-	case $roaming in
-		0|1)
-			$MCB_TOOLS_DIR/umtscardtool -s AT^SYSCONFIG=16,3,$roaming,4 >& /dev/null 
-		;;
-		*)	
-			log "Error: Setting roaming option"
-		;;
-		esac	
-}
-#-------------------------------------------------------------------------------
 function InitializeModem ()
 {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
 		SetConnectionRAT
-		SetSIMRoaming
 		SetSIMPIN
 		sleep 1
 		WriteConnectionFieldStrengthFile
