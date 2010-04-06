@@ -18,9 +18,6 @@ MCBCTL_CONFIG=/etc/mcbctl.conf
 # Basisverzeichnis f�r die Statusdateien
 MCB_STATUSFILE_DIR=/var/run
 
-# Log file f�r die Verbindung
-CONNECTION_LOG_FILE=/var/log/connection.log
-
 # Globale Variablen fuer die Devices des internen Modems
 COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
 CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
@@ -50,7 +47,7 @@ UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
 # Programm zur Pin-Eingabe
 UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
 
-#TODO Programm zum Setzen des Operators
+#TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
 
 
 #-------------------------------------------------------------------------------
@@ -77,33 +74,24 @@ fi
 
 #-------------------------------------------------------------------------------
 # Log Funktion
-function log ()
+# void syslogger (char *logtype, char *msg)
+function syslogger ()
 {
-  if ( test $LOG_LEVEL -ge 1 ); then
+	DESC="mcb-monitor"
 
-    if ( test $LOG_LEVEL -eq 2 ); then
-      logger -p local0.info -t checkconnection $@
-    fi
-
-    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
-  fi
+	# LogLevel 1
+	if ( test "$1" != "debug" ); then
+		logger -p local0.$1 -t $DESC $2
+	else
+		# LogLevel 2 (Debugging)
+		if ( test $LOG_LEVEL -gt 1 ); then
+			logger -p local0.$1 -t $DESC $2	
+		fi
+	fi
 }
-
-#-------------------------------------------------------------------------------
-# Debug Funktion
-function debuglog ()
-{
-  if ( test $LOG_LEVEL -eq 2 ); then
-    logger -p local0.debug -t checkconnection $@
-    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
-  fi
-}
-
 #-------------------------------------------------------------------------------
 function RebootMCB ()
-{
-  log "MCB wird neu gestartet."
-
+{  
   # Reboot ausf�hren
   /sbin/reboot
 }
@@ -191,7 +179,6 @@ function DetectModemCard ()
 {
 	# Sierra Wireless Modems
 	if lsusb -d 1199: > /dev/null; then
-		debuglog "Sierra Wireless Modem wurden von dem System erkannt"
 		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
 		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
 
@@ -254,26 +241,11 @@ function SetConnectionRAT ()
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
 #-------------------------------------------------------------------------------
-# Sets roaming option
-function SetSIMRoaming ()
-{	
-	local roaming=`grep "sim.roaming" $MCBCTL_CONFIG | cut -d"=" -f2`
-	case $roaming in
-		0|1)
-			$MCB_TOOLS_DIR/umtscardtool -s AT^SYSCONFIG=16,3,$roaming,4 >& /dev/null 
-		;;
-		*)	
-			log "Error: Setting roaming option"
-		;;
-		esac	
-}
-#-------------------------------------------------------------------------------
 function InitializeModem ()
 {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
 		SetConnectionRAT
-		SetSIMRoaming
 		SetSIMPIN
 		sleep 1
 		WriteConnectionFieldStrengthFile
@@ -294,3 +266,4 @@ function CheckOpenVPNPeer ()
 	fi
 }
 #-------------------------------------------------------------------------------
+

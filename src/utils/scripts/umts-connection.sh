@@ -34,7 +34,8 @@ function IsPPPDAlive ()
 # PPPD fuer UMTS starten
 function StartPPPD ()
 {
-  log "PPPD starten..."
+	syslogger "info" "UMTS-Conn - Starting pppd..."
+
   # Device des Modems aktualisieren
   RefreshModemDevices
   local device=$CONNECTION_DEVICE
@@ -46,7 +47,7 @@ function StopPPPD ()
 {
   local pids=`pidof pppd`
 
-  log "PPPD beenden..."
+	syslogger "info" "UMTS-Conn - Stopping pppd..."
 
   # Kein PPPD aktiv
   if test -z "$pids"; then
@@ -76,8 +77,8 @@ function WaitForPPP0Device ()
   while [ true ] ; do
 
     # ppp0 device pruefen        
-    if (systool -c net | grep ppp0 > /dev/null); then    
-      log "device ppp0 verfuegbar"
+    if (systool -c net | grep ppp0 > /dev/null); then
+			syslogger "info" "UMTS-Conn - ppp0 available"
 
     	# Nach dem UMTS Startskript Zeit aktualisieren
     	WriteConnectionAvailableFile
@@ -91,7 +92,7 @@ function WaitForPPP0Device ()
       break
     fi
 
-    debuglog "Warte auf device ppp0..."
+		syslogger "debug" "UMTS-Conn - Waiting ppp0 coming up"		
 
     sleep $sleeptime
 
@@ -122,8 +123,6 @@ function WaitForDataCard ()
 	CheckNIState
   local ni_state=$?
 
-  debuglog "ni_state in WaitForDataCard: " $ni_state;
-
   # Karte auf Verbindung (eingebucht) pruefen
   while [ $ni_state -ne 0 ]; do
 
@@ -143,10 +142,11 @@ function WaitForDataCard ()
     # Ist die Karte eingebucht?
 		CheckNIState
     ni_state=$?
-
+    
     count_timeout=$[count_timeout+1]
 
-    debuglog "Warte bis Datenkarte eingebucht: " $count_timeout " ni_state: " $ni_state
+		syslogger "debug" "UMTS-Conn - Waiting for UMTS network registration ($count_timeout/$ni_state)"
+		
   done
 
   if [ $reached_timeout -eq 1 ]; then
@@ -208,14 +208,14 @@ case "$1" in
 			    fi
 			  fi
 			else
-			  log "Datenkarte konnte nicht initialisiert werden (timeout)"
+				syslogger "warn" "UMTS-Conn - Could not initialize datacard (timeout)"
 
 			  # 3g LED ausschalten
 			  /usr/share/mcbsystools/leds.sh 3g off
 
 			  # Haben wir wirklich keine Verbindung oder liegt ein Fehler im Netz vor
 			  $UMTS_FS
-			  debuglog "Pruefung der Feldstuerke: (timeout) " $?
+				syslogger "info" "UMTS-Conn - Fieldstrength $?"			  
 			fi		  
 		fi
 
@@ -241,5 +241,4 @@ case "$1" in
 
 # case
 esac
-
 
