@@ -90,10 +90,28 @@ function syslogger ()
 	fi
 }
 #-------------------------------------------------------------------------------
+# Reboot the system
 function RebootMCB ()
 {  
-  # Reboot ausf�hren
-  /sbin/reboot
+	/sbin/reboot
+}
+#-------------------------------------------------------------------------------
+# Validate an IP Address
+# void valid_ip (char *ipaddress)
+function valid_ip ()
+{
+	local  ip=$1
+	local  stat=1
+
+	 if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+		 OIFS=$IFS
+		 IFS='.'
+		 ip=($ip)
+		 IFS=$OIFS
+		 [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+		 stat=$?
+	 fi
+	 return $stat
 }
 #-------------------------------------------------------------------------------
 function RefreshModemDevices ()
@@ -254,16 +272,43 @@ function InitializeModem ()
 #-------------------------------------------------------------------------------
 function CheckOpenVPNPeer ()
 {	
-	if [ -e /etc/openvpn/client.conf ] ; then
-		openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
+	local tunnelstate="down"
+	local checkmode=`grep 'ovpn.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2`
+
+	case "$checkmode" in
+		"ifconfig"|"")
+		  #echo "get ip address from client.conf"
+			if [ -e /etc/openvpn/client.conf ]; then
+		  	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
+			fi
+		  ;;
+		"watchdog")
+		  #echo "get ip address from watchdog settings"
+		  openvpnIP=`grep 'watchdog.ping.check_ping_ip' /etc/mcbctl.conf | cut -d"=" -f2`
+		  ;;
+		*)
+		  #echo "validate ip address"
+		  openvpnIP=$checkmode
+		  ;;
+	esac
+
+	# Ping the peer address
+	if (valid_ip $openvpnIP); then
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
 			/usr/share/mcbsystools/leds.sh vpn on
-			echo "up" > $VPN_STATE_FILE
+			tunnelstate="up"
 		else
 			/usr/share/mcbsystools/leds.sh vpn off
-			echo "down" > $VPN_STATE_FILE
+			tunnelstate="down"
 		fi
+	else 
+		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
+		tunnelstate="down"
 	fi
+
+	# Set Tunnel state
+	echo $tunnelstate > $VPN_STATE_FILE
+	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
 }
 #-------------------------------------------------------------------------------
 
