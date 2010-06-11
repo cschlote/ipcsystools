@@ -1,2 +1,5 @@
 *~
-*Makefile.in
+Makefile.in
+Makefile
+autom4te.cache
+.deps
