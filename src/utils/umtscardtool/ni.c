@@ -71,7 +71,7 @@ static bool WriteStatusFile(const unsigned char* strStatus)
 	{
 		syslog(LOG_DEBUG, "Setting new provider '%s' in file %s", strStatus, UMTS_NI_PROVIDER_FILE);
 
-		fprintf(pFile, (char*)strStatus);
+		fprintf(pFile, "%s", (char*)strStatus);
 		fclose(pFile);
 
 		bRet = true;

@@ -126,13 +126,13 @@ OpenIniFile(cchr * FileName)
 		{
 			*pStr = 0;
 		}			/* Cut all comments */
-		if ((strstr(Str, "[") > 0) && (strstr(Str, "]") > 0))	/* Is Section */
+		if ( strstr(Str, "[") && strstr(Str, "]"))   /* Is Section */
 		{
 			pEntry->Type = tpSECTION;
 		}
 		else
 		{
-			if (strstr(Str, "=") > 0)
+			if (strstr(Str, "="))
 			{
 				pEntry->Type = tpKEYVALUE;
 			}
@@ -617,6 +617,8 @@ AddItem(IniFileHandle_p handle, char Type, cchr * Text)
 bool
 AddItemAt(IniFileHandle_p handle, struct ENTRY * EntryAt, char Mode, cchr * Text)
 {
+	handle = NULL; // unused
+	
 	struct ENTRY *pNewEntry;
 	if (EntryAt == NULL)
 	{
