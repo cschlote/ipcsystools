@@ -18,6 +18,9 @@ MCBCTL_CONFIG=/etc/mcbctl.conf
 # Basisverzeichnis f�r die Statusdateien
 MCB_STATUSFILE_DIR=/var/run
 
+# Log file f�r die Verbindung
+CONNECTION_LOG_FILE=/var/log/connection.log
+
 # Globale Variablen fuer die Devices des internen Modems
 COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
 CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
@@ -47,7 +50,7 @@ UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
 # Programm zur Pin-Eingabe
 UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
 
-#TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
+#TODO Programm zum Setzen des Operators
 
 
 #-------------------------------------------------------------------------------
@@ -74,44 +77,35 @@ fi
 
 #-------------------------------------------------------------------------------
 # Log Funktion
-# void syslogger (char *logtype, char *msg)
-function syslogger ()
+function log ()
 {
-	DESC="mcb-monitor"
+  if ( test $LOG_LEVEL -ge 1 ); then
 
-	# LogLevel 1
-	if ( test "$1" != "debug" ); then
-		logger -p local0.$1 -t $DESC $2
-	else
-		# LogLevel 2 (Debugging)
-		if ( test $LOG_LEVEL -gt 1 ); then
-			logger -p local0.$1 -t $DESC $2	
-		fi
-	fi
+    if ( test $LOG_LEVEL -eq 2 ); then
+      logger -p local0.info -t checkconnection $@
+    fi
+
+    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
+  fi
 }
+
 #-------------------------------------------------------------------------------
-# Reboot the system
+# Debug Funktion
+function debuglog ()
+{
+  if ( test $LOG_LEVEL -eq 2 ); then
+    logger -p local0.debug -t checkconnection $@
+    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
+  fi
+}
+
+#-------------------------------------------------------------------------------
 function RebootMCB ()
-{  
-	/sbin/reboot
-}
-#-------------------------------------------------------------------------------
-# Validate an IP Address
-# void valid_ip (char *ipaddress)
-function valid_ip ()
 {
-	local  ip=$1
-	local  stat=1
+  log "MCB wird neu gestartet."
 
-	 if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-		 OIFS=$IFS
-		 IFS='.'
-		 ip=($ip)
-		 IFS=$OIFS
-		 [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-		 stat=$?
-	 fi
-	 return $stat
+  # Reboot ausf�hren
+  /sbin/reboot
 }
 #-------------------------------------------------------------------------------
 function RefreshModemDevices ()
@@ -197,6 +191,7 @@ function DetectModemCard ()
 {
 	# Sierra Wireless Modems
 	if lsusb -d 1199: > /dev/null; then
+		debuglog "Sierra Wireless Modem wurden von dem System erkannt"
 		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
 		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
 
@@ -259,11 +254,26 @@ function SetConnectionRAT ()
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
 #-------------------------------------------------------------------------------
+# Sets roaming option
+function SetSIMRoaming ()
+{	
+	local roaming=`grep "sim.roaming" $MCBCTL_CONFIG | cut -d"=" -f2`
+	case $roaming in
+		0|1)
+			$MCB_TOOLS_DIR/umtscardtool -s AT^SYSCONFIG=16,3,$roaming,4 >& /dev/null 
+		;;
+		*)	
+			log "Error: Setting roaming option"
+		;;
+		esac	
+}
+#-------------------------------------------------------------------------------
 function InitializeModem ()
 {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
 		SetConnectionRAT
+		SetSIMRoaming
 		SetSIMPIN
 		sleep 1
 		WriteConnectionFieldStrengthFile
@@ -272,43 +282,15 @@ function InitializeModem ()
 #-------------------------------------------------------------------------------
 function CheckOpenVPNPeer ()
 {	
-	local tunnelstate="down"
-	local checkmode=`grep 'ovpn.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2`
-
-	case "$checkmode" in
-		"ifconfig"|"")
-		  #echo "get ip address from client.conf"
-			if [ -e /etc/openvpn/client.conf ]; then
-		  	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
-			fi
-		  ;;
-		"watchdog")
-		  #echo "get ip address from watchdog settings"
-		  openvpnIP=`grep 'watchdog.ping.check_ping_ip' /etc/mcbctl.conf | cut -d"=" -f2`
-		  ;;
-		*)
-		  #echo "validate ip address"
-		  openvpnIP=$checkmode
-		  ;;
-	esac
-
-	# Ping the peer address
-	if (valid_ip $openvpnIP); then
+	if [ -e /etc/openvpn/client.conf ] ; then
+		openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
 			/usr/share/mcbsystools/leds.sh vpn on
-			tunnelstate="up"
+			echo "up" > $VPN_STATE_FILE
 		else
 			/usr/share/mcbsystools/leds.sh vpn off
-			tunnelstate="down"
+			echo "down" > $VPN_STATE_FILE
 		fi
-	else 
-		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
-		tunnelstate="down"
 	fi
-
-	# Set Tunnel state
-	echo $tunnelstate > $VPN_STATE_FILE
-	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
 }
 #-------------------------------------------------------------------------------
-
