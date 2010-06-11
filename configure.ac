@@ -3,7 +3,7 @@ AC_PREREQ(2.64)
 esyscmd([echo "define(myversion, $(dir=$(basename $(pwd)); if test \"${dir%%-trunk}\" != \"$dir\"; then echo 99999999-9; else prefix=${dir%%-[0-9]*-[0-9]}; echo ${dir##$prefix-}; fi))"])
 
 AC_INIT([mcbsystools],[myversion],[bugs@konzeptpark.de])
-#AC_CONFIG_SRCDIR([src])
+AC_CONFIG_SRCDIR([src])
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 

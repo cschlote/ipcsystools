@@ -21,7 +21,7 @@ sbin_PROGRAMS =
 ## -------------------------------------------------------------------
 
 umtscardtool_SOURCES = umtscardtool.c setop.c fs.c ni.c pin.c customcmd.c
-umtscardtool_LDFLAGS = -L$(top_srcdir)/src/commonlib -lmcbtoolset
+umtscardtool_LDFLAGS = -L$(top_builddir)/src/commonlib -L$(top_builddir)/src/commonlib/.libs -lmcbtoolset
 
 install-data-hook :
 	chmod +s $(DESTDIR)$(bindir)/umtscardtool
