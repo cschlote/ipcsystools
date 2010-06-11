@@ -1,8 +1,4 @@
 *~
-config.log
-config.guess
-config.status
-config.sub
 Makefile
 autom4te.cache
 .deps
