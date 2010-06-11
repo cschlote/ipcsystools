@@ -1,12 +1,14 @@
 ## Process this file with automake to produce Makefile.in
 
-AM_CPPFLAGS = -I$(top_srcdir)/src/commonlib -I$(top_srcdir)/src/include $(all_includes) \
+AM_CPPFLAGS = \
+	-I$(top_srcdir)/src/commonlib \
+	-I$(top_srcdir)/src/include $(all_includes) \
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
 	-DPKGBLDDATE=\"`date +%F-%R`\" \
 	@CPPFLAGS@
 
-AM_LDFLAGS = -L$(top_srcdir)/src/commonlib -Wl,-rpath-link -Wl,$(top_srcdir)/src/commonlib/.libs/ -lbstrlib -linifile -lmcbtoolset
+AM_LDFLAGS = -Wl,-rpath-link -Wl,$(pkglib_srcdir) 
 
 DISTCLEANFILES = Makefile.in
 

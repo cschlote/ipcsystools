@@ -211,13 +211,15 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/src/commonlib -I$(top_srcdir)/src/include $(all_includes) \
+AM_CPPFLAGS = \
+	-I$(top_srcdir)/src/commonlib \
+	-I$(top_srcdir)/src/include $(all_includes) \
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
 	-DPKGBLDDATE=\"`date +%F-%R`\" \
 	@CPPFLAGS@
 
-AM_LDFLAGS = -L$(top_srcdir)/src/commonlib -Wl,-rpath-link -Wl,$(top_srcdir)/src/commonlib/.libs/ -lbstrlib -linifile -lmcbtoolset
+AM_LDFLAGS = -Wl,-rpath-link -Wl,$(pkglib_srcdir) 
 DISTCLEANFILES = Makefile.in
 bin_SCRIPTS = 
 umtscardtool_SOURCES = umtscardtool.c setop.c fs.c ni.c pin.c customcmd.c
