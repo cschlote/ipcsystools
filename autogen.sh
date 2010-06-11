@@ -3,8 +3,7 @@
 aclocal $ACLOCAL_FLAGS
 
 libtoolize --force --copy
-autoheader
-automake
+
 autoreconf \
 	--force \
 	--install \
