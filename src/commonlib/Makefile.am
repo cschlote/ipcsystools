@@ -5,10 +5,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/include $(all_includes) \
    -DPKGLIBDIR=\"$(pkglibdir)/\" \
    -DPKGDATADIR=\"$(pkgdatadir)/\" \
    -DPKGBLDDATE=\"`date +%F-%R`\" \
-   -DPKGBLDREV=\"$(strip $(shell svnversion))\" \
    @CPPFLAGS@ 
-AM_CFLAGS = -Wall -Werror
-AM_CXXFLAGS = -Wall -Werror
+
 AM_LDFLAGS = -L$(top_srcdir)/src/commonlib
 DISTCLEANFILES = Makefile.in
 

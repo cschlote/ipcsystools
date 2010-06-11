@@ -1,15 +1,22 @@
-#! /bin/bash
+#!/bin/bash
 
-aclocal $ACLOCAL_FLAGS
+#
+# usage:
+#
+# banner <target name>
+#
+banner() {
+	echo
+	TG=`echo $1 | sed -e "s,/.*/,,g"`
+	LINE=`echo $TG |sed -e "s/./-/g"`
+	echo $LINE
+	echo $TG
+	echo $LINE
+	echo
+}
 
-libtoolize --force --copy
-autoheader
-automake
-autoreconf \
-	--force \
-	--install \
-	--warnings=cross \
-	--warnings=syntax \
-	--warnings=obsolete \
-	--warnings=unsupported
-						
+banner "autoreconf"
+
+autoreconf --force --install -Wall || exit $?
+
+banner "Finished"

@@ -1,5 +1,12 @@
 *~
-Makefile.in
+config.log
+config.guess
+config.status
+config.sub
 Makefile
 autom4te.cache
 .deps
+*.o
+*.lo
+*.la
+.libs
