@@ -1,3 +1,4 @@
+#!/bin/bash
 #**********************************************************************************
 #
 #        FILE: mcblib.sh
@@ -17,9 +18,6 @@ MCBCTL_CONFIG=/etc/mcbctl.conf
 
 # Basisverzeichnis f�r die Statusdateien
 MCB_STATUSFILE_DIR=/var/run
-
-# Log file f�r die Verbindung
-CONNECTION_LOG_FILE=/var/log/connection.log
 
 # Globale Variablen fuer die Devices des internen Modems
 COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
@@ -50,7 +48,7 @@ UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
 # Programm zur Pin-Eingabe
 UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
 
-#TODO Programm zum Setzen des Operators
+#TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
 
 
 #-------------------------------------------------------------------------------
@@ -77,59 +75,64 @@ fi
 
 #-------------------------------------------------------------------------------
 # Log Funktion
-function log ()
+# void syslogger (char *logtype, char *msg)
+function syslogger ()
 {
-  if ( test $LOG_LEVEL -ge 1 ); then
+	DESC="mcb-monitor"
 
-    if ( test $LOG_LEVEL -eq 2 ); then
-      logger -p local0.info -t checkconnection $@
-    fi
-
-    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
-  fi
-}
-
-#-------------------------------------------------------------------------------
-# Debug Funktion
-function debuglog ()
-{
-  if ( test $LOG_LEVEL -eq 2 ); then
-    logger -p local0.debug -t checkconnection $@
-    echo `date` "  ;checkconnection; " $@ >> $CONNECTION_LOG_FILE
-  fi
-}
-
-#-------------------------------------------------------------------------------
-function RebootMCB ()
-{
-  log "MCB wird neu gestartet."
-
-  # Reboot ausf�hren
-  /sbin/reboot
+	# LogLevel 1
+	if ( test "$1" != "debug" ); then
+		logger -p local0.$1 -t $DESC $2
+	else
+		# LogLevel 2 (Debugging)
+		if ( test $LOG_LEVEL -gt 1 ); then
+			logger -p local0.$1 -t $DESC $2	
+		fi
+	fi
 }
 #-------------------------------------------------------------------------------
-function RefreshModemDevices ()
+
+function RebootMCB () {
+	syslogger "info" "MCB wird neu gestartet."
+	/sbin/reboot
+}
+#-------------------------------------------------------------------------------
+# Validate an IP Address
+# void valid_ip (char *ipaddress)
+function valid_ip ()
 {
+	local  ip=$1
+	local  stat=1
+
+	 if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+		 OIFS=$IFS
+		 IFS='.'
+		 ip=($ip)
+		 IFS=$OIFS
+		 [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+		 stat=$?
+	 fi
+	 return $stat
+}
+#-------------------------------------------------------------------------------
+
+function RefreshModemDevices () {
 	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
 	CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
-#-------------------------------------------------------------------------------
-function WriteConnectionAvailableFile ()
-{
-	# Letzte Verf�gbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
+
+function WriteConnectionAvailableFile () {
 	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 }
-#-------------------------------------------------------------------------------
+
 # Write the radio access technology (RAT) mode to a file
-function WriteConnectionRATModeFile ()
-{
+function WriteConnectionRATModeFile () {
 	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
-#-------------------------------------------------------------------------------
+
 # Write the current network mode to a file
-function WriteConnectionNetworkModeFile ()
-{
+function WriteConnectionNetworkModeFile () {
 	local connectionmode
 	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
 	
@@ -142,40 +145,33 @@ function WriteConnectionNetworkModeFile ()
 	fi
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
-#-------------------------------------------------------------------------------
+
 # Write the UMTS Field strength to a file and update the LEDBAR
 function WriteConnectionFieldStrengthFile ()
 {
-	# Feldst�rke auf der MCB aktualisieren
-  $UMTS_FS
-  field_strength=$?
+	$UMTS_FS
+	field_strength=$?
 
-	# Feldst�rke Datei aktualisieren
 	echo $field_strength > $CONNECTION_FS_FILE
-
-	# LED's aktualisieren
-  /usr/share/mcbsystools/leds.sh gsmfs $field_strength
+	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
 }
-#-------------------------------------------------------------------------------
-function WriteToModemStatusFile ()
-{
+
+function WriteToModemStatusFile () {
 	MODEM_STATUS=$1
 	echo $MODEM_STATUS > $MODEM_STATUS_FILE
 }
-#-------------------------------------------------------------------------------
-function WriteGSMCellInfoFile ()
-{
-	# Mobile Network Code schreiben	
+
+function WriteGSMCellInfoFile () {
+	# Write Mobile Network Code
 	local gsminfo=`$MCB_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
 	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
 
-	# Roaming schreiben
+	# Write roaming info 
 	local roaming=`$MCB_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
 	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
 }
-#-------------------------------------------------------------------------------
-function WriteGSMConnectionInfoFiles ()
-{
+
+function WriteGSMConnectionInfoFiles () {
 	# Update field strength
 	WriteConnectionFieldStrengthFile
 
@@ -185,13 +181,12 @@ function WriteGSMConnectionInfoFiles ()
 	# Write GSM Information
 	WriteGSMCellInfoFile
 }
+
 #-------------------------------------------------------------------------------
-# Detect the Modemcard and write the device
-function DetectModemCard ()
-{
+
+function DetectModemCard () {
 	# Sierra Wireless Modems
 	if lsusb -d 1199: > /dev/null; then
-		debuglog "Sierra Wireless Modem wurden von dem System erkannt"
 		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
 		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
 
@@ -228,69 +223,93 @@ function SetSIMPIN ()
 			WriteToModemStatusFile "errorcode: $pin_state" ;;
 	esac
 }
-#-------------------------------------------------------------------------------
+
 # Ist die Karte eingebucht?
-function CheckNIState ()
-{
-  $UMTS_NI
+function CheckNIState () {
+	$UMTS_NI
 	local ni=$?
 	if [ $ni -eq 0 ]; then
 		WriteToModemStatusFile ${MODEM_STATES[registeredID]}
 		WriteGSMConnectionInfoFiles
 	fi
-  return $ni
+	return $ni
 }
-#-------------------------------------------------------------------------------
-function ReadModemStatus ()
-{
+
+function ReadModemStatus () {
 	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
 }
-#-------------------------------------------------------------------------------
-# Sets current radio access technology (RAT)
-function SetConnectionRAT ()
-{	
+
+function SetConnectionRAT () {	
 	ratcode=`cat $MCBCTL_CONFIG | grep modem.connectionmode | cut -d"=" -f2`
 	RefreshModemDevices
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
-#-------------------------------------------------------------------------------
-# Sets roaming option
-function SetSIMRoaming ()
-{	
-	local roaming=`grep "sim.roaming" $MCBCTL_CONFIG | cut -d"=" -f2`
-	case $roaming in
-		0|1)
-			$MCB_TOOLS_DIR/umtscardtool -s AT^SYSCONFIG=16,3,$roaming,4 >& /dev/null 
-		;;
-		*)	
-			log "Error: Setting roaming option"
-		;;
-		esac	
-}
-#-------------------------------------------------------------------------------
-function InitializeModem ()
-{
+
+#
+# Add checkconnection.sh to system cron table
+#
+function setup_checkconnection () {
+	entry=`crontab -l 2>/dev/null | grep checkconnection.sh | wc -l` > /dev/null
+	if [ $entry -eq 0 ]; then	
+		syslogger "info" "Creating crontab entry for checkconnection.sh ..."
+		crontab -l 2>/dev/null /tmp/crontab.dump
+		echo "*/2 * * * * /usr/share/mcbsystools/checkconnection.sh" >> /tmp/crontab.dump
+		crontab /tmp/crontab.dump
+		rm -f /tmp/crontab.dump
+	fi
+)
+
+
+function InitializeModem () {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
 		SetConnectionRAT
-		SetSIMRoaming
 		SetSIMPIN
 		sleep 1
 		WriteConnectionFieldStrengthFile
 	fi
 }
+
 #-------------------------------------------------------------------------------
-function CheckOpenVPNPeer ()
-{	
-	if [ -e /etc/openvpn/client.conf ] ; then
-		openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`	
+# VPN related functions
+#-------------------------------------------------------------------------------
+
+function CheckOpenVPNPeer () {	
+	local tunnelstate="down"
+	local checkmode=`grep 'ovpn.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2`
+
+	case "$checkmode" in
+		"ifconfig"|"")
+		  #echo "get ip address from client.conf"
+			if [ -e /etc/openvpn/client.conf ]; then
+		  	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
+			fi
+		  ;;
+		"watchdog")
+		  #echo "get ip address from watchdog settings"
+		  openvpnIP=`grep 'watchdog.ping.check_ping_ip' /etc/mcbctl.conf | cut -d"=" -f2`
+		  ;;
+		*)
+		  #echo "validate ip address"
+		  openvpnIP=$checkmode
+		  ;;
+	esac
+
+	# Ping the peer address
+	if (valid_ip $openvpnIP); then
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
 			/usr/share/mcbsystools/leds.sh vpn on
-			echo "up" > $VPN_STATE_FILE
+			tunnelstate="up"
 		else
 			/usr/share/mcbsystools/leds.sh vpn off
-			echo "down" > $VPN_STATE_FILE
+			tunnelstate="down"
 		fi
+	else 
+		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
+		tunnelstate="down"
 	fi
+
+	# Set Tunnel state
+	echo $tunnelstate > $VPN_STATE_FILE
+	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
 }
-#-------------------------------------------------------------------------------

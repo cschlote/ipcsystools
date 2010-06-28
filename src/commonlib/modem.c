@@ -61,7 +61,7 @@ void SetupDevice(int nSerFD)
 };
 
 // Liste bis OK oder ERROR
-bool ReadHasFinished(char* strResult, unsigned int nResultSize, bool* pOk, bool* pError)
+bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
 {
 	bool bRet = false;
 
@@ -114,18 +114,18 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	}
 	strncat(strCmd, strCommand, nCommandSize);
 	strcat(strCmd, "\r");
-	for (i = 0; i < (int)strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
+	for (i = 0; i < strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
 
 	/* Send AT command */
 	nRes = write(nSerFD, strCmd, strlen(strCmd));
 	syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
-	if (nRes == (int)strlen(strCmd))
+	if (nRes == strlen(strCmd))
 	{
 		memset(strResult, 0, nResultSize);
 
 		/* Read and skip echoed command string */
 		nRes = 0;
-		while (nRes < (int)strlen(strCmd))
+		while (nRes < strlen(strCmd))
 		{
 			FD_SET(nSerFD, &readfs);
 			tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;

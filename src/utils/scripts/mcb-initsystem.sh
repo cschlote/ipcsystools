@@ -1,18 +1,25 @@
-#! /bin/bash
+#!/bin/bash
+# This script is called by the installer script. Do not delete.
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-# Basis Bibliothek für die MCB-2
-#. /usr/shared/mcbsystools/mcblib.inc
+#. /usr/share/mcbsystools/mcblib.inc
 
-# Link fuer Sierra Wireless Modem
-( ! test -h /etc/ppp/options.ttyUSB4 ) && ln -s /usr/share/mcbsystools/options.umts /etc/ppp/options.ttyUSB4
+#
+# Create link for Sierra Wireless Modem ppp options file 
+#
+if [ ! -L /etc/ppp/options.ttyUSB4 ]; then
+	rm -f /etc/ppp/options.ttyUSB4
+	ln -s /usr/share/mcbsystools/options.umts /etc/ppp/options.ttyUSB4
+	echo "Setup modem options of PPPD"
+fi
 
-# crontab einrichten
-# Eintrag bereits vorhanden?
+#
+# Add checkconnection.sh to system cron table
+#
 entry=`crontab -l 2>/dev/null | grep checkconnection.sh | wc -l` > /dev/null
-if (test $entry -eq 0); then	
-	echo "Erstelle crontab Eintrag für checkconnection.sh ..."
+if [ $entry -eq 0 ]; then	
+	echo "Creating crontab entry for checkconnection.sh ..."
 	crontab -l 2>/dev/null /tmp/crontab.dump
 	echo "*/2 * * * * /usr/share/mcbsystools/checkconnection.sh" >> /tmp/crontab.dump
 	crontab /tmp/crontab.dump

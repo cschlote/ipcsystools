@@ -13,8 +13,6 @@
 #**********************************************************************************
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-
-# Basis Bibliothek f�r die MCB-2
 . /usr/share/mcbsystools/mcblib.inc
 
 # Read variables from config file
@@ -109,91 +107,90 @@ function IsUMST_Connection_Script_Run ()
 WriteGSMConnectionInfoFiles
 
 # Autom. Start UMTS aktiviert?
-if (test $START_UMTS_ENABLED -eq 1); then	
-	
+if (test $START_UMTS_ENABLED -eq 1); then
+	syslogger "debug" "Watchdog - Checking enabled UMTS connection"
+
 	# Test OpenVPN Peer
-  if (test $START_VPN_ENABLED -eq 1); then
+	if (test $START_VPN_ENABLED -eq 1); then
 		CheckOpenVPNPeer
 	fi
-
-  # Option f�r die Pr�fung aktiviert?
-  if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
+	#
+	# Option f�r die Pr�fung aktiviert?
+	#
+	if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
 		syslogger "info" "Watchdog - Check UMTS connection"
 
-    # Absoluter Notfall nichts geht mehr Hardware abgest�rt oder so!
-    if ( test $MAX_CONNECTION_LOST -gt 0 ); then
+		# Absoluter Notfall nichts geht mehr Hardware abgest�rt oder so!
+		if ( test $MAX_CONNECTION_LOST -gt 0 ); then
+			LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
+			TIMESTAMP_NOW=`date +%s`
 
-      LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
-      TIMESTAMP_NOW=`date +%s`
-
-      # Maximaler Zeitraum �berschritten -> reboot des System
-      if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
+			# Maximaler Zeitraum �berschritten -> reboot des System
+			if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
 				syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds"
 				syslogger "warn" "Watchdog - Restart MCB..."
-
-        RebootMCB
-        exit 1
-      fi
-    fi
-
-    # UMTS Skript noch aktiv?
-    IsUMST_Connection_Script_Run
-    if ( test $? -eq 0 ); then	
+				RebootMCB
+				exit 1
+			fi
+		fi
+		#
+		# UMTS Skript noch aktiv?
+		#
+		IsUMST_Connection_Script_Run
+		if ( test $? -eq 0 ); then	
 			syslogger "debug" "Watchdog - Last pppd available time $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds ago"
 
-      # ppp0 vorhanden?      
-      if (systool -c net | grep ppp0 > /dev/null); then
+			# ppp0 vorhanden?      
+			if (systool -c net | grep ppp0 > /dev/null); then
 				syslogger "info" "Watchdog - ppp0 connection available"
 
-        # Verbindungsstatus f�r das Starten der MCB eintragen
+				# Verbindungsstatus f�r das Starten der MCB eintragen
 				WriteConnectionAvailableFile
 
-        # Date f�r die Fehlversuche zur�cksetzen
-        echo 0 > $CONNECTION_FAULT_FILE
+				# Date f�r die Fehlversuche zur�cksetzen
+				echo 0 > $CONNECTION_FAULT_FILE
 
-        # PING auf eine beliebige Internetadresse
-        if ( test $CHECK_PING_ENABLED -eq 1 ); then
-          CheckExternConnection					
+				# PING auf eine beliebige Internetadresse
+				if ( test $CHECK_PING_ENABLED -eq 1 ); then
+					CheckExternConnection					
 
-          # Grenzwert erreicht?
-          if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then						
+					# Grenzwert erreicht?
+					if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then						
 						syslogger "warn" "Watchdog - Restart MCB..."
-
-	          RebootMCB
-            exit 1
-          fi
-        fi
-      else        
+						RebootMCB
+					exit 1
+				fi
+			fi
+			else        
 				syslogger "info" "Watchdog - ppp0 connection not available"
 
-        # pppd eliminieren, k�nnte noch vorhanden sein!
+				# pppd eliminieren, k�nnte noch vorhanden sein!
 				/usr/share/mcbsystools/umts-connection.sh stop
 
-        # Verbindungsz�hler erh�hen
-        CONNECTION_FAULT=$[CONNECTION_FAULT+1]
-        echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
+				# Verbindungsz�hler erh�hen
+				CONNECTION_FAULT=$[CONNECTION_FAULT+1]
+				echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
 
-        # Noch etwas Zeit geben bis alles erledigt ist
-        sleep 5
+				# Noch etwas Zeit geben bis alles erledigt ist
+				sleep 5
 
-        # Anzahl der Fehlversuche �berschritten -> reboot des Systems
-        if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ); then
+				# Anzahl der Fehlversuche �berschritten -> reboot des Systems
+				if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ); then
 					syslogger "info" "Watchdog - Starting pppd $CONNECTION_FAULT times"
 					syslogger "warn" "Watchdog - Restart MCB..."
+					RebootMCB
+					exit 1
+				fi
 
-          RebootMCB
-          exit 1
-        fi
-
-        # Restart der Verbindung (pppd)
-        if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_RESTART ); then
+				# Restart der Verbindung (pppd)
+				if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_RESTART ); then
 					syslogger "info" "Watchdog - Restart modem connection..."
 
-          # Neustart des PPPD veranlassen
-          /usr/share/mcbsystools/umts-connection.sh start
-        fi
-      fi
-    fi
-  fi
+					# Neustart des PPPD veranlassen
+					/usr/share/mcbsystools/umts-connection.sh start
+				fi
+			fi
+		fi
+	fi
 fi
 

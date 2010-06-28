@@ -6,7 +6,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/include $(all_includes) \
    -DPKGDATADIR=\"$(pkgdatadir)/\" \
    -DPKGBLDDATE=\"`date +%F-%R`\" \
    @CPPFLAGS@ 
-
+AM_CFLAGS = -Wall -Werror
+AM_CXXFLAGS = -Wall -Werror
 AM_LDFLAGS = -L$(top_srcdir)/src/commonlib
 DISTCLEANFILES = Makefile.in
 
@@ -26,4 +27,3 @@ libmcbtoolset_la_SOURCES = \
 libinifile_la_SOURCES = inifile.c inifile.h
 
 libbstrlib_la_SOURCES = bstrlib.c bstrlib.h
-

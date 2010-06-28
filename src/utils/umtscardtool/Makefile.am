@@ -7,6 +7,8 @@ AM_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
 	-DPKGBLDDATE=\"`date +%F-%R`\" \
 	@CPPFLAGS@
+AM_CFLAGS = -Wall
+AM_CXXFLAGS = -Wall
 
 AM_LDFLAGS = -Wl,-rpath-link -Wl,$(pkglib_srcdir) 
 
