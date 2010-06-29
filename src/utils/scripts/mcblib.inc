@@ -1,43 +1,16 @@
-#!/bin/bash
-#**********************************************************************************
-#
-#        FILE: mcblib.sh
+#!/bin/bash -u -x
 #
 # DESCRIPTION: Include file for bash scripts
 #
-#      AUTHOR: Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
-#     COMPANY: konzeptpark GmbH, 35633 Lahnau
-#
-#**********************************************************************************
 
-# Basisverzeichnis f�r der UMTS Tools
+# Base directory of UMTS tools
 MCB_TOOLS_DIR=/usr/bin
 
-# Konfigurationsdatei
+# Configuration file
 MCBCTL_CONFIG=/etc/mcbctl.conf
 
-# Basisverzeichnis f�r die Statusdateien
+# Base directory for status files
 MCB_STATUSFILE_DIR=/var/run
-
-# Globale Variablen fuer die Devices des internen Modems
-COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
-CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
-MODEM_STATUS_FILE=$MCB_STATUSFILE_DIR/modem_status
-CONNECTION_MODE_FILE=$MCB_STATUSFILE_DIR/connection_mode
-CONNECTION_FS_FILE=$MCB_STATUSFILE_DIR/connection_fs
-CONNECTION_GSMINFO_FILE=$MCB_STATUSFILE_DIR/connection_gsminfo
-VPN_STATE_FILE=$MCB_STATUSFILE_DIR/vpn_status
-
-# Status for the modem
-MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected )
-# IDs for the modem state
-no_modemID=0
-detectedID=1
-sim_not_insertedID=2
-sim_pinID=3
-readyID=4
-registeredID=5
-connected=6
 
 # Programm zur Netzidentifizierung
 UMTS_NI="$MCB_TOOLS_DIR/umtscardtool -i"
@@ -50,38 +23,74 @@ UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
 
 #TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
 
+# Status for the modem
+MODEM_STATES=( no_modem detected sim_not_inserted sim_pin ready registered connected )
+# IDs for the modem state
+no_modemID=0
+detectedID=1
+sim_not_insertedID=2
+sim_pinID=3
+readyID=4
+registeredID=5
+connected=6
 
-#-------------------------------------------------------------------------------
-# Auslesen der GENERAL-Parameter aus mcbctl.conf
+# Define paths to persistent status variables 
+COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
+CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
+MODEM_STATUS_FILE=$MCB_STATUSFILE_DIR/modem_status
+CONNECTION_MODE_FILE=$MCB_STATUSFILE_DIR/connection_mode
+CONNECTION_FS_FILE=$MCB_STATUSFILE_DIR/connection_fs
+CONNECTION_GSMINFO_FILE=$MCB_STATUSFILE_DIR/connection_gsminfo
+VPN_STATE_FILE=$MCB_STATUSFILE_DIR/vpn_status
 
-# Sektion [GENERAL]
-START_UMTS_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_umts_enabled | cut -d"=" -f2`
-START_VPN_ENABLED=`cat $MCBCTL_CONFIG | grep general.start_vpn_enabled | cut -d"=" -f2`
-LOG_LEVEL=`cat $MCBCTL_CONFIG | grep general.log_level | cut -d"=" -f2`
-CHECK_CONNECTION_ENABLED=`cat $MCBCTL_CONFIG | grep general.check_connection_enabled | cut -d"=" -f2`
-
-#-------------------------------------------------------------------------------
-# Speichert den Zeitpunkt wann die Verbindung das letzte Mal verf�gbar war	
+# Connection monitoring, remember successful test time
 CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
 if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
-	# Letzte Verf�gbarkeit bei ersten Zugriff auf die aktuelle Zeit setzen
+	# create file with current date, if not available yet (after boot)
 	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 fi
 
-#-------------------------------------------------------------------------------
-#
-# Globale Funktionen
-#
+#-----------------------------------------------------------------------
+# Configuration file
+#-----------------------------------------------------------------------
+function getmcboption () {
+	echo `cat $MCBCTL_CONFIG | grep $1 | cut -d"=" -f2`
+}
 
-#-------------------------------------------------------------------------------
+# Read GENERAL parameters from mcbctl.conf
+START_UMTS_ENABLED=`getmcboption general.start_umts_enabled`
+START_VPN_ENABLED=`getmcboption general.start_vpn_enabled`
+LOG_LEVEL=`getmcboption general.log_level`
+CHECK_CONNECTION_ENABLED=`getmcboption general.check_connection_enabled`
+
+#-----------------------------------------------------------------------
+# Shell locking
+#-----------------------------------------------------------------------
+function obtainlock () {
+	lastlockfile=$1
+	if ( set -o noclobber; echo "$$" > "$lastlockfile") 2> /dev/null; 
+	then
+		trap 'rm -f "$lastlockfile"; exit $?' INT TERM EXIT
+	else
+	   echo "Failed to acquire lockfile: $lastlockfile." 
+	   echo "Held by $(cat $lastlockfile)"
+	   exit 0
+	fi
+}
+function releaselock () {
+   rm -f "$lastlockfile"
+   trap - INT TERM EXIT
+}
+   
+#-----------------------------------------------------------------------
 # Log Funktion
+#-----------------------------------------------------------------------
 # void syslogger (char *logtype, char *msg)
 function syslogger ()
 {
 	DESC="mcb-monitor"
-
 	# LogLevel 1
-	if ( test "$1" != "debug" ); then
+	if [ "$1" != "debug" ]; then
 		logger -p local0.$1 -t $DESC $2
 	else
 		# LogLevel 2 (Debugging)
@@ -90,31 +99,10 @@ function syslogger ()
 		fi
 	fi
 }
-#-------------------------------------------------------------------------------
 
-function RebootMCB () {
-	syslogger "info" "MCB wird neu gestartet."
-	/sbin/reboot
-}
-#-------------------------------------------------------------------------------
-# Validate an IP Address
-# void valid_ip (char *ipaddress)
-function valid_ip ()
-{
-	local  ip=$1
-	local  stat=1
-
-	 if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-		 OIFS=$IFS
-		 IFS='.'
-		 ip=($ip)
-		 IFS=$OIFS
-		 [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-		 stat=$?
-	 fi
-	 return $stat
-}
-#-------------------------------------------------------------------------------
+#-----------------------------------------------------------------------
+# Modem Handling
+#-----------------------------------------------------------------------
 
 function RefreshModemDevices () {
 	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
@@ -182,7 +170,7 @@ function WriteGSMConnectionInfoFiles () {
 	WriteGSMCellInfoFile
 }
 
-#-------------------------------------------------------------------------------
+#-----------------------------------------------------------------------
 
 function DetectModemCard () {
 	# Sierra Wireless Modems
@@ -197,11 +185,11 @@ function DetectModemCard () {
 		return 1
 	fi
 }
-#-------------------------------------------------------------------------------
+#-----------------------------------------------------------------------
 # Sets the PIN for the SIM card
 function SetSIMPIN ()
 {
-	local sim_pin=`grep 'sim.pin' /etc/mcbctl.conf | cut -d"=" -f2`
+	local sim_pin=`getmcboption sim.pin`
 
 	$UMTS_PIN $sim_pin
 	local pin_state=$?
@@ -224,6 +212,7 @@ function SetSIMPIN ()
 	esac
 }
 
+#-----------------------------------------------------------------------
 # Ist die Karte eingebucht?
 function CheckNIState () {
 	$UMTS_NI
@@ -240,25 +229,10 @@ function ReadModemStatus () {
 }
 
 function SetConnectionRAT () {	
-	ratcode=`cat $MCBCTL_CONFIG | grep modem.connectionmode | cut -d"=" -f2`
+	ratcode=`getmcboption modem.connectionmode`
 	RefreshModemDevices
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
-
-#
-# Add mcb-monitor.sh to system cron table
-#
-function setup_checkconnection () {
-	entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
-	if [ $entry -eq 0 ]; then	
-		syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
-		crontab -l 2>/dev/null /tmp/crontab.dump
-		echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
-		crontab /tmp/crontab.dump
-		rm -f /tmp/crontab.dump
-	fi
-}
-
 
 function InitializeModem () {
 	DetectModemCard
@@ -276,7 +250,7 @@ function InitializeModem () {
 
 function CheckOpenVPNPeer () {	
 	local tunnelstate="down"
-	local checkmode=`grep 'ovpn.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2`
+	local checkmode=`getmcboption ovpn.monitorpeers`
 
 	case "$checkmode" in
 		"ifconfig"|"")
@@ -287,7 +261,7 @@ function CheckOpenVPNPeer () {
 		  ;;
 		"watchdog")
 		  #echo "get ip address from watchdog settings"
-		  openvpnIP=`grep 'watchdog.ping.check_ping_ip' /etc/mcbctl.conf | cut -d"=" -f2`
+		  openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
 		  ;;
 		*)
 		  #echo "validate ip address"
@@ -313,3 +287,45 @@ function CheckOpenVPNPeer () {
 	echo $tunnelstate > $VPN_STATE_FILE
 	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
 }
+
+#-----------------------------------------------------------------------
+# Misc
+#-----------------------------------------------------------------------
+
+function RebootMCB () {
+	syslogger "info" "MCB wird neu gestartet."
+	/sbin/reboot
+}
+
+# Validate an IP Address
+# void valid_ip (char *ipaddress)
+function valid_ip ()
+{
+	local  ip=$1
+	local  stat=1
+
+	 if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+		 OIFS=$IFS
+		 IFS='.'
+		 ip=($ip)
+		 IFS=$OIFS
+		 [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+		 stat=$?
+	 fi
+	 return $stat
+}
+
+#
+# Add mcb-monitor.sh to system cron table
+#
+function setup_checkconnection () {
+	entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+	if [ $entry -eq 0 ]; then	
+		syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
+		crontab -l 2>/dev/null /tmp/crontab.dump
+		echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
+		crontab /tmp/crontab.dump
+		rm -f /tmp/crontab.dump
+	fi
+}
+
