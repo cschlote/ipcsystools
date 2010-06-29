@@ -1,9 +1,9 @@
 #!/bin/bash
 #**********************************************************************************
 #
-#        FILE: checkconnection.sh
+#        FILE: mcb-monitor.sh
 #
-#       USAGE: checkconnection.sh
+#       USAGE: mcb-monitor.sh
 #
 # DESCRIPTION: Monitor the UMTS Connection
 #

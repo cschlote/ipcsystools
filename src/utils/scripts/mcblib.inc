@@ -246,14 +246,14 @@ function SetConnectionRAT () {
 }
 
 #
-# Add checkconnection.sh to system cron table
+# Add mcb-monitor.sh to system cron table
 #
 function setup_checkconnection () {
-	entry=`crontab -l 2>/dev/null | grep checkconnection.sh | wc -l` > /dev/null
+	entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
 	if [ $entry -eq 0 ]; then	
-		syslogger "info" "Creating crontab entry for checkconnection.sh ..."
+		syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
 		crontab -l 2>/dev/null /tmp/crontab.dump
-		echo "*/2 * * * * /usr/share/mcbsystools/checkconnection.sh" >> /tmp/crontab.dump
+		echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
 		crontab /tmp/crontab.dump
 		rm -f /tmp/crontab.dump
 	fi
