@@ -257,7 +257,7 @@ function setup_checkconnection () {
 		crontab /tmp/crontab.dump
 		rm -f /tmp/crontab.dump
 	fi
-)
+}
 
 
 function InitializeModem () {
