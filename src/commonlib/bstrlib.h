@@ -142,10 +142,10 @@ struct tagbstring
 };
 
 /* Accessor macros */
-#define blengthe(b, e)      (((b) == (void *)0 || (b)->slen < 0) ? (unsigned int)(e) : ((b)->slen))
+#define blengthe(b, e)      ( ((b) == NULL || (b)->slen < 0) ? (unsigned int)(e) : (unsigned int)((b)->slen) )
 #define blength(b)          (blengthe ((b), 0))
-#define bdataofse(b, o, e)  (((b) == (void *)0 || (b)->data == (void*)0) ? (unsigned char *)(e) : ((b)->data) + (o))
-#define bdataofs(b, o)      (bdataofse ((b), (o), (void *)0))
+#define bdataofse(b, o, e)  ( ((b) == NULL || (b)->data == NULL) ? (unsigned char *)(e) : (unsigned char *)((b)->data) + (o))
+#define bdataofs(b, o)      (bdataofse ((b), (o), NULL))
 #define bdatae(b, e)        (bdataofse (b, 0, e))
 #define bdata(b)            (bdataofs (b, 0))
 #define bchare(b, p, e)     ((((unsigned)(p)) < (unsigned)blength(b)) ? ((b)->data[(p)]) : (e))

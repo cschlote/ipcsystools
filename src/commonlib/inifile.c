@@ -126,13 +126,13 @@ OpenIniFile(cchr * FileName)
 		{
 			*pStr = 0;
 		}			/* Cut all comments */
-		if ((strstr(Str, "[") > 0) && (strstr(Str, "]") > 0))	/* Is Section */
+		if ((strstr(Str, "[") != NULL) && (strstr(Str, "]") != NULL))	/* Is Section */
 		{
 			pEntry->Type = tpSECTION;
 		}
 		else
 		{
-			if (strstr(Str, "=") > 0)
+			if (strstr(Str, "=") !=NULL)
 			{
 				pEntry->Type = tpKEYVALUE;
 			}
