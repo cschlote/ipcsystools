@@ -14,7 +14,7 @@ ETH_KEEPUP=`getmcboption connection.eth.keepup`
 #-----------------------------------------------------------------------
 function IsETHAlive () {
     if ifconfig $ETH_DEV | grep -q UP ; then
-	syslogger "debug" "ETH-Conn - found configured $ETH_DEV"
+	syslogger "debug" "ETH-Conn - status - interface $ETH_DEV is up and running"
 	return 0;
     fi
     return 1;
@@ -50,9 +50,6 @@ function StopETH () {
 rc_code=0
 obtainlock $ETH_CONNECTION_PID_FILE
 
-wan_ct=${2:=127.0.0.1}
-wan_gw=${3:=default}
-
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
     start)
@@ -63,7 +60,9 @@ case "$cmd" in
 	syslogger "debug" "ETH-Conn - stopping connection..."
     	StopETH
 	;;
-    check)	if [ $# -gt 2 ] && [ -n "$wan_ct" -a -n "$wan_gw" ]; then
+    check)	if [ $# -gt 2 ] && [ -n "$2" -a -n "$3" ]; then
+		    wan_ct=${2:=127.0.0.1}
+		    wan_gw=${3:=default}
 		    syslogger "debug" "ETH-Conn - Pinging check target $wan_ct via $wan_gw"
 		    ip route add $wan_ct/32 via $wan_gw dev $ETH_DEV;
 		    IsETHAlive &&

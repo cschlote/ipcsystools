@@ -45,102 +45,112 @@ reset_vpn=false
 reset_system=false
 
 #-----------------------------------------------------------------------
-function CheckExternConnection ()
+# Ping some connection with timeinterval and max fail count
+# - ping a target with a time interval
+# - record number of fails
+# - reset system of max number of fails
+function check_connection_maxping ()
 {
-    local timestamp=`date +%s`
-    local last_ping=`date +%s`
+    local rc=0
+    if ( test $CHECK_PING_ENABLED -eq 1 ); then
+	local timestamp=`date +%s`
+	local last_ping=`date +%s`
 
-    if ( test -e $LAST_PING_FILE ); then
-	last_ping=`cat $LAST_PING_FILE`
-    else
-	# Initialen Timestamp schreiben
-	echo $last_ping > $LAST_PING_FILE
-    fi
-
-    # Zeit �berschritten -> ping absetzen
-    if ( test $[$timestamp - $last_ping] -gt $CHECK_PING_TIME ); then
-
-	# Timestamp schreiben
-	echo `date +%s` > $LAST_PING_FILE
-
-	# Externen Server �berpr�fen
-	if ping -c 1 -W 5 -s 8 $CHECK_PING_IP >& /dev/null ; then
-	    syslogger "info" "Watchdog - Check peer $CHECK_PING_IP passed"
-
-	    echo 0 > $PING_FAULT_FILE
+	if [ -e $LAST_PING_FILE ]; then
+	    last_ping=`cat $LAST_PING_FILE`
 	else
-	    # Anzahl der Fehler in der Datei erh�hen
-	    PING_FAULT=$[$PING_FAULT+1];
-	    echo $PING_FAULT > $PING_FAULT_FILE;
-	    syslogger "info" "Watchdog - Check peer $CHECK_PING_IP failed $PING_FAULT time(s)"
+	    echo $last_ping > $LAST_PING_FILE
+	fi
+
+	# Check for next time to send a ping and count fails
+	if [ $[$timestamp - $last_ping] -gt $CHECK_PING_TIME ]; then
+
+	    echo `date +%s` > $LAST_PING_FILE
+
+	    if ping -c 1 -W 5 -s 8 $CHECK_PING_IP > /dev/null ; then
+		syslogger "debug" "Watchdog - Check ping peer $CHECK_PING_IP passed"
+		PING_FAULT=0
+	    else
+		syslogger "info"  "Watchdog - Check ping peer $CHECK_PING_IP failed $PING_FAULT time(s)"
+		PING_FAULT=$[$PING_FAULT+1]
+	    fi
+	    echo $PING_FAULT > $PING_FAULT_FILE
+	else
+	    syslogger "debug" "Watchdog - Next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds"
+	fi
+
+	# Maximum number of pings sent?
+	if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
+	    syslogger "error" "Watchdog - Check ping peer $CHECK_PING_IP expired"
+	    PING_FAULT=0 ; echo $PING_FAULT > $PING_FAULT_FILE
+	    reset_system=true
+	    rc=1
+	fi
+    fi
+    return $rc
+}
+
+
+#-----------------------------------------------------------------------
+# Connection monitoring
+# - test for current connection status, if fail use next wan connection
+# - reset box after maximum time without valid connection
+# - reset box after maximum number of faults
+
+function ReadConnectionAvailableFile () {
+	if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
+		WriteConnectionAvailableFile
+	fi
+	LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
+}
+function WriteConnectionAvailableFile () {
+	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+}
+
+function check_connection_fault () {
+    if [ $# -ge 1 ]; then
+	case "$1" in
+	    reset)	CONNECTION_FAULT=0    ;;
+	    count)	CONNECTION_FAULT=$[CONNECTION_FAULT+1]	;;
+	esac
+	echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
+    else
+	if [ $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ]; then
+	    syslogger "warn" "Watchdog - Restarted connections $CONNECTION_FAULT times (timeout)"
+	    reset_system=true
+	else
+	    syslogger "info" "Watchdog - Restarted connections $CONNECTION_FAULT times"
 	fi
     fi
 }
 
-#-----------------------------------------------------------------------
-function check_defaultroute ()
-{
-    if ( test $MAX_CONNECTION_LOST -gt 0 ); then
-	LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
-	TIMESTAMP_NOW=`date +%s`
+function check_connection_maxlost () {
+    local rc=0
+    if [ $MAX_CONNECTION_LOST -gt 0 ]; then
+	local timestamp=`date +%s`
 
-	# Maximaler Zeitraum �berschritten -> reboot des System
-	if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
-	    syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds"
-	    syslogger "warn" "Watchdog - Restart MCB..."
-	    reset_system=true
-	fi
-    else
-	syslogger "debug" "Watchdog - Last pppd available time $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds ago"
-
-	# ppp0 vorhanden?      
-	if systool -c net | grep ppp0 > /dev/null; then
-	    syslogger "info" "Watchdog - ppp0 connection available"
-
-	    # Verbindungsstatus f�r das Starten der MCB eintragen
+	ReadConnectionAvailableFile
+	if check_wan_connection_status; then
 	    WriteConnectionAvailableFile
-
-	    # Date f�r die Fehlversuche zur�cksetzen
-	    echo 0 > $CONNECTION_FAULT_FILE
-
-	    # PING auf eine beliebige Internetadresse
-	    if ( test $CHECK_PING_ENABLED -eq 1 ); then
-		CheckExternConnection					
-
-		# Grenzwert erreicht?
-		if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then						
-		    syslogger "warn" "Watchdog - Restart MCB..."
-		    reset_system=true
-		fi
-	    fi
-	else        
-	    syslogger "info" "Watchdog - ppp0 connection not available"
-
-	    # pppd eliminieren, k�nnte noch vorhanden sein!
-	    /usr/share/mcbsystools/connection-umts.sh stop
-
-	    # Verbindungsz�hler erh�hen
-	    CONNECTION_FAULT=$[CONNECTION_FAULT+1]
-	    echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
-
-	    # Noch etwas Zeit geben bis alles erledigt ist
-	    sleep 5
-
-	    # Anzahl der Fehlversuche �berschritten -> reboot des Systems
-	    if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ); then
-		syslogger "info" "Watchdog - Starting pppd $CONNECTION_FAULT times"
-		reset_system=true
-	    fi
-
-	    # Restart der Verbindung (pppd)
-	    if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_RESTART ); then
-		syslogger "info" "Watchdog - Restart modem connection..."
-
-		# Neustart des PPPD veranlassen
-		/usr/share/mcbsystools/connection-umts.sh start
-	    fi
+	    check_connection_fault reset
+	else
+	    check_connection_fault count
+	    reset_wan=true
 	fi
+	    
+	# Maximum time without connection expired?
+	if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
+	    syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds"
+	    reset_system=true
+	    rc=1
+	else
+	    syslogger "debug" "Watchdog - Last connection available time $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
+	fi
+
+	# Maxium number of successless restarts?
+	check_connection_fault || rc=1
     fi
+    return $rc
 }
 
 #-----------------------------------------------------------------------
@@ -182,16 +192,11 @@ if [ $START_WAN_ENABLED -eq 1 ]; then
     fi
 fi
 
-# Test OpenVPN Peer
-if (test $START_VPN_ENABLED -eq 1); then
-    CheckOpenVPNPeer
-fi
+#-- Status checks ------------------------------------------------------
+check_openvpn_status
 
-# Additional connection checks, if enabled
-if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
-    syslogger "info" "Watchdog - Checking defaultroute connection..."
-    check_defaultroute
-fi
+check_connection_maxlost &&
+    check_connection_maxping
 
 #-- Restart components -------------------------------------------------
 if [ $reset_system = "true" ]; then
@@ -200,7 +205,7 @@ if [ $reset_system = "true" ]; then
 else
     if [ $reset_vpn = "true" ]; then
 	syslogger "warn" "Watchdog - Restarting VPN connection..."
-	CheckOpenVPNPeer
+	startup_vpn_connection
     else 
 	if [ $reset_wan = "true" ]; then
 	    syslogger "warn" "Watchdog - Restarting WAN connection..."

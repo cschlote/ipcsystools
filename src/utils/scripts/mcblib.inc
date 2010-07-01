@@ -53,10 +53,6 @@ fi
 
 # Connection monitoring, remember successful test time
 CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
-if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
-	# create file with current date, if not available yet (after boot)
-	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
-fi
 
 #-----------------------------------------------------------------------
 # Configuration file
@@ -67,7 +63,6 @@ function getmcboption () {
 
 # Read GENERAL parameters from mcbctl.conf
 START_WAN_ENABLED=`getmcboption general.start_wan_enabled`
-START_UMTS_ENABLED=`getmcboption general.start_umts_enabled`
 START_VPN_ENABLED=`getmcboption general.start_vpn_enabled`
 LOG_LEVEL=`getmcboption general.log_level`
 CHECK_CONNECTION_ENABLED=`getmcboption general.check_connection_enabled`
@@ -105,11 +100,11 @@ function syslogger ()
 	DESC="mcb-monitor[$$]"
 	# LogLevel 1
 	if [ "$1" != "debug" ]; then
-		logger -p local0.$1 -t $DESC $2
+		logger -p local0.$1 -t $DESC "$2"
 	else
 		# LogLevel 2 (Debugging)
 		if ( test $LOG_LEVEL -gt 1 ); then
-			logger -p local0.$1 -t $DESC $2	
+			logger -p local0.$1 -t $DESC "$2"	
 		fi
 	fi
 }
@@ -121,10 +116,6 @@ function syslogger ()
 function RefreshModemDevices () {
 	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
 	CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
-}
-
-function WriteConnectionAvailableFile () {
-	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 }
 
 #-----------------------------------------------------------------------
@@ -311,49 +302,75 @@ function check_wan_connection () {
 	fi
 	return $rc
 }
+function check_wan_connection_status () {
+	local rc=0
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		$MCB_SCRIPTS_DIR/connection-$wan_if.sh status
+		if [ $? != 0 ]; then
+			syslogger "error" "WAN interface $wan_if has broken status"
+			rc=1;
+		fi
+	fi
+	return $rc
+}
 
 #-------------------------------------------------------------------------------
 # VPN related functions
 #-------------------------------------------------------------------------------
 
-function CheckOpenVPNPeer () {	
-	local tunnelstate="down"
-	local checkmode=`getmcboption ovpn.monitorpeers`
+function check_openvpn_status () {	
+	if [ $START_VPN_ENABLED -eq 1 ]; then
+		local tunnelstate="down"
+		local checkmode=`getmcboption ovpn.monitorpeers`
 
-	case "$checkmode" in
+		case "$checkmode" in
 		"ifconfig"|"")
-		  #echo "get ip address from client.conf"
+			syslogger "debug" "get ip address from client.conf"
 			if [ -e /etc/openvpn/client.conf ]; then
-		  	openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
+				openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
 			fi
-		  ;;
+		;;
 		"watchdog")
-		  #echo "get ip address from watchdog settings"
-		  openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
-		  ;;
+			syslogger "debug" "get ip address from watchdog settings"
+			openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
+		;;
 		*)
-		  #echo "validate ip address"
-		  openvpnIP=$checkmode
-		  ;;
-	esac
+			syslogger "debug"  "validate ip address"
+			openvpnIP=$checkmode
+		;;
+		esac
 
-	# Ping the peer address
-	if (valid_ip $openvpnIP); then
-		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
-			/usr/share/mcbsystools/leds.sh vpn on
-			tunnelstate="up"
-		else
-			/usr/share/mcbsystools/leds.sh vpn off
+		# Ping the peer address
+		if (valid_ip $openvpnIP); then
+			if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
+				/usr/share/mcbsystools/leds.sh vpn on
+				tunnelstate="up"
+			else
+				/usr/share/mcbsystools/leds.sh vpn off
+				tunnelstate="down"
+			fi
+		else 
+			syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
 			tunnelstate="down"
 		fi
-	else 
-		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
-		tunnelstate="down"
-	fi
 
-	# Set Tunnel state
-	echo $tunnelstate > $VPN_STATE_FILE
-	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
+		# Set Tunnel state
+		echo $tunnelstate > $VPN_STATE_FILE
+		syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
+	fi
+	[ "$tunnelstae" = "down" ] && return 1
+	return 0
+}
+
+function startup_vpn_connection () {
+	if [ $START_VPN_ENABLED -eq 1 ]; then
+		syslogger "debug" "Restarting VPN connection FIXME"
+	fi
 }
 
 #-----------------------------------------------------------------------

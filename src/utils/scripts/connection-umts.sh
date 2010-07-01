@@ -11,32 +11,37 @@ UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 UMTS_DEV=`getmcboption connection.umts.dev`
 
 #-----------------------------------------------------------------------
+# Check for functional pppd and pppx interface
 function IsPPPDAlive () {
     local pids
     local netclass
     local rc
     pids="`pidof pppd`" && netclass="`systool -c net | grep -q $UMTS_DEV`"; rc=$?
-    syslogger "debug" "UMTS-Conn - pppd processes: $pids $netclass ($rc)"		
+    syslogger "debug" "UMTS-Conn - status - pppd: $pids $netclass (rc=$rc)"		
     return $rc
 }
 
 function StartPPPD () {
-    RefreshModemDevices
-    local device=$CONNECTION_DEVICE
-    syslogger "info" "UMTS-Conn - Starting pppd on modem device $device"
-    pppd $device 460800 connect "/usr/sbin/chat -v -f $MCB_SCRIPTS_DIR/ppp-umts.chat" &
+    if ! IsPPPDAlive; then
+	RefreshModemDevices
+	local device=$CONNECTION_DEVICE
+	syslogger "info" "UMTS-Conn - Starting pppd on modem device $device"
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $MCB_SCRIPTS_DIR/ppp-umts.chat" &
+    fi
 }
 function StopPPPD () {
-    local pids=`pidof pppd`
-    syslogger "info" "UMTS-Conn - Stopping pppd ($pids)"
-    if [ -z "$pids" ]; then
-	    syslogger "info" "UMTS-Conn - No pppd is running."
-	    return 0
-    fi
+    if IsPPPDAlive; then
+	local pids=`pidof pppd`
+	syslogger "info" "UMTS-Conn - Stopping pppd ($pids)"
+	if [ -z "$pids" ]; then
+		syslogger "info" "UMTS-Conn - No pppd is running."
+		return 0
+	fi
 
-    kill -TERM $pids > /dev/null
-    if [ "$?" != "0" ]; then
-	rm -f /var/run/ppp*.pid > /dev/null
+	kill -TERM $pids > /dev/null
+	if [ "$?" != "0" ]; then
+	    rm -f /var/run/ppp*.pid > /dev/null
+	fi
     fi
 }
 
@@ -117,14 +122,10 @@ function WaitForModemBookedIntoNetwork () {
 rc_code=0
 obtainlock $UMTS_CONNECTION_PID_FILE
 
-wan_ct=${2:=127.0.0.1}
-wan_gw=${3:=default}
-
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
     start)
 	syslogger "info" "UMTS-Conn - starting connection..."
-	rc_code=1
 	ReadModemStatusFile
 	if 	[ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] ||
 		[ $MODEM_STATUS == ${MODEM_STATES[readyID]} ] ||
@@ -145,34 +146,38 @@ case "$cmd" in
 		    WaitForPPP0Device
 		    if [ $? -eq 1 ]; then		
 			WriteModemStatusFile ${MODEM_STATES[connected]}
-			rc_code=0;
 		    else
 			syslogger "debug" "UMTS-Conn - ppp deamon didn't startup."
 			$MCB_SCRIPTS_DIR/leds.sh 3g off
+			rc_code=1
 		    fi
 		else
+		    WriteModemStatusFile ${MODEM_STATES[connected]}
 		    syslogger "debug" "UMTS-Conn - ppp deamon is already running."
-		    rc_code=0;
 		fi
 	    else
 		syslogger "error" "UMTS-Conn - Could not initialize datacard (timeout)"
 		$MCB_SCRIPTS_DIR/leds.sh 3g off
 		$UMTS_FS
-		syslogger "info" "UMTS-Conn - reported fieldstrength is $?."			  
+		syslogger "info" "UMTS-Conn - reported fieldstrength is $?."
+		rc_code=1
 	    fi
 	else
-	    syslogger "debug" "UMTS-Conn - modem not ready"
+	    syslogger "debug" "UMTS-Conn - modem in status $MODEM_STATUS, won't again"
 	fi
     ;;
     stop)
 	syslogger "info" "UMTS-Conn - stopping connection..."
 	StopPPPD
+	InitializeModem
 	CheckNIState
     ;;
     check)
 	if IsPPPDAlive; then
-	    if [ $# -gt 1 ] && [ -n "$wan_ct" -a -n "$wan_gw" ]; then
-		syslogger "debug" "ETH-Conn - Pinging check target $wan_ct via $wan_gw"
+	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
+		wan_ct=${2:=127.0.0.1}
+		wan_gw=${3:=default}
+		syslogger "debug" "UMTS-Conn - Pinging check target $wan_ct via $wan_gw"
 		ip route add $wan_ct/32 via $wan_gw dev $UMTS_DEV;
 		ip route
 		ping -I $UMTS_DEV -c 1 -W 10 -w 60 $wan_ct 1>/dev/null ||
@@ -198,7 +203,9 @@ case "$cmd" in
 	if IsPPPDAlive; then
 	    echo "Interface $UMTS_DEV is active"
 	else
-	    echo "Interface $UMTS_DEV isn't configured"; rc_code=1
+	    echo "Interface $UMTS_DEV isn't configured"
+	    DetectModemCard
+	    rc_code=1
 	fi
 	;;
     *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
