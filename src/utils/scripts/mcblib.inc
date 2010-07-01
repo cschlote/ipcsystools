@@ -87,6 +87,7 @@ function obtainlock () {
 	else
 	   syslogger "error" "Failed to acquire lockfile: $lastlockfile." 
 	   syslogger "error" "Held by $(cat $lastlockfile)"
+	   echo "ERROR: Can't get lock. Script instance already running" 1>&2
 	   exit 0
 	fi
 }
@@ -293,6 +294,7 @@ function startup_wan_connection () {
 	fi
 }
 function check_wan_connection () {
+	local rc=0
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
 		if [ $# -ge 1 ]; then
@@ -300,14 +302,14 @@ function check_wan_connection () {
 		fi
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
-		
-		$MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct
+		local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
+		$MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
 		if [ $? != 0 ]; then
 			syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
-			return 1;
+			rc=1;
 		fi
 	fi
-	return 0
+	return $rc
 }
 
 #-------------------------------------------------------------------------------
@@ -360,7 +362,7 @@ function CheckOpenVPNPeer () {
 
 function RebootMCB () {
 	syslogger "info" "MCB wird neu gestartet."
-	/sbin/reboot
+	echo /sbin/reboot
 }
 
 # Validate an IP Address

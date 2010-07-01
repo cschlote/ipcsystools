@@ -8,28 +8,34 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 # PID - File fuer das Skript
 UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 
-#-------------------------------------------------------------------------------
+UMTS_DEV=`getmcboption connection.umts.dev`
+
+#-----------------------------------------------------------------------
 function IsPPPDAlive () {
-    pidof pppd > /dev/null
-    return $?
+    local pids
+    local netclass
+    local rc
+    pids="`pidof pppd`" && netclass="`systool -c net | grep -q $UMTS_DEV`"; rc=$?
+    syslogger "debug" "UMTS-Conn - pppd processes: $pids $netclass ($rc)"		
+    return $rc
 }
 
 function StartPPPD () {
     RefreshModemDevices
     local device=$CONNECTION_DEVICE
-    syslogger "info" "UMTS-Conn - Starting pppd on device $device"
+    syslogger "info" "UMTS-Conn - Starting pppd on modem device $device"
     pppd $device 460800 connect "/usr/sbin/chat -v -f $MCB_SCRIPTS_DIR/ppp-umts.chat" &
 }
 function StopPPPD () {
     local pids=`pidof pppd`
     syslogger "info" "UMTS-Conn - Stopping pppd ($pids)"
     if [ -z "$pids" ]; then
-	    syslogger "info" "$0: No pppd is running."
+	    syslogger "info" "UMTS-Conn - No pppd is running."
 	    return 0
     fi
 
     kill -TERM $pids > /dev/null
-    if [ ! "$?" = "0" ]; then
+    if [ "$?" != "0" ]; then
 	rm -f /var/run/ppp*.pid > /dev/null
     fi
 }
@@ -42,8 +48,8 @@ function WaitForPPP0Device () {
     local reached_timeout=0
 
     while [ true ] ; do
-	if (systool -c net | grep ppp0 > /dev/null); then
-	    syslogger "info" "UMTS-Conn - ppp0 available"
+	if systool -c net | grep -q $UMTS_DEV; then
+	    syslogger "info" "UMTS-Conn - $UMTS_DEV available"
 	    WriteConnectionAvailableFile
 	    break
 	fi
@@ -53,7 +59,7 @@ function WaitForPPP0Device () {
 	    break
 	fi
 
-	syslogger "debug" "UMTS-Conn - Waiting ppp0 coming up"		
+	syslogger "debug" "UMTS-Conn - Waiting $UMTS_DEV coming up"		
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -111,11 +117,13 @@ function WaitForModemBookedIntoNetwork () {
 rc_code=0
 obtainlock $UMTS_CONNECTION_PID_FILE
 
-if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
+wan_ct=${2:=127.0.0.1}
+wan_gw=${3:=default}
 
+if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
     start)
-	syslogger "debug" "UMTS-Conn - starting connection..."
+	syslogger "info" "UMTS-Conn - starting connection..."
 	rc_code=1
 	ReadModemStatusFile
 	if 	[ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] ||
@@ -157,30 +165,43 @@ case "$cmd" in
 	fi
     ;;
     stop)
-	syslogger "debug" "UMTS-Conn - stopping connection..."
+	syslogger "info" "UMTS-Conn - stopping connection..."
 	StopPPPD
 	CheckNIState
     ;;
-    check)	if [ $# -gt 1 ] && [ -n "$2" ]; then
-		    syslogger "debug" "UMTS-Conn - Pinging check target $2"
-		    IsPPPDAlive &&
-			ping -I ppp0 -c 1 -W 10 -w 60 $2 1>/dev/null ||
-			( sleep 10 &&
-			ping -I ppp0 -c 3 -W 15 -w 60 $2 1>/dev/null) ||
-			( sleep 10 &&
-			ping -I ppp0 -c 5 -W 20 -w 60 $2 1>/dev/null)
-		    if [ $? != 0 ]; then
-			syslogger "error" "UMTS-Conn - Ping to $2 on WAN interface eth0 failed"
-			rc_code=1;
-		    else
-			syslogger "debug" "UMTS-Conn - Ping to $2 on WAN interface ppp0 successful"
-		    fi
+    check)
+	if IsPPPDAlive; then
+	    if [ $# -gt 1 ] && [ -n "$wan_ct" -a -n "$wan_gw" ]; then
+		syslogger "debug" "ETH-Conn - Pinging check target $wan_ct via $wan_gw"
+		ip route add $wan_ct/32 via $wan_gw dev $UMTS_DEV;
+		ip route
+		ping -I $UMTS_DEV -c 1 -W 10 -w 60 $wan_ct 1>/dev/null ||
+		( sleep 10 &&
+		ping -I $UMTS_DEV -c 3 -W 15 -w 60 $wan_ct 1>/dev/null) ||
+		( sleep 10 &&
+		ping -I $UMTS_DEV -c 5 -W 20 -w 60 $wan_ct 1>/dev/null)
+		if [ $? != 0 ]; then
+		    syslogger "error" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV failed"
+		    rc_code=1;
 		else
-		    syslogger "debug" "UMTS-Conn - Missing ping target argument"
+		    syslogger "debug" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV successful"
 		fi
+		ip route del $wan_ct/32 via $wan_gw dev $UMTS_DEV;
+	    else
+		syslogger "error" "UMTS-Conn - Missing ping target argument"
+	    fi
+	else
+		syslogger "error" "UMTS-Conn - PPPD isn't running, no UMTS connection"
+	fi
 	;;
-    *)
-	echo "Usage: $0 start|stop|check <ip>"
+    status)
+	if IsPPPDAlive; then
+	    echo "Interface $UMTS_DEV is active"
+	else
+	    echo "Interface $UMTS_DEV isn't configured"; rc_code=1
+	fi
+	;;
+    *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
 	exit 1
     ;;
 esac
