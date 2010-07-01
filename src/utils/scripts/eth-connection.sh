@@ -20,26 +20,48 @@ function IsETHAlive () {
 
 function StartETH () {
 	syslogger "info" "ETH-Conn - Starting IF"
-	
+	if [ ! IsETHAlive ]; then
+	    mount | grep nfs | wc -l
+	    if [ $? = 1 ]; then
+		syslogger "debug" "ETH-Conn - NFS mounted rootfs. Don't touch eth0!"
+	    else
+		ifdown eth0 || true
+		ifup eth0
+	    fi
+	fi
 }
 function StopETH () {
-	syslogger "info" "UMTS-Conn - Stopping pppd ($pids)"
+	syslogger "info" "ETH-Conn - Stopping pppd ($pids)"
+	if [ IsETHAlive ]; then
+	    mount | grep nfs | wc -l
+	    if [ $? = 1 ]; then
+		syslogger "debug" "ETH-Conn - NFS mounted rootfs. Don't touch eth0!"
+	    else
+		ifdown eth0
+	    fi
+	fi
 }
 
 #-----------------------------------------------------------------------
 
 rc_code=0
-obtainlock $UMTS_CONNECTION_PID_FILE
+obtainlock $ETH_CONNECTION_PID_FILE
 
-case "$1" in
+if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
+
+case "$cmd" in
     start)	StartETH	;;
     stop)	StopETH		;;
-    check)	if [ -n "$2" ]; then
-		    ping -I eth0 -c 1 $2
-		    if [ ! $? ]; then
-			syslogger "error" $DESC "Ping to $wan_ct on WAN interface $wan_if failed"
+    check)	if [ $# -gt 1 ] && [ -n "$2" ]; then
+		    syslogger "debug" "ETH-Conn - Pinging check target"
+		    ping -I eth0 -c 1 -w 1 $2
+		    if [ $? != 0 ]; then
+			syslogger "error" "ETH-Conn - Ping to $2 on WAN interface eth0 failed"
 			rc_code=1;
 		    fi
+		else
+		    syslogger "debug" "ETH-Conn - Missing ping target argument"
+		fi
 	;;
     *)	echo "Usage: $0 start|stop|check <ip>"
 	rc_code=1;
