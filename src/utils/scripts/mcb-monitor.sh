@@ -92,11 +92,26 @@ function IsUMST_Connection_Script_Run ()
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
+set reset_wan=false
+set reset_vpn=false
+set reset_system=false
+
 # Statusdateien für die GSM Verbindung aktualisieren
 WriteGSMConnectionInfoFiles
 
 # Autom. Start UMTS aktiviert?
-if (test $START_UMTS_ENABLED -eq 1); then
+if [ $START_WAN_ENABLED -eq 1 ]; then
+    syslogger "debug" "Watchdog - Checking enabled WAN connections"
+    check_wan_connection
+    if [ ! $? ]; then
+	syslogger "debug" "Watchdog - Current WAN connection failed, try next"
+	set_wan_connection_current next
+	reset_wan=true
+    fi
+fi
+
+# Autom. Start UMTS aktiviert?
+if [ $START_UMTS_ENABLED -eq 1 ]; then
     syslogger "debug" "Watchdog - Checking enabled UMTS connection"
 
     # Test OpenVPN Peer
@@ -166,9 +181,7 @@ if (test $START_UMTS_ENABLED -eq 1); then
 		# Anzahl der Fehlversuche �berschritten -> reboot des Systems
 		if ( test $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ); then
 		    syslogger "info" "Watchdog - Starting pppd $CONNECTION_FAULT times"
-		    syslogger "warn" "Watchdog - Restart MCB..."
-		    RebootMCB
-		    exit 1
+		    reset_system=true
 		fi
 
 		# Restart der Verbindung (pppd)
@@ -183,4 +196,23 @@ if (test $START_UMTS_ENABLED -eq 1); then
     fi
 fi
 
+#-- Restart components -------------------------------------------------
+if  [ $reset_system = "true" ]; then
+    syslogger "warn" "Watchdog - Restarting MCB..."
+    RebootMCB
+else
+    if  [ $reset_vpn = "true" ]; then
+	syslogger "warn" "Watchdog - Restarting VPN connection..."
+	CheckOpenVPNPeer
+    else 
+	if  [ $reset_wan = "true" ]; then
+	    syslogger "warn" "Watchdog - Restarting WAN connection..."
+	    # Neustart des PPPD veranlassen
+	    startup_wan_connection
+	fi
+    fi
+fi
+
+#-- End of script ------------------------------------------------------
 releaselock
+exit 0

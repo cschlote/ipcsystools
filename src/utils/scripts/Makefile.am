@@ -10,6 +10,7 @@ nobase_dist_pkgdata_DATA = \
 	mcblib.inc \
 	options.umts \
 	ppp-umts.chat \
+	eth-connection.sh \
 	umts-connection.sh \
 	mcb-initsystem.sh \
 	leds.sh

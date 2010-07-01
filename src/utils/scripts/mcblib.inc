@@ -6,6 +6,9 @@
 # Base directory of UMTS tools
 MCB_TOOLS_DIR=/usr/bin
 
+# Base directory of mcbsystools scripts
+MCB_SCRIPTS_DIR=/usr/share/mcbsystools
+
 # Configuration file
 MCBCTL_CONFIG=/etc/mcbctl.conf
 
@@ -43,6 +46,11 @@ CONNECTION_FS_FILE=$MCB_STATUSFILE_DIR/connection_fs
 CONNECTION_GSMINFO_FILE=$MCB_STATUSFILE_DIR/connection_gsminfo
 VPN_STATE_FILE=$MCB_STATUSFILE_DIR/vpn_status
 
+WAN_STATE_FILE=$MCB_STATUSFILE_DIR/wan_status
+if [ ! -e $WAN_STATE_FILE ] ; then
+	echo 0 > $WAN_STATE_FILE
+fi
+
 # Connection monitoring, remember successful test time
 CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
 if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
@@ -58,10 +66,13 @@ function getmcboption () {
 }
 
 # Read GENERAL parameters from mcbctl.conf
+START_WAN_ENABLED=`getmcboption general.start_wan_enabled`
 START_UMTS_ENABLED=`getmcboption general.start_umts_enabled`
 START_VPN_ENABLED=`getmcboption general.start_vpn_enabled`
 LOG_LEVEL=`getmcboption general.log_level`
 CHECK_CONNECTION_ENABLED=`getmcboption general.check_connection_enabled`
+WAN_INTERFACES=`getmcboption general.wan.interfaces`
+WAN_CHECKTARGETS=`getmcboption wan.checktargets`
 
 #-----------------------------------------------------------------------
 # Shell locking
@@ -245,6 +256,52 @@ function InitializeModem () {
 }
 
 #-------------------------------------------------------------------------------
+# WAN related functions
+#-------------------------------------------------------------------------------
+function set_wan_connection_current () {
+	local wan_curr=`cat $WAN_STATE_FILE`
+	case $1 in
+	reset)	wan_curr=0 ;;
+	next)	wan_curr=$[$wan_curr +1]
+			if [ $wan_curr >= ${#WAN_INTERFACES[@]} ]; then
+				$wan_curr=0;
+			fi
+	esac
+	echo $wan_curr > $WAN_STATE_FILE
+}
+function startup_wan_connection () {
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		syslogger "debug" "Starting WAN connection $wan_if"
+		$MCB_SCRIPTS_DIR/$wan_if-connection.sh start &
+	
+		# [ $START_UMTS_ENABLED -eq 1 ] && $MCB_SCRIPTS_DIR/umts-connection.sh start &
+	fi
+}
+function check_wan_connection () {
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		
+		$MCB_SCRIPTS_DIR/$wan_if-connection.sh check $wan_ct
+		if [ ! $? ]; then
+			syslogger "error" $DESC "WAN interface $wan_if or pin to $wan_ct failed"
+			return 1;
+		fi
+
+		ping -I $wan_if -c 1 $wan_ct
+		if [ ! $? ]; then
+			syslogger "error" $DESC "Ping to $wan_ct on WAN interface $wan_if failed"
+			return 1;
+		fi
+	fi
+	return 0
+}
+
+#-------------------------------------------------------------------------------
 # VPN related functions
 #-------------------------------------------------------------------------------
 
@@ -319,13 +376,20 @@ function valid_ip ()
 # Add mcb-monitor.sh to system cron table
 #
 function setup_checkconnection () {
-	entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
-	if [ $entry -eq 0 ]; then	
-		syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
-		crontab -l 2>/dev/null /tmp/crontab.dump
-		echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
-		crontab /tmp/crontab.dump
-		rm -f /tmp/crontab.dump
+	if [ $CHECK_CONNECTION_ENABLED -eq 1 ] ; then
+		entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+		if [ $entry -eq 0 ]; then	
+			syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
+			crontab -l 2>/dev/null /tmp/crontab.dump
+			echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
+			crontab /tmp/crontab.dump
+			rm -f /tmp/crontab.dump
+		fi
 	fi
 }
-
+#
+# Ping a target and return status RC
+#
+function ping_target () {
+	return 0
+}
