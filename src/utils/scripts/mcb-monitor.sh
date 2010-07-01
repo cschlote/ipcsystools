@@ -72,15 +72,14 @@ function CheckExternConnection ()
 	fi
     fi
 }
-#-------------------------------------------------------------------------------
+
 function IsUMST_Connection_Script_Run ()
 {
-    if ( pidof umts-connection.sh > /dev/null ); then
-	return 1
-    else
-	return 0
-    fi
+    return pidof connection-umts.sh > /dev/null
 }
+
+
+
 #-----------------------------------------------------------------------
 # MCB Connection Monitor
 #
@@ -92,60 +91,67 @@ function IsUMST_Connection_Script_Run ()
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
-set reset_wan=false
-set reset_vpn=false
-set reset_system=false
+reset_wan=false
+reset_vpn=false
+reset_system=false
 
 # Statusdateien für die GSM Verbindung aktualisieren
 WriteGSMConnectionInfoFiles
 
-# Autom. Start UMTS aktiviert?
+# Automatically start configured WAN connections
 if [ $START_WAN_ENABLED -eq 1 ]; then
     syslogger "debug" "Watchdog - Checking enabled WAN connections"
     check_wan_connection
-    if [ ! $? ]; then
-	syslogger "debug" "Watchdog - Current WAN connection failed, try next"
+    if [ $? != 0 ]; then
+	syslogger "debug" "Watchdog - Current WAN connection failed, trying next"
+	shutdown_wan_connection
 	set_wan_connection_current next
 	reset_wan=true
+    else
+	get_wan_connect_current
+	if [ $WAN_FALLBACKMODE -eq 1 -a $WAN_CURRENT -ne 0 ]  ; then
+	    check_wan_connection 0
+	    if [ $? != 0 ]; then
+		syslogger "debug" "Watchdog - Primary WAN connection still failing"
+	    else
+		syslogger "debug" "Watchdog - Primary WAN connection available again"
+		shutdown_wan_connection
+		set_wan_connection_current reset
+		reset_wan=true
+	    fi
+	fi
     fi
 fi
 
-# Autom. Start UMTS aktiviert?
-if [ $START_UMTS_ENABLED -eq 1 ]; then
-    syslogger "debug" "Watchdog - Checking enabled UMTS connection"
+# Test OpenVPN Peer
+if (test $START_VPN_ENABLED -eq 1); then
+    CheckOpenVPNPeer
+fi
 
-    # Test OpenVPN Peer
-    if (test $START_VPN_ENABLED -eq 1); then
-	    CheckOpenVPNPeer
-    fi
-    #
-    # Option f�r die Pr�fung aktiviert?
-    #
-    if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
-	syslogger "info" "Watchdog - Check UMTS connection"
+# Additional connection checks, if enabled
+if ( test $CHECK_CONNECTION_ENABLED -eq 1 ); then
+    syslogger "info" "Watchdog - Check UMTS connection"
 
-	# Absoluter Notfall nichts geht mehr Hardware abgest�rt oder so!
-	if ( test $MAX_CONNECTION_LOST -gt 0 ); then
-	    LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
-	    TIMESTAMP_NOW=`date +%s`
+    # Absoluter Notfall nichts geht mehr Hardware abgest�rt oder so!
+    if ( test $MAX_CONNECTION_LOST -gt 0 ); then
+	LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
+	TIMESTAMP_NOW=`date +%s`
 
-	    # Maximaler Zeitraum �berschritten -> reboot des System
-	    if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
-		syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds"
-		syslogger "warn" "Watchdog - Restart MCB..."
-		RebootMCB
-		exit 1
-	    fi
+	# Maximaler Zeitraum �berschritten -> reboot des System
+	if ( test $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ); then
+	    syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds"
+	    syslogger "warn" "Watchdog - Restart MCB..."
+	    reset_system=true
 	fi
+    else
 	#
 	# UMTS Skript noch aktiv?
 	#
-	IsUMST_Connection_Script_Run
-	if ( test $? -eq 0 ); then	
+	if ! IsUMST_Connection_Script_Run; then	
 	    syslogger "debug" "Watchdog - Last pppd available time $[$TIMESTAMP_NOW - $LAST_CONNECTION_AVAILABLE] seconds ago"
 
 	    # ppp0 vorhanden?      
-	    if (systool -c net | grep ppp0 > /dev/null); then
+	    if systool -c net | grep ppp0 > /dev/null; then
 		syslogger "info" "Watchdog - ppp0 connection available"
 
 		# Verbindungsstatus f�r das Starten der MCB eintragen
@@ -161,15 +167,14 @@ if [ $START_UMTS_ENABLED -eq 1 ]; then
 		    # Grenzwert erreicht?
 		    if ( test $PING_FAULT -ge $CHECK_PING_REBOOT ); then						
 			syslogger "warn" "Watchdog - Restart MCB..."
-			RebootMCB
-			exit 1
+			reset_system=true
 		    fi
 		fi
 	    else        
 		syslogger "info" "Watchdog - ppp0 connection not available"
 
 		# pppd eliminieren, k�nnte noch vorhanden sein!
-		/usr/share/mcbsystools/umts-connection.sh stop
+		/usr/share/mcbsystools/connection-umts.sh stop
 
 		# Verbindungsz�hler erh�hen
 		CONNECTION_FAULT=$[CONNECTION_FAULT+1]
@@ -189,25 +194,26 @@ if [ $START_UMTS_ENABLED -eq 1 ]; then
 		    syslogger "info" "Watchdog - Restart modem connection..."
 
 		    # Neustart des PPPD veranlassen
-		    /usr/share/mcbsystools/umts-connection.sh start
+		    /usr/share/mcbsystools/connection-umts.sh start
 		fi
 	    fi
+	else
+	    syslogger "debug" "Watchdog - connect-umts.sh still active"
 	fi
     fi
 fi
 
 #-- Restart components -------------------------------------------------
-if  [ $reset_system = "true" ]; then
+if [ $reset_system = "true" ]; then
     syslogger "warn" "Watchdog - Restarting MCB..."
     RebootMCB
 else
-    if  [ $reset_vpn = "true" ]; then
+    if [ $reset_vpn = "true" ]; then
 	syslogger "warn" "Watchdog - Restarting VPN connection..."
 	CheckOpenVPNPeer
     else 
-	if  [ $reset_wan = "true" ]; then
+	if [ $reset_wan = "true" ]; then
 	    syslogger "warn" "Watchdog - Restarting WAN connection..."
-	    # Neustart des PPPD veranlassen
 	    startup_wan_connection
 	fi
     fi

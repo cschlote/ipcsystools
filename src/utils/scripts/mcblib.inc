@@ -71,8 +71,10 @@ START_UMTS_ENABLED=`getmcboption general.start_umts_enabled`
 START_VPN_ENABLED=`getmcboption general.start_vpn_enabled`
 LOG_LEVEL=`getmcboption general.log_level`
 CHECK_CONNECTION_ENABLED=`getmcboption general.check_connection_enabled`
-WAN_INTERFACES=`getmcboption general.wan.interfaces`
-WAN_CHECKTARGETS=`getmcboption wan.checktargets`
+WAN_FALLBACKMODE=`getmcboption general.wan.fallbackmode`
+WAN_INTERFACES=(`getmcboption general.wan.interfaces`)
+WAN_CHECKTARGETS=(`getmcboption wan.checktargets`)
+WAN_CHECKGATEWAYS=(`getmcboption wan.checkgateways`)
 
 #-----------------------------------------------------------------------
 # Shell locking
@@ -83,8 +85,8 @@ function obtainlock () {
 	then
 		trap 'rm -f "$lastlockfile"; exit $?' INT TERM EXIT
 	else
-	   echo "Failed to acquire lockfile: $lastlockfile." 
-	   echo "Held by $(cat $lastlockfile)"
+	   syslogger "error" "Failed to acquire lockfile: $lastlockfile." 
+	   syslogger "error" "Held by $(cat $lastlockfile)"
 	   exit 0
 	fi
 }
@@ -99,7 +101,7 @@ function releaselock () {
 # void syslogger (char *logtype, char *msg)
 function syslogger ()
 {
-	DESC="mcb-monitor"
+	DESC="mcb-monitor[$$]"
 	# LogLevel 1
 	if [ "$1" != "debug" ]; then
 		logger -p local0.$1 -t $DESC $2
@@ -124,12 +126,23 @@ function WriteConnectionAvailableFile () {
 	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
 }
 
+#-----------------------------------------------------------------------
+
+# Write the UMTS Field strength to a file and update the LEDBAR
+function WriteConnectionFieldStrengthFile ()
+{
+	$UMTS_FS
+	field_strength=$?
+
+	echo $field_strength > $CONNECTION_FS_FILE
+	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
+}
+
 # Write the radio access technology (RAT) mode to a file
 function WriteConnectionRATModeFile () {
 	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
-
 # Write the current network mode to a file
 function WriteConnectionNetworkModeFile () {
 	local connectionmode
@@ -143,21 +156,6 @@ function WriteConnectionNetworkModeFile () {
 		connectionmode=`echo $cnti | awk -F":" '{print $3}'`		
 	fi
 	echo $connectionmode > $CONNECTION_MODE_FILE
-}
-
-# Write the UMTS Field strength to a file and update the LEDBAR
-function WriteConnectionFieldStrengthFile ()
-{
-	$UMTS_FS
-	field_strength=$?
-
-	echo $field_strength > $CONNECTION_FS_FILE
-	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
-}
-
-function WriteToModemStatusFile () {
-	MODEM_STATUS=$1
-	echo $MODEM_STATUS > $MODEM_STATUS_FILE
 }
 
 function WriteGSMCellInfoFile () {
@@ -180,8 +178,17 @@ function WriteGSMConnectionInfoFiles () {
 	# Write GSM Information
 	WriteGSMCellInfoFile
 }
-
 #-----------------------------------------------------------------------
+
+function ReadModemStatusFile () {
+	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
+	syslogger "debug" "modem status is $MODEM_STATUS"
+}
+function WriteModemStatusFile () {
+	MODEM_STATUS=$1
+	syslogger "debug" "modem status set to $MODEM_STATUS"
+	echo $MODEM_STATUS > $MODEM_STATUS_FILE
+}
 
 function DetectModemCard () {
 	# Sierra Wireless Modems
@@ -189,15 +196,14 @@ function DetectModemCard () {
 		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
 		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
 
-		WriteToModemStatusFile ${MODEM_STATES[detectedID]}
+		WriteModemStatusFile ${MODEM_STATES[detectedID]}
 		return 0
 	else
-		WriteToModemStatusFile ${MODEM_STATES[no_modemID]}
+		WriteModemStatusFile ${MODEM_STATES[no_modemID]}
 		return 1
 	fi
 }
-#-----------------------------------------------------------------------
-# Sets the PIN for the SIM card
+
 function SetSIMPIN ()
 {
 	local sim_pin=`getmcboption sim.pin`
@@ -213,30 +219,25 @@ function SetSIMPIN ()
 	#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
 	case $pin_state in
 		0|1)
-			WriteToModemStatusFile ${MODEM_STATES[readyID]} ;;
+			WriteModemStatusFile ${MODEM_STATES[readyID]} ;;
 		2)
-			WriteToModemStatusFile ${MODEM_STATES[sim_not_insertedID]} ;;
+			WriteModemStatusFile ${MODEM_STATES[sim_not_insertedID]} ;;
 		3)
-			WriteToModemStatusFile ${MODEM_STATES[sim_pinID]} ;;
+			WriteModemStatusFile ${MODEM_STATES[sim_pinID]} ;;
 		*)
-			WriteToModemStatusFile "errorcode: $pin_state" ;;
+			WriteModemStatusFile "errorcode: $pin_state" ;;
 	esac
 }
 
-#-----------------------------------------------------------------------
 # Ist die Karte eingebucht?
 function CheckNIState () {
 	$UMTS_NI
 	local ni=$?
 	if [ $ni -eq 0 ]; then
-		WriteToModemStatusFile ${MODEM_STATES[registeredID]}
+		WriteModemStatusFile ${MODEM_STATES[registeredID]}
 		WriteGSMConnectionInfoFiles
 	fi
 	return $ni
-}
-
-function ReadModemStatus () {
-	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
 }
 
 function SetConnectionRAT () {	
@@ -258,16 +259,29 @@ function InitializeModem () {
 #-------------------------------------------------------------------------------
 # WAN related functions
 #-------------------------------------------------------------------------------
+function get_wan_connect_current () {
+	WAN_CURRENT=`cat $WAN_STATE_FILE`
+}
 function set_wan_connection_current () {
 	local wan_curr=`cat $WAN_STATE_FILE`
 	case $1 in
 	reset)	wan_curr=0 ;;
 	next)	wan_curr=$[$wan_curr +1]
-			if [ $wan_curr >= ${#WAN_INTERFACES[@]} ]; then
-				$wan_curr=0;
+			if [ $wan_curr -ge ${#WAN_INTERFACES[@]} ]; then
+				wan_curr=0;
 			fi
 	esac
 	echo $wan_curr > $WAN_STATE_FILE
+	get_wan_connect_current
+}
+function shutdown_wan_connection () {
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		syslogger "debug" "Shutdown WAN connection $wan_if"
+		$MCB_SCRIPTS_DIR/connection-$wan_if.sh stop
+	fi
 }
 function startup_wan_connection () {
 	if [ $START_WAN_ENABLED -eq 1 ]; then
@@ -275,26 +289,21 @@ function startup_wan_connection () {
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		syslogger "debug" "Starting WAN connection $wan_if"
-		$MCB_SCRIPTS_DIR/$wan_if-connection.sh start &
-	
-		# [ $START_UMTS_ENABLED -eq 1 ] && $MCB_SCRIPTS_DIR/umts-connection.sh start &
+		$MCB_SCRIPTS_DIR/connection-$wan_if.sh start
 	fi
 }
 function check_wan_connection () {
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		
-		$MCB_SCRIPTS_DIR/$wan_if-connection.sh check $wan_ct
-		if [ ! $? ]; then
-			syslogger "error" $DESC "WAN interface $wan_if or pin to $wan_ct failed"
-			return 1;
-		fi
-
-		ping -I $wan_if -c 1 $wan_ct
-		if [ ! $? ]; then
-			syslogger "error" $DESC "Ping to $wan_ct on WAN interface $wan_if failed"
+		$MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct
+		if [ $? != 0 ]; then
+			syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
 			return 1;
 		fi
 	fi
