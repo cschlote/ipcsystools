@@ -378,8 +378,13 @@ function startup_vpn_connection () {
 #-----------------------------------------------------------------------
 
 function RebootMCB () {
-	syslogger "info" "MCB wird neu gestartet."
-	echo /sbin/reboot
+	local fake=`getmcboption general.reboot.fake`
+	syslogger "error" "MCB wird neu gestartet."
+	if [ fake -eq 1 ]; then
+		syslogger "debug" "Fake mode: do not reset box."
+	else
+		/sbin/reboot
+	fi
 }
 
 # Validate an IP Address
