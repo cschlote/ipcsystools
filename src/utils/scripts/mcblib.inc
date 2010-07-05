@@ -62,10 +62,11 @@ function getmcboption () {
 }
 
 # Read GENERAL parameters from mcbctl.conf
+START_MCB_MONITOR=`getmcboption general.start_mcb_monitor`
 START_WAN_ENABLED=`getmcboption general.start_wan_enabled`
 START_VPN_ENABLED=`getmcboption general.start_vpn_enabled`
 LOG_LEVEL=`getmcboption general.log_level`
-CHECK_CONNECTION_ENABLED=`getmcboption general.check_connection_enabled`
+
 WAN_FALLBACKMODE=`getmcboption general.wan.fallbackmode`
 WAN_INTERFACES=(`getmcboption general.wan.interfaces`)
 WAN_CHECKTARGETS=(`getmcboption wan.checktargets`)
@@ -128,6 +129,10 @@ function WriteConnectionFieldStrengthFile ()
 
 	echo $field_strength > $CONNECTION_FS_FILE
 	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
+}
+
+function ResetModem () {
+	$MCB_TOOLS_DIR/umtscardtool -s ATZ
 }
 
 # Write the radio access technology (RAT) mode to a file
@@ -241,6 +246,7 @@ function SetConnectionRAT () {
 function InitializeModem () {
 	DetectModemCard
 	if [ $? -eq 0 ]; then
+		ResetModem || syslogger "error" "Can't reset modem.'"
 		SetConnectionRAT
 		SetSIMPIN
 		sleep 1
@@ -380,15 +386,18 @@ function startup_vpn_connection () {
 function RebootMCB () {
 	local fake=`getmcboption general.reboot.fake`
 	syslogger "error" "MCB wird neu gestartet."
-	if [ fake -eq 1 ]; then
+	if [ "$fake" -eq "1" ]; then
 		syslogger "debug" "Fake mode: do not reset box."
 	else
 		/sbin/reboot
 	fi
 }
 
+#
 # Validate an IP Address
 # void valid_ip (char *ipaddress)
+# FIXME Handle ipv6 addresses
+#
 function valid_ip ()
 {
 	local  ip=$1
@@ -404,14 +413,30 @@ function valid_ip ()
 	 fi
 	 return $stat
 }
+#
+# Ping a target and return status RC
+#
+function ping_target () {
+	local rc=0;
+	set -x
+	[ "$2" != "default" ] && ip route add $1/32 via $2 dev $3;
+	ping -I $3 -c 1 -W 10 -w 60 $1 1>/dev/null ||
+	( sleep 10 &&
+	ping -I $3 -c 3 -W 15 -w 60 $1 1>/dev/null) ||
+	( sleep 10 &&
+	ping -I $3 -c 5 -W 20 -w 60 $1 1>/dev/null)
+	rc=$?
+	[ "$2" != "default" ] && ip route del $1/32 via $2 dev $3;
+	set +x
+	return $rc
+}
 
 #
 # Add mcb-monitor.sh to system cron table
 #
 function setup_checkconnection () {
-	if [ $CHECK_CONNECTION_ENABLED -eq 1 ] ; then
-		entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
-		if [ $entry -eq 0 ]; then	
+	if [ $START_MCB_MONITOR -eq 1 ] ; then
+		if ! crontab -l 2>/dev/null | grep -q mcb-monitor.sh; then	
 			syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
 			crontab -l 2>/dev/null /tmp/crontab.dump
 			echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
@@ -419,10 +444,4 @@ function setup_checkconnection () {
 			rm -f /tmp/crontab.dump
 		fi
 	fi
-}
-#
-# Ping a target and return status RC
-#
-function ping_target () {
-	return 0
 }

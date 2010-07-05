@@ -12,10 +12,9 @@ obtainlock /var/lock/mcb-monitor.lock
 # Read variables from config file
 #-----------------------------------------------------------------------
 
-# Sektion [WATCHDOG-UMTS]
-CHECK_CONNECTION_RESTART=`getmcboption watchdog.3g.check_connection_restart`
-CHECK_CONNECTION_REBOOT=`getmcboption watchdog.3g.check_connection_reboot`
-MAX_CONNECTION_LOST=`getmcboption watchdog.3g.max_connection_lost`
+# Sektion [WATCHDOG-CONNECTION]
+CHECK_CONNECTION_REBOOT=`getmcboption watchdog.wan.connection.max_restarts`
+MAX_CONNECTION_LOST=`getmcboption watchdog.wan.connection.max_time`
 
 # Sektion [WATCHDOG-PING]
 CHECK_PING_ENABLED=`getmcboption watchdog.ping.check_ping_enabled`
@@ -52,10 +51,9 @@ reset_system=false
 function check_connection_maxping ()
 {
     local rc=0
-    if ( test $CHECK_PING_ENABLED -eq 1 ); then
+    if [ $CHECK_PING_ENABLED -eq "1" ]; then
 	local timestamp=`date +%s`
 	local last_ping=`date +%s`
-
 	if [ -e $LAST_PING_FILE ]; then
 	    last_ping=`cat $LAST_PING_FILE`
 	else
@@ -75,16 +73,16 @@ function check_connection_maxping ()
 		PING_FAULT=$[$PING_FAULT+1]
 	    fi
 	    echo $PING_FAULT > $PING_FAULT_FILE
-	else
-	    syslogger "debug" "Watchdog - Next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds"
-	fi
 
-	# Maximum number of pings sent?
-	if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
-	    syslogger "error" "Watchdog - Check ping peer $CHECK_PING_IP expired"
-	    PING_FAULT=0 ; echo $PING_FAULT > $PING_FAULT_FILE
-	    reset_system=true
-	    rc=1
+	    # Maximum number of pings sent?
+	    if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
+		syslogger "error" "Watchdog - FAIL: ping peer $CHECK_PING_IP unavailable $CHECK_PING_REBOOT times"
+		reset_system=true
+		rc=1
+	    fi
+	else
+	    syslogger "debug" "Watchdog - ... (next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds)"
+	    syslogger "debug" "Watchdog - ... (remote ping test failed $PING_FAULT times of $CHECK_PING_REBOOT max)"
 	fi
     fi
     return $rc
@@ -116,10 +114,10 @@ function check_connection_fault () {
 	echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
     else
 	if [ $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ]; then
-	    syslogger "warn" "Watchdog - Restarted connections $CONNECTION_FAULT times (timeout)"
+	    syslogger "warn" "Watchdog - ... connection status faults $CONNECTION_FAULT times (timeout)"
 	    reset_system=true
 	else
-	    syslogger "info" "Watchdog - Restarted connections $CONNECTION_FAULT times"
+	    syslogger "debug" "Watchdog - ... connection status faults $CONNECTION_FAULT times"
 	fi
     fi
 }
@@ -131,24 +129,26 @@ function check_connection_maxlost () {
 
 	ReadConnectionAvailableFile
 	if check_wan_connection_status; then
+	    syslogger "debug" "Watchdog - ... connection status ok"
 	    WriteConnectionAvailableFile
 	    check_connection_fault reset
 	else
+	    syslogger "warn" "Watchdog - ... connection status fail, restart connection"
 	    check_connection_fault count
 	    reset_wan=true
 	fi
 	    
 	# Maximum time without connection expired?
 	if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
-	    syslogger "warn" "Watchdog - Maximun timeperiod reached - $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds"
+	    syslogger "warn" "Watchdog - ... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
 	    reset_system=true
 	    rc=1
 	else
-	    syslogger "debug" "Watchdog - Last connection available time $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
+	    syslogger "debug" "Watchdog - ... connection status reported ok $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
 	fi
 
 	# Maxium number of successless restarts?
-	check_connection_fault || rc=1
+	check_connection_fault 
     fi
     return $rc
 }
@@ -195,8 +195,18 @@ fi
 #-- Status checks ------------------------------------------------------
 check_openvpn_status
 
-check_connection_maxlost &&
-    check_connection_maxping
+#--- Ping a remote target and count faults eventually rebooting
+syslogger "debug" "Watchdog - Run Remote ping test..."
+if ! check_connection_maxping; then
+    syslogger "debug" "Watchdog - ... remote ping test reported failure!"
+fi
+
+#--- Check for connection status and PING_FAULT==0 and trigger reboot
+#--- when no valid connection after n times OR n seconds.
+syslogger "debug" "Watchdog - Run connection status test..."
+if ! check_connection_maxlost; then
+    syslogger "debug" "Watchdog - ...remote connection test failt!"
+fi
 
 #-- Restart components -------------------------------------------------
 if [ $reset_system = "true" ]; then

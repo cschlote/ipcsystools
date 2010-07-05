@@ -45,7 +45,10 @@ function StopPPPD () {
     fi
 }
 
-function WaitForPPP0Device () {
+#
+# Start the PPPD connection and retry if it fails
+#
+function StartAndWaitForPPPD () {
     # Loop Counters
     local count_timeout=0
     local count_timeout_max=12
@@ -57,6 +60,10 @@ function WaitForPPP0Device () {
 	    syslogger "info" "UMTS-Conn - $UMTS_DEV available"
 	    WriteConnectionAvailableFile
 	    break
+	else
+	    syslogger "info" "UMTS-Conn - $UMTS_DEV startet, wait for interface"
+	    InitializeModem
+	    StartPPPD
 	fi
 
 	if [ $count_timeout -ge $count_timeout_max ]; then
@@ -69,11 +76,7 @@ function WaitForPPP0Device () {
 	count_timeout=$[count_timeout+1]
     done
 
-    if [ $reached_timeout -eq 1 ]; then
-	return 0
-    else
-	return 1
-    fi
+    return $reached_timeout
 }
 
 #
@@ -140,11 +143,8 @@ case "$cmd" in
 		WriteConnectionFieldStrengthFile
 		WriteConnectionNetworkModeFile
 
-		IsPPPDAlive
-		if [ $? -eq 1 ]; then			
-		    StartPPPD
-		    WaitForPPP0Device
-		    if [ $? -eq 1 ]; then		
+		if ! IsPPPDAlive; then			
+		    if StartAndWaitForPPPD; then		
 			WriteModemStatusFile ${MODEM_STATES[connected]}
 		    else
 			syslogger "debug" "UMTS-Conn - ppp deamon didn't startup."
@@ -163,7 +163,7 @@ case "$cmd" in
 		rc_code=1
 	    fi
 	else
-	    syslogger "debug" "UMTS-Conn - modem in status $MODEM_STATUS, won't again"
+	    syslogger "debug" "UMTS-Conn - modem in status $MODEM_STATUS, won't start again"
 	fi
     ;;
     stop)
@@ -178,25 +178,19 @@ case "$cmd" in
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
 		syslogger "debug" "UMTS-Conn - Pinging check target $wan_ct via $wan_gw"
-		ip route add $wan_ct/32 via $wan_gw dev $UMTS_DEV;
-		ip route
-		ping -I $UMTS_DEV -c 1 -W 10 -w 60 $wan_ct 1>/dev/null ||
-		( sleep 10 &&
-		ping -I $UMTS_DEV -c 3 -W 15 -w 60 $wan_ct 1>/dev/null) ||
-		( sleep 10 &&
-		ping -I $UMTS_DEV -c 5 -W 20 -w 60 $wan_ct 1>/dev/null)
+		ping_target $wan_ct $wan_gw $UMTS_DEV;
 		if [ $? != 0 ]; then
 		    syslogger "error" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV failed"
 		    rc_code=1;
 		else
 		    syslogger "debug" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV successful"
 		fi
-		ip route del $wan_ct/32 via $wan_gw dev $UMTS_DEV;
 	    else
 		syslogger "error" "UMTS-Conn - Missing ping target argument"
 	    fi
 	else
-		syslogger "error" "UMTS-Conn - PPPD isn't running, no UMTS connection"
+	    syslogger "error" "UMTS-Conn - PPPD isn't running, no UMTS connection"
+	    rc_code=1;
 	fi
 	;;
     status)

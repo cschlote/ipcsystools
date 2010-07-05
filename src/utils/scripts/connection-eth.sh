@@ -13,11 +13,20 @@ ETH_KEEPUP=`getmcboption connection.eth.keepup`
 
 #-----------------------------------------------------------------------
 function IsETHAlive () {
-    if ifconfig $ETH_DEV | grep -q UP ; then
-	syslogger "debug" "ETH-Conn - status - interface $ETH_DEV is up and running"
-	return 0;
+    if ! ip addr show dev $ETH_DEV | grep -q "inet " ; then
+	syslogger "error" "ETH-Conn - status - interface $ETH_DEV has no ipv4 addr"
+	return 1;
     fi
-    return 1;
+    if ! mii-diag -s $ETH_DEV 2>&1 >/dev/null; then
+	syslogger "error" "ETH-Conn - status - interface $ETH_DEV has no link beat"
+	return 1;
+    fi
+    if ! ifconfig $ETH_DEV | grep -q UP ; then
+	syslogger "warn" "ETH-Conn - status - interface $ETH_DEV is not up"
+	return 1;
+    fi
+    syslogger "debug" "ETH-Conn - status - interface $ETH_DEV is up and running"
+    return 0;
 }
 function IsNotNFSRoot () {
     if [ "$ETH_DEV" = "eth0" ] && mount | grep -q ^/dev/root.*nfs.*; then
@@ -31,18 +40,19 @@ function StartETH () {
     syslogger "info" "ETH-Conn - Starting $ETH_DEV"
     if ! IsETHAlive; then
 	if IsNotNFSRoot; then
-	    ifdown $ETH_DEV || true
-	    ifup $ETH_DEV
+	    ifdown $ETH_DEV -fv
+	    ifup $ETH_DEV -v
 	fi
     fi
 }
 function StopETH () {
     syslogger "info" "ETH-Conn - Stopping $ETH_DEV"
-    if IsETHAlive ; then
+#    if IsETHAlive ; then
 	if [ $ETH_KEEPUP != "1" ] && IsNotNFSRoot; then
-	    ifdown $ETH_DEV
+    syslogger "info" "ETH-Conn - yyyStopping $ETH_DEV"
+	    ifdown $ETH_DEV -fv
 	fi
-    fi
+#    fi
 }
 
 #-----------------------------------------------------------------------
@@ -60,33 +70,34 @@ case "$cmd" in
 	syslogger "debug" "ETH-Conn - stopping connection..."
     	StopETH
 	;;
-    check)	if [ $# -gt 2 ] && [ -n "$2" -a -n "$3" ]; then
-		    wan_ct=${2:=127.0.0.1}
-		    wan_gw=${3:=default}
-		    syslogger "debug" "ETH-Conn - Pinging check target $wan_ct via $wan_gw"
-		    ip route add $wan_ct/32 via $wan_gw dev $ETH_DEV;
-		    IsETHAlive &&
-			ping -I $ETH_DEV -c 1 -w 3 $wan_ct 1>/dev/null  ||
-			( sleep 5 &&
-			ping -I $ETH_DEV -c 1 -w 3 $wan_ct 1>/dev/null ) ||
-			( sleep 5 &&
-			ping -I $ETH_DEV -c 1 -w 3 $wan_ct 1>/dev/null )
-		    if [ $? != 0 ]; then
-			syslogger "error" "ETH-Conn - Ping to $2 on WAN interface $ETH_DEV failed"
-			rc_code=1;
-		    else
-			syslogger "debug" "ETH-Conn - Ping to $2 on WAN interface $ETH_DEV successful"
-		    fi
-		    ip route del $wan_ct/32 via $wan_gw dev $ETH_DEV;
+    check)
+	if IsETHAlive; then
+	    if [ $# -gt 2 ] && [ -n "$2" -a -n "$3" ]; then
+		wan_ct=${2:=127.0.0.1}
+		wan_gw=${3:=default}
+		syslogger "debug" "ETH-Conn - Pinging check target $wan_ct via $wan_gw"
+		ping_target $wan_ct $wan_gw $ETH_DEV;
+		if [ $? != 0 ]; then
+		    syslogger "error" "ETH-Conn - Ping to $2 on WAN interface $ETH_DEV failed"
+		    rc_code=1;
 		else
-		    syslogger "debug" "ETH-Conn - Missing ping target argument"
+		    syslogger "debug" "ETH-Conn - Ping to $2 on WAN interface $ETH_DEV successful"
 		fi
+	    else
+		syslogger "debug" "ETH-Conn - missing argss for 'check' interface $ETH_DEV"
+		rc_code=1
+	    fi
+	else
+	    syslogger "error" "ETH-Conn - interface $ETH_DEV not ready"
+	    rc_code=1
+	fi
 	;;
     status)
 	if IsETHAlive; then
 	    echo "Interface $ETH_DEV is active"
 	else
-	    echo "Interface $ETH_DEV isn't configured"; rc_code=1
+	    echo "Interface $ETH_DEV isn't configured"
+	    rc_code=1
 	fi
 	;;
     *)	echo "Usage: $0 start|stop|check <ip>|status"
