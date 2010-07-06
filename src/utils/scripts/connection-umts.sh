@@ -63,7 +63,6 @@ function StartAndWaitForPPPD ()
     while [ true ] ; do
 	if systool -c net | grep -q $UMTS_DEV; then
 	    syslogger "info" "$UMTS_DEV available"
-	    WriteConnectionAvailableFile
 	    break
 	else
 	    syslogger "info" "$UMTS_DEV startet, wait for interface"

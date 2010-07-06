@@ -1,16 +1,7 @@
 #!/bin/bash
-#**********************************************************************************
-#
-#        FILE: leds.sh
-#
-#       USAGE: leds.sh 3g on ...
 #
 # DESCRIPTION: Script for control the Leds on the MCB-2
 #
-#      AUTHOR: Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
-#     COMPANY: konzeptpark GmbH, 35633 Lahnau
-#
-#**********************************************************************************
 
 # LED names 
 ALL_LEDS=( ready error vpn gsm 3g gpsfix option1 option2 service gsm-fs gps-fs bar0 bar1 bar2 bar3 bar4 bar5 bar6 bar7 )
