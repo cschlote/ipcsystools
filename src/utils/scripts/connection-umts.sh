@@ -1,40 +1,44 @@
 #!/bin/sh
 # DESCRIPTION: Script starts the UMTS Connection
-#       USAGE: umts-connection.sh start || stop
+#       USAGE: $0 start | stop | check <ip> <gw> | status
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/mcbsystools/mcblib.inc
 
-# PID - File fuer das Skript
+DESC="connection-umts[$$]"
+
 UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 
 UMTS_DEV=`getmcboption connection.umts.dev`
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
-function IsPPPDAlive () {
+function IsPPPDAlive ()
+{
     local pids
     local netclass
     local rc
     pids="`pidof pppd`" && netclass="`systool -c net | grep -q $UMTS_DEV`"; rc=$?
-    syslogger "debug" "UMTS-Conn - status - pppd: $pids $netclass (rc=$rc)"		
+    syslogger "debug" "status - pppd: $pids $netclass (rc=$rc)"		
     return $rc
 }
 
-function StartPPPD () {
+function StartPPPD ()
+{
     if ! IsPPPDAlive; then
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
-	syslogger "info" "UMTS-Conn - Starting pppd on modem device $device"
+	syslogger "info" "Starting pppd on modem device $device"
 	pppd $device 460800 connect "/usr/sbin/chat -v -f $MCB_SCRIPTS_DIR/ppp-umts.chat" &
     fi
 }
-function StopPPPD () {
+function StopPPPD ()
+{
     if IsPPPDAlive; then
 	local pids=`pidof pppd`
-	syslogger "info" "UMTS-Conn - Stopping pppd ($pids)"
+	syslogger "info" "Stopping pppd ($pids)"
 	if [ -z "$pids" ]; then
-		syslogger "info" "UMTS-Conn - No pppd is running."
+		syslogger "info" "No pppd is running."
 		return 0
 	fi
 
@@ -48,7 +52,8 @@ function StopPPPD () {
 #
 # Start the PPPD connection and retry if it fails
 #
-function StartAndWaitForPPPD () {
+function StartAndWaitForPPPD ()
+{
     # Loop Counters
     local count_timeout=0
     local count_timeout_max=12
@@ -57,11 +62,11 @@ function StartAndWaitForPPPD () {
 
     while [ true ] ; do
 	if systool -c net | grep -q $UMTS_DEV; then
-	    syslogger "info" "UMTS-Conn - $UMTS_DEV available"
+	    syslogger "info" "$UMTS_DEV available"
 	    WriteConnectionAvailableFile
 	    break
 	else
-	    syslogger "info" "UMTS-Conn - $UMTS_DEV startet, wait for interface"
+	    syslogger "info" "$UMTS_DEV startet, wait for interface"
 	    InitializeModem
 	    StartPPPD
 	fi
@@ -71,7 +76,7 @@ function StartAndWaitForPPPD () {
 	    break
 	fi
 
-	syslogger "debug" "UMTS-Conn - Waiting $UMTS_DEV coming up"		
+	syslogger "debug" "Waiting $UMTS_DEV coming up"		
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -82,7 +87,8 @@ function StartAndWaitForPPPD () {
 #
 # Wait until modem is booked into service provider network
 #
-function WaitForModemBookedIntoNetwork () {
+function WaitForModemBookedIntoNetwork ()
+{
     # Loop Counters
     local count_timeout=0
     local count_timeout_max=12
@@ -96,7 +102,7 @@ function WaitForModemBookedIntoNetwork () {
     CheckNIState
     local ni_state=$?
     while [ $ni_state -ne 0 ]; do
-	syslogger "debug" "UMTS-Conn - Waiting for UMTS network registration ($count_timeout/$ni_state)"
+	syslogger "debug" "Waiting for UMTS network registration ($count_timeout/$ni_state)"
 
 	# Increase number of tries, when 'limited service' is reported
 	# (ni_state==2) 
@@ -128,7 +134,7 @@ obtainlock $UMTS_CONNECTION_PID_FILE
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
     start)
-	syslogger "info" "UMTS-Conn - starting connection..."
+	syslogger "info" "starting connection..."
 	ReadModemStatusFile
 	if 	[ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] ||
 		[ $MODEM_STATUS == ${MODEM_STATES[readyID]} ] ||
@@ -147,27 +153,27 @@ case "$cmd" in
 		    if StartAndWaitForPPPD; then		
 			WriteModemStatusFile ${MODEM_STATES[connected]}
 		    else
-			syslogger "debug" "UMTS-Conn - ppp deamon didn't startup."
+			syslogger "debug" "ppp deamon didn't startup."
 			$MCB_SCRIPTS_DIR/leds.sh 3g off
 			rc_code=1
 		    fi
 		else
 		    WriteModemStatusFile ${MODEM_STATES[connected]}
-		    syslogger "debug" "UMTS-Conn - ppp deamon is already running."
+		    syslogger "debug" "ppp deamon is already running."
 		fi
 	    else
-		syslogger "error" "UMTS-Conn - Could not initialize datacard (timeout)"
+		syslogger "error" "Could not initialize datacard (timeout)"
 		$MCB_SCRIPTS_DIR/leds.sh 3g off
 		$UMTS_FS
-		syslogger "info" "UMTS-Conn - reported fieldstrength is $?."
+		syslogger "info" "reported fieldstrength is $?."
 		rc_code=1
 	    fi
 	else
-	    syslogger "debug" "UMTS-Conn - modem in status $MODEM_STATUS, won't start again"
+	    syslogger "debug" "modem in status $MODEM_STATUS, won't start again"
 	fi
     ;;
     stop)
-	syslogger "info" "UMTS-Conn - stopping connection..."
+	syslogger "info" "stopping connection..."
 	StopPPPD
 	InitializeModem
 	CheckNIState
@@ -177,19 +183,20 @@ case "$cmd" in
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
-		syslogger "debug" "UMTS-Conn - Pinging check target $wan_ct via $wan_gw"
-		ping_target $wan_ct $wan_gw $UMTS_DEV;
-		if [ $? != 0 ]; then
-		    syslogger "error" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV failed"
-		    rc_code=1;
+		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
+
+		if ping_target $wan_ct $wan_gw $UMTS_DEV; then
+		    syslogger "debug" "Ping to $wan_ct on WAN interface $UMTS_DEV successful"
 		else
-		    syslogger "debug" "UMTS-Conn - Ping to $wan_ct on WAN interface $UMTS_DEV successful"
+		    syslogger "error" "Ping to $wan_ct on WAN interface $UMTS_DEV failed"
+		    rc_code=1;
 		fi
 	    else
-		syslogger "error" "UMTS-Conn - Missing ping target argument"
+		syslogger "error" "Missing ping target argument"
+		rc_code=1;
 	    fi
 	else
-	    syslogger "error" "UMTS-Conn - PPPD isn't running, no UMTS connection"
+	    syslogger "error" "PPPD isn't running, no UMTS connection"
 	    rc_code=1;
 	fi
 	;;

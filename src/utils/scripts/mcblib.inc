@@ -75,7 +75,8 @@ WAN_CHECKGATEWAYS=(`getmcboption wan.checkgateways`)
 #-----------------------------------------------------------------------
 # Shell locking
 #-----------------------------------------------------------------------
-function obtainlock () {
+function obtainlock ()
+{
 	lastlockfile=$1
 	if ( set -o noclobber; echo "$$" > "$lastlockfile") 2> /dev/null; 
 	then
@@ -87,7 +88,8 @@ function obtainlock () {
 	   exit 0
 	fi
 }
-function releaselock () {
+function releaselock ()
+{
    rm -f "$lastlockfile"
    trap - INT TERM EXIT
 }
@@ -98,7 +100,7 @@ function releaselock () {
 # void syslogger (char *logtype, char *msg)
 function syslogger ()
 {
-	DESC="mcb-monitor[$$]"
+	local logDESC=${DESC:=$0[$$]}
 	# LogLevel 1
 	if [ "$1" != "debug" ]; then
 		logger -p local0.$1 -t $DESC "$2"
@@ -114,7 +116,8 @@ function syslogger ()
 # Modem Handling
 #-----------------------------------------------------------------------
 
-function RefreshModemDevices () {
+function RefreshModemDevices ()
+{
 	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
 	CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
@@ -131,17 +134,20 @@ function WriteConnectionFieldStrengthFile ()
 	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
 }
 
-function ResetModem () {
+function ResetModem ()
+{
 	$MCB_TOOLS_DIR/umtscardtool -s ATZ
 }
 
 # Write the radio access technology (RAT) mode to a file
-function WriteConnectionRATModeFile () {
+function WriteConnectionRATModeFile ()
+{
 	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 # Write the current network mode to a file
-function WriteConnectionNetworkModeFile () {
+function WriteConnectionNetworkModeFile ()
+{
 	local connectionmode
 	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
 	
@@ -155,7 +161,8 @@ function WriteConnectionNetworkModeFile () {
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 
-function WriteGSMCellInfoFile () {
+function WriteGSMCellInfoFile ()
+{
 	# Write Mobile Network Code
 	local gsminfo=`$MCB_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
 	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
@@ -165,7 +172,8 @@ function WriteGSMCellInfoFile () {
 	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
 }
 
-function WriteGSMConnectionInfoFiles () {
+function WriteGSMConnectionInfoFiles ()
+{
 	# Update field strength
 	WriteConnectionFieldStrengthFile
 
@@ -177,17 +185,20 @@ function WriteGSMConnectionInfoFiles () {
 }
 #-----------------------------------------------------------------------
 
-function ReadModemStatusFile () {
+function ReadModemStatusFile ()
+{
 	MODEM_STATUS=`cat $MODEM_STATUS_FILE`
 	syslogger "debug" "modem status is $MODEM_STATUS"
 }
-function WriteModemStatusFile () {
+function WriteModemStatusFile ()
+{
 	MODEM_STATUS=$1
 	syslogger "debug" "modem status set to $MODEM_STATUS"
 	echo $MODEM_STATUS > $MODEM_STATUS_FILE
 }
 
-function DetectModemCard () {
+function DetectModemCard ()
+{
 	# Sierra Wireless Modems
 	if lsusb -d 1199: > /dev/null; then
 		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
@@ -227,7 +238,8 @@ function SetSIMPIN ()
 }
 
 # Ist die Karte eingebucht?
-function CheckNIState () {
+function CheckNIState ()
+{
 	$UMTS_NI
 	local ni=$?
 	if [ $ni -eq 0 ]; then
@@ -237,13 +249,15 @@ function CheckNIState () {
 	return $ni
 }
 
-function SetConnectionRAT () {	
+function SetConnectionRAT ()
+{	
 	ratcode=`getmcboption modem.connectionmode`
 	RefreshModemDevices
 	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
 
-function InitializeModem () {
+function InitializeModem ()
+{
 	DetectModemCard
 	if [ $? -eq 0 ]; then
 		ResetModem || syslogger "error" "Can't reset modem.'"
@@ -257,10 +271,12 @@ function InitializeModem () {
 #-------------------------------------------------------------------------------
 # WAN related functions
 #-------------------------------------------------------------------------------
-function get_wan_connect_current () {
+function get_wan_connect_current ()
+{
 	WAN_CURRENT=`cat $WAN_STATE_FILE`
 }
-function set_wan_connection_current () {
+function set_wan_connection_current ()
+{
 	local wan_curr=`cat $WAN_STATE_FILE`
 	case $1 in
 	reset)	wan_curr=0 ;;
@@ -272,7 +288,8 @@ function set_wan_connection_current () {
 	echo $wan_curr > $WAN_STATE_FILE
 	get_wan_connect_current
 }
-function shutdown_wan_connection () {
+function shutdown_wan_connection ()
+{
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
@@ -281,7 +298,8 @@ function shutdown_wan_connection () {
 		$MCB_SCRIPTS_DIR/connection-$wan_if.sh stop
 	fi
 }
-function startup_wan_connection () {
+function startup_wan_connection ()
+{
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
@@ -290,7 +308,8 @@ function startup_wan_connection () {
 		$MCB_SCRIPTS_DIR/connection-$wan_if.sh start
 	fi
 }
-function check_wan_connection () {
+function check_wan_connection ()
+{
 	local rc=0
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
@@ -308,7 +327,8 @@ function check_wan_connection () {
 	fi
 	return $rc
 }
-function check_wan_connection_status () {
+function check_wan_connection_status ()
+{
 	local rc=0
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
@@ -329,7 +349,8 @@ function check_wan_connection_status () {
 # VPN related functions
 #-------------------------------------------------------------------------------
 
-function check_openvpn_status () {	
+function check_openvpn_status ()
+{	
 	if [ $START_VPN_ENABLED -eq 1 ]; then
 		local tunnelstate="down"
 		local checkmode=`getmcboption ovpn.monitorpeers`
@@ -373,7 +394,8 @@ function check_openvpn_status () {
 	return 0
 }
 
-function startup_vpn_connection () {
+function startup_vpn_connection ()
+{
 	if [ $START_VPN_ENABLED -eq 1 ]; then
 		syslogger "debug" "Restarting VPN connection FIXME"
 	fi
@@ -383,7 +405,8 @@ function startup_vpn_connection () {
 # Misc
 #-----------------------------------------------------------------------
 
-function RebootMCB () {
+function RebootMCB ()
+{
 	local fake=`getmcboption general.reboot.fake`
 	syslogger "error" "MCB wird neu gestartet."
 	if [ "$fake" -eq "1" ]; then
@@ -415,26 +438,28 @@ function valid_ip ()
 }
 #
 # Ping a target and return status RC
-#
-function ping_target () {
-	local rc=0;
-	set -x
+#   <ip> <gw> <ifname>
+function ping_target ()
+{
+	local rc=1;
+	local i;
 	[ "$2" != "default" ] && ip route add $1/32 via $2 dev $3;
-	ping -I $3 -c 1 -W 10 -w 60 $1 1>/dev/null ||
-	( sleep 10 &&
-	ping -I $3 -c 3 -W 15 -w 60 $1 1>/dev/null) ||
-	( sleep 10 &&
-	ping -I $3 -c 5 -W 20 -w 60 $1 1>/dev/null)
-	rc=$?
+	#bash 4.x: for $(( i=1; i<4; i++ )); do
+	for i in {1..3}; do
+		if ping -I $3 -c $i -W 10 -w 12 $1 >/dev/null; then
+			rc=0; break;
+		fi
+		syslogger "warn" "ping to $1 failed ($i of 3)"
+	done
 	[ "$2" != "default" ] && ip route del $1/32 via $2 dev $3;
-	set +x
 	return $rc
 }
 
 #
 # Add mcb-monitor.sh to system cron table
 #
-function setup_checkconnection () {
+function setup_checkconnection ()
+{
 	if [ $START_MCB_MONITOR -eq 1 ] ; then
 		if ! crontab -l 2>/dev/null | grep -q mcb-monitor.sh; then	
 			syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."

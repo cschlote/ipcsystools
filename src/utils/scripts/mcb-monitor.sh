@@ -6,7 +6,9 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/mcbsystools/mcblib.inc
 
-obtainlock /var/lock/mcb-monitor.lock
+DESC="mcb-monitor[$$]"
+
+MCB_MONITOR_PID_FILE=/var/lock/mcb-monitor.pid
 
 #-----------------------------------------------------------------------
 # Read variables from config file
@@ -66,23 +68,23 @@ function check_connection_maxping ()
 	    echo `date +%s` > $LAST_PING_FILE
 
 	    if ping -c 1 -W 5 -s 8 $CHECK_PING_IP > /dev/null ; then
-		syslogger "debug" "Watchdog - Check ping peer $CHECK_PING_IP passed"
+		syslogger "debug" "Check ping peer $CHECK_PING_IP passed"
 		PING_FAULT=0
 	    else
-		syslogger "info"  "Watchdog - Check ping peer $CHECK_PING_IP failed $PING_FAULT time(s)"
+		syslogger "info"  "Check ping peer $CHECK_PING_IP failed $PING_FAULT time(s)"
 		PING_FAULT=$[$PING_FAULT+1]
 	    fi
 	    echo $PING_FAULT > $PING_FAULT_FILE
 
 	    # Maximum number of pings sent?
 	    if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
-		syslogger "error" "Watchdog - FAIL: ping peer $CHECK_PING_IP unavailable $CHECK_PING_REBOOT times"
+		syslogger "error" "FAIL: ping peer $CHECK_PING_IP unavailable $CHECK_PING_REBOOT times"
 		reset_system=true
 		rc=1
 	    fi
 	else
-	    syslogger "debug" "Watchdog - ... (next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds)"
-	    syslogger "debug" "Watchdog - ... (remote ping test failed $PING_FAULT times of $CHECK_PING_REBOOT max)"
+	    syslogger "debug" "... (next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds)"
+	    syslogger "debug" "... (remote ping test failed $PING_FAULT times of $CHECK_PING_REBOOT max)"
 	fi
     fi
     return $rc
@@ -114,10 +116,10 @@ function check_connection_fault () {
 	echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
     else
 	if [ $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ]; then
-	    syslogger "warn" "Watchdog - ... connection status faults $CONNECTION_FAULT times (timeout)"
+	    syslogger "warn" "... connection status faults $CONNECTION_FAULT times (timeout)"
 	    reset_system=true
 	else
-	    syslogger "debug" "Watchdog - ... connection status faults $CONNECTION_FAULT times"
+	    syslogger "debug" "... connection status faults $CONNECTION_FAULT times"
 	fi
     fi
 }
@@ -129,22 +131,22 @@ function check_connection_maxlost () {
 
 	ReadConnectionAvailableFile
 	if check_wan_connection_status; then
-	    syslogger "debug" "Watchdog - ... connection status ok"
+	    syslogger "debug" "... connection status ok"
 	    WriteConnectionAvailableFile
 	    check_connection_fault reset
 	else
-	    syslogger "warn" "Watchdog - ... connection status fail, restart connection"
+	    syslogger "warn" "... connection status fail, restart connection"
 	    check_connection_fault count
 	    reset_wan=true
 	fi
 	    
 	# Maximum time without connection expired?
 	if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
-	    syslogger "warn" "Watchdog - ... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
+	    syslogger "warn" "... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
 	    reset_system=true
 	    rc=1
 	else
-	    syslogger "debug" "Watchdog - ... connection status reported ok $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
+	    syslogger "debug" "... connection status reported ok $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
 	fi
 
 	# Maxium number of successless restarts?
@@ -164,26 +166,29 @@ function check_connection_maxlost () {
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
+obtainlock $MCB_MONITOR_PID_FILE
+syslogger "debug" "Started monitor (`date`)"
+
 # Statusdateien für die GSM Verbindung aktualisieren
 WriteGSMConnectionInfoFiles
 
 # Automatically start configured WAN connections
 if [ $START_WAN_ENABLED -eq 1 ]; then
-    syslogger "debug" "Watchdog - Checking enabled WAN connections"
+    syslogger "debug" "Checking active WAN connection"
     check_wan_connection
     if [ $? != 0 ]; then
-	syslogger "debug" "Watchdog - Current WAN connection failed, trying next"
+	syslogger "error" "Current WAN connection failed, trying next"
 	shutdown_wan_connection
 	set_wan_connection_current next
 	reset_wan=true
     else
 	get_wan_connect_current
 	if [ $WAN_FALLBACKMODE -eq 1 -a $WAN_CURRENT -ne 0 ]  ; then
-	    check_wan_connection 0
-	    if [ $? != 0 ]; then
-		syslogger "debug" "Watchdog - Primary WAN connection still failing"
+	    syslogger "debug" "Checking fallback WAN connection"
+	    if ! check_wan_connection 0; then
+		syslogger "debug" "Primary WAN connection still failing"
 	    else
-		syslogger "debug" "Watchdog - Primary WAN connection available again"
+		syslogger "debug" "Primary WAN connection available again"
 		shutdown_wan_connection
 		set_wan_connection_current reset
 		reset_wan=true
@@ -196,34 +201,35 @@ fi
 check_openvpn_status
 
 #--- Ping a remote target and count faults eventually rebooting
-syslogger "debug" "Watchdog - Run Remote ping test..."
+syslogger "debug" "Run Remote ping test..."
 if ! check_connection_maxping; then
-    syslogger "debug" "Watchdog - ... remote ping test reported failure!"
+    syslogger "debug" "... remote ping test reported failure!"
 fi
 
 #--- Check for connection status and PING_FAULT==0 and trigger reboot
 #--- when no valid connection after n times OR n seconds.
-syslogger "debug" "Watchdog - Run connection status test..."
+syslogger "debug" "Run connection status test..."
 if ! check_connection_maxlost; then
-    syslogger "debug" "Watchdog - ...remote connection test failt!"
+    syslogger "debug" "...remote connection test failt!"
 fi
 
 #-- Restart components -------------------------------------------------
 if [ $reset_system = "true" ]; then
-    syslogger "warn" "Watchdog - Restarting MCB..."
+    syslogger "warn" "Restarting MCB..."
     RebootMCB
 else
     if [ $reset_vpn = "true" ]; then
-	syslogger "warn" "Watchdog - Restarting VPN connection..."
+	syslogger "warn" "Restarting VPN connection..."
 	startup_vpn_connection
     else 
 	if [ $reset_wan = "true" ]; then
-	    syslogger "warn" "Watchdog - Restarting WAN connection..."
+	    syslogger "warn" "Restarting WAN connection..."
 	    startup_wan_connection
 	fi
     fi
 fi
 
 #-- End of script ------------------------------------------------------
+syslogger "debug" "Finished monitor (`date`)"
 releaselock
 exit 0
