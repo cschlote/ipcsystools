@@ -169,7 +169,7 @@ function check_connection_maxlost () {
 obtainlock $MCB_MONITOR_PID_FILE
 syslogger "debug" "Started monitor (`date`)"
 
-# Statusdateien für die GSM Verbindung aktualisieren
+# Update files and links for GSM modem connection
 WriteGSMConnectionInfoFiles
 
 # Automatically start configured WAN connections

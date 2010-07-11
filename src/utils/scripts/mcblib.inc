@@ -1,4 +1,4 @@
-#!/bin/bash -u -x
+#!/bin/bash
 #
 # DESCRIPTION: Include file for bash scripts
 #
@@ -136,7 +136,7 @@ function WriteConnectionFieldStrengthFile ()
 
 function ResetModem ()
 {
-	$MCB_TOOLS_DIR/umtscardtool -s ATZ
+	$MCB_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
 }
 
 # Write the radio access technology (RAT) mode to a file
