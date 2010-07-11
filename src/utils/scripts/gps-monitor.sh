@@ -271,14 +271,18 @@ function query_gpsstatus ()
 {
     save_gpsstatus
     cat $GPS_STATUS_FILE
+    GPS_TIME=`cat $GPS_STATUS_FILE | sed -n "s/^Current time: \(.*\)$/\1/ p" | tr -d ' :'`
+    GPS_TTFF=`cat $GPS_STATUS_FILE | sed -n "s/^TTFF (sec) = \(.*\)$/\1/ p" | tr -d ' :'`
     local t1=`cat $GPS_STATUS_FILE | sed -n "s/^.*Last Fix Status    = \(.*\)$/\1/ p"`
     local t2=`cat $GPS_STATUS_FILE | sed -n "s/^.*Fix Session Status = \(.*\)$/\1/ p"`
     GPS_LASTSTATUS=$t1
     GPS_CURRSTATUS=$t2
     GPS_LASTERROR=`echo $t1 | sed -n "s/.*FAILCODE = \(.*\)$/\1/ p"`
     GPS_CURRERROR=`echo $t2 | sed -n "s/.*FAILCODE = \(.*\)$/\1/ p"`
+    echo "Current GPS time: $GPS_TIME"
     echo "Last status: $GPS_LASTSTATUS `get_errorstring $GPS_LASTERROR`"
     echo "Curr status: $GPS_CURRSTATUS `get_errorstring $GPS_CURRERROR`"
+    echo "Current GPS TTFF: $GPS_TTFF"
 }
 function query_gpsloc ()
 {
