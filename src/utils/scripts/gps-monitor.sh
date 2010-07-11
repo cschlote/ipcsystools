@@ -270,7 +270,7 @@ function get_errorstring ()
 function query_gpsstatus ()
 {
     save_gpsstatus
-    cat $GPS_STATUS_FILE
+    # cat $GPS_STATUS_FILE
     GPS_TIME=`cat $GPS_STATUS_FILE | sed -n "s/^Current time: \(.*\)$/\1/ p" | tr -d ' :'`
     GPS_TTFF=`cat $GPS_STATUS_FILE | sed -n "s/^TTFF (sec) = \(.*\)$/\1/ p" | tr -d ' :'`
     local t1=`cat $GPS_STATUS_FILE | sed -n "s/^.*Last Fix Status    = \(.*\)$/\1/ p"`
@@ -386,7 +386,7 @@ function gps_start ()
     local retries=3
     while [ $retries -gt 0 ]; do
 	syslogger "debug" "Trying to obtain initial fix (retries=$retries)"
-	issue_gpsfix 1 255 30
+	issue_gpsfix 1 255 100
 	wait_gpsfix
 	retries=$[$retries-1]
 	query_gpsloc
