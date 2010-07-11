@@ -354,7 +354,7 @@ function wait_gpsfix ()
 
 function start_gpsd ()
 {
-    issue_gpstrack 1 15 100 1
+    issue_gpstrack 1 15 100
     query_gpsstatus
   
     if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
@@ -369,7 +369,7 @@ function start_gpsd ()
 function stop_gpsd ()
 {
     if pidof gpsd && [ -e /var/run/gpsd.pid ]; then
-	kill -TERM 'cat /var/run/gpsd.pid'
+	killall -TERM gpsd
 	rm /var/run/gpsd.pid
     fi
 }
@@ -409,6 +409,10 @@ function gps_stop ()
 function gps_monitor ()
 {
     query_gpsstatus
+    if [ ! "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+	syslogger "debug" "Starting active GPS tracking session (again)"
+	issue_gpstrack 1 15 100
+    fi
     query_gpsloc
     query_gpssatinfo
 }
