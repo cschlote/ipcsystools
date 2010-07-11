@@ -7,6 +7,7 @@ DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	mcb-monitor.sh \
+	gps-monitor.sh \
 	mcblib.inc \
 	options.umts \
 	ppp-umts.chat \
