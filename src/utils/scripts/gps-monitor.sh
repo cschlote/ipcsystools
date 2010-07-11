@@ -352,6 +352,28 @@ function wait_gpsfix ()
 # MCB GPS Monitor
 #-----------------------------------------------------------------------
 
+function start_gpsd ()
+{
+    issue_gpstrack 1 15 100 1
+    query_gpsstatus
+  
+    if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+	if pidof gpsd; then
+	    gpsd -P /var/run/gpsd.pid /dev/ttyUSB2 &
+	fi
+    else
+	syslogger "debug" "Unable to start tracking session"
+    fi
+}
+
+function stop_gpsd ()
+{
+    if pidof gpsd && [ -e /var/run/gpsd.pid ]; then
+	kill -TERM 'cat /var/run/gpsd.pid'
+	rm /var/run/gpsd.pid
+    fi
+}
+
 function gps_start ()
 {
     # --- Get an intitial GPS fix ----------------------------
@@ -376,19 +398,12 @@ function gps_start ()
     fi
 
     # --- Start NMEA output on USB port
-    issue_gpstrack
-
-    if ! pidof gpsd; then
-	gpsd -D2 -P /var/run/gpsd.pid /dev/ttyUSB2 &
-    fi
+    start_gpsd
 }
 
 function gps_stop ()
 {
-    if pidof gpsd && [ -e /var/run/gpsd.pid ]; then
-	kill -TERM 'cat /var/run/gpsd.pid'
-	rm /var/run/gpsd.pid
-    fi
+    stop_gpsd
 }
 
 function gps_monitor ()
