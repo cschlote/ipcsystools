@@ -273,16 +273,18 @@ function query_gpsstatus ()
     # cat $GPS_STATUS_FILE
     GPS_TIME=`cat $GPS_STATUS_FILE | sed -n "s/^Current time: \(.*\)$/\1/ p" | tr -d ' :'`
     GPS_TTFF=`cat $GPS_STATUS_FILE | sed -n "s/^TTFF (sec) = \(.*\)$/\1/ p" | tr -d ' :'`
+    GPS_LASTSTATUS_TIME=`cat $GPS_STATUS_FILE | sed -n "s/^\(.*\)Last Fix Status    = .*$/\1/p" | tr -d ' :'`
+    GPS_CURRSTATUS_TIME=`cat $GPS_STATUS_FILE | sed -n "s/^\(.*\)Fix Session Status = .*$/\1/p" | tr -d ' :'`
     local t1=`cat $GPS_STATUS_FILE | sed -n "s/^.*Last Fix Status    = \(.*\)$/\1/ p"`
     local t2=`cat $GPS_STATUS_FILE | sed -n "s/^.*Fix Session Status = \(.*\)$/\1/ p"`
     GPS_LASTSTATUS=$t1
     GPS_CURRSTATUS=$t2
     GPS_LASTERROR=`echo $t1 | sed -n "s/.*FAILCODE = \(.*\)$/\1/ p"`
     GPS_CURRERROR=`echo $t2 | sed -n "s/.*FAILCODE = \(.*\)$/\1/ p"`
-    echo "Current GPS time: $GPS_TIME"
-    echo "Last status: $GPS_LASTSTATUS `get_errorstring $GPS_LASTERROR`"
-    echo "Curr status: $GPS_CURRSTATUS `get_errorstring $GPS_CURRERROR`"
-    echo "Current GPS TTFF: $GPS_TTFF"
+    echo "   GPS time: $GPS_TIME"
+    echo "   GPS TTFF: $GPS_TTFF"
+    echo "Last status: $GPS_LASTSTATUS_TIME $GPS_LASTSTATUS `get_errorstring $GPS_LASTERROR`"
+    echo "Curr status: $GPS_CURRSTATUS_TIME $GPS_CURRSTATUS `get_errorstring $GPS_CURRERROR`"
 }
 function query_gpsloc ()
 {
@@ -352,23 +354,34 @@ function wait_gpsfix ()
 # MCB GPS Monitor
 #-----------------------------------------------------------------------
 
+function check_gpsd ()
+{
+    local pids="`pidof gpsd`"
+    [ -z "$pids" ] && return 1
+    return 0
+}
 function start_gpsd ()
 {
-    issue_gpstrack 1 15 100
     query_gpsstatus
-  
+    if [ ! "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+	syslogger "debug" "restarted GPS tracking for gpsd..."
+	issue_gpstrack 1 15 100
+    fi
+    
+    query_gpsstatus
     if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
-	if pidof gpsd; then
+	if ! check_gpsd; then
 	    gpsd -P /var/run/gpsd.pid /dev/ttyUSB2 &
+	else
+	    syslogger "debug" "gpsd already running..."
 	fi
     else
 	syslogger "debug" "Unable to start tracking session"
     fi
 }
-
 function stop_gpsd ()
 {
-    if pidof gpsd && [ -e /var/run/gpsd.pid ]; then
+    if check_gpsd; then
 	killall -TERM gpsd
 	rm /var/run/gpsd.pid
     fi
@@ -397,7 +410,6 @@ function gps_start ()
 	syslogger "error" "Unable to get GPS fix, yet"
     fi
 
-    # --- Start NMEA output on USB port
     start_gpsd
 }
 
@@ -408,11 +420,11 @@ function gps_stop ()
 
 function gps_monitor ()
 {
-    query_gpsstatus
-    if [ ! "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+    if ! check_gpsd; then
 	syslogger "debug" "Starting active GPS tracking session (again)"
-	issue_gpstrack 1 15 100
+	start_gpsd
     fi
+    query_gpsstatus
     query_gpsloc
     query_gpssatinfo
 }
