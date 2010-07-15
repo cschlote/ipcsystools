@@ -15,6 +15,11 @@ GPS_SATINFO_FILE=$MCB_STATUSFILE_DIR/gps_satinfo
 
 MCB_MONITOR_PID_FILE=/var/lock/gps-monitor.pid
 
+GPS_FIXPREC=`getmcboption monitor.gps.fix_prec`
+GPS_TRKPREC=`getmcboption monitor.gps.trk_prec`
+GPS_START_BACKEND=`getmcboption monitor.gps.start_backend`
+GPS_BACKENDS=(`getmcboption monitor.gps.backends`)
+
 # ----------------------------------------------------------------------
 # Errorcodes
 # ----------------------------------------------------------------------
@@ -321,7 +326,7 @@ function wait_gpsfix ()
 	SUCCESS)
 	    syslogger "debug" "gpsfix succesfully finished"
 	    rc=0; break;;
-	FAIL*)
+	FAIL,*)
 	    syslogger "debug" "gpsfix failed"
 	    rc=1; break;;
 	*)
@@ -350,8 +355,9 @@ function wait_gpsfix ()
     return 0
 }
 
+
 #-----------------------------------------------------------------------
-# MCB GPS Monitor
+# GPS Backends
 #-----------------------------------------------------------------------
 
 function check_gpsd ()
@@ -365,13 +371,13 @@ function start_gpsd ()
     query_gpsstatus
     if [ ! "$GPS_CURRSTATUS" = "ACTIVE" ]; then
 	syslogger "debug" "restarted GPS tracking for gpsd..."
-	issue_gpstrack 1 15 100
+	issue_gpstrack 1 15 $GPS_TRKPREC
     fi
     
     query_gpsstatus
     if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
 	if ! check_gpsd; then
-	    gpsd -n -N -G -D 5 -P /var/run/gpsd.pid /dev/ttyUSB2 &
+	    gpsd -n -G -D 1 -P /var/run/gpsd.pid /dev/ttyUSB2
 	else
 	    syslogger "debug" "gpsd already running..."
 	fi
@@ -387,6 +393,76 @@ function stop_gpsd ()
     fi
 }
 
+function check_ser2net ()
+{
+    local pids="`pidof ser2net`"
+    [ -z "$pids" ] && return 1
+    return 0
+}
+function start_ser2net ()
+{
+    query_gpsstatus
+    if [ ! "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+	syslogger "debug" "restarted GPS tracking for ser2net..."
+	issue_gpstrack 1 15 $GPS_TRKPREC
+    fi
+    
+    query_gpsstatus
+    if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
+	if ! check_ser2net; then
+	    ser2net -C "4000:telnet:0:/dev/ttyUSB2:115200 -LOCAL"
+   	else
+	    syslogger "debug" "ser2net already running..."
+	fi
+    else
+	syslogger "debug" "Unable to start tracking session"
+    fi
+}
+function stop_ser2net ()
+{
+    if check_ser2net; then
+	killall -TERM ser2net
+    fi
+}
+
+function check_backend ()
+{
+    [ $GPS_START_BACKEND -gt ${#GPS_BACKENDS[@]} ] &&
+	syslogger "debug" "unknown backend index $GPS_START_BACKEND" &&
+	return 1
+    case ${GPS_BACKENDS[$GPS_START_BACKEND]} in
+    none)	syslogger "debug" "no backend checked" ;;
+    gpsd)	check_gpsd ;;
+    ser2net)	check_ser2net ;;
+    esac
+}
+function start_backend ()
+{
+    [ $GPS_START_BACKEND -gt ${#GPS_BACKENDS[@]} ] &&
+	syslogger "debug" "unknown backend index $GPS_START_BACKEND" &&
+	return 1
+    case ${GPS_BACKENDS[$GPS_START_BACKEND]} in
+    none)	syslogger "debug" "no backend started" ;;
+    gpsd)	start_gpsd ;;
+    ser2net)	start_ser2net ;;
+    esac
+}
+function stop_backend ()
+{
+    [ $GPS_START_BACKEND -gt ${#GPS_BACKENDS[@]} ] &&
+	syslogger "debug" "unknown backend index $GPS_START_BACKEND" &&
+	return 1
+    case ${GPS_BACKENDS[$GPS_START_BACKEND]} in
+    none)	syslogger "debug" "no backend stopped" ;;
+    gpsd)	stop_gpsd ;;
+    ser2net)	stop_ser2net ;;
+    esac
+}
+
+#-----------------------------------------------------------------------
+# MCB GPS Monitor
+#-----------------------------------------------------------------------
+
 function gps_start ()
 {
     # --- Get an intitial GPS fix ----------------------------
@@ -399,8 +475,8 @@ function gps_start ()
     local retries=3
     while [ $retries -gt 0 ]; do
 	syslogger "debug" "Trying to obtain initial fix (retries=$retries)"
-	issue_gpsfix 1 255 100
-	wait_gpsfix
+	issue_gpsfix 1 255 $GPS_FIXPREC
+	wait_gpsfix && break
 	retries=$[$retries-1]
 	query_gpsloc
 	query_gpssatinfo
@@ -410,19 +486,19 @@ function gps_start ()
 	syslogger "error" "Unable to get GPS fix, yet"
     fi
 
-    start_gpsd
+    start_backend
 }
 
 function gps_stop ()
 {
-    stop_gpsd
+    stop_backend
 }
 
 function gps_monitor ()
 {
-    if ! check_gpsd; then
+    if ! check_backend; then
 	syslogger "debug" "Starting active GPS tracking session (again)"
-	start_gpsd
+	start_backend
     fi
     query_gpsstatus
     query_gpsloc
