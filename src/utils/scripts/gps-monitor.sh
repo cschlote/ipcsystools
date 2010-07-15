@@ -371,7 +371,7 @@ function start_gpsd ()
     query_gpsstatus
     if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
 	if ! check_gpsd; then
-	    gpsd -P /var/run/gpsd.pid /dev/ttyUSB2 &
+	    gpsd -n -N -G -D 5 -P /var/run/gpsd.pid /dev/ttyUSB2 &
 	else
 	    syslogger "debug" "gpsd already running..."
 	fi
