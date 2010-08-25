@@ -355,8 +355,8 @@ VPN_BACKENDS=(`getmcboption vpn.backends`)
 function check_ipsec_status ()
 {
     syslogger "debug" "Checking for ipsec running"
-    if ! ipsec status; then
-	syslogger "warn" "Ipsec not running - trigger restart"
+    if ! ipsec status >/dev/null; then
+		syslogger "warn" "Ipsec not running - trigger restart"
 	return 1
     fi
     return 0
