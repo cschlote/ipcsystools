@@ -349,56 +349,89 @@ function check_wan_connection_status ()
 # VPN related functions
 #-------------------------------------------------------------------------------
 
+VPN_START_BACKEND=`getmcboption vpn.start_backend`
+VPN_BACKENDS=(`getmcboption vpn.backends`)
+
+function check_ipsec_status ()
+{
+    syslogger "debug" "Checking for ipsec running"
+    if ! ipsec status; then
+	syslogger "warn" "Ipsec not running - trigger restart"
+	return 1
+    fi
+    return 0
+}
 function check_openvpn_status ()
 {	
-	if [ $START_VPN_ENABLED -eq 1 ]; then
-		local tunnelstate="down"
-		local checkmode=`getmcboption ovpn.monitorpeers`
+    if [ $START_VPN_ENABLED -eq 1 ]; then
+	local tunnelstate="down"
+	local checkmode=`getmcboption ovpn.monitorpeers`
 
-		case "$checkmode" in
-		"ifconfig"|"")
-			syslogger "debug" "get ip address from client.conf"
-			if [ -e /etc/openvpn/client.conf ]; then
-				openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
-			fi
-		;;
-		"watchdog")
-			syslogger "debug" "get ip address from watchdog settings"
-			openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
-		;;
-		*)
-			syslogger "debug"  "validate ip address"
-			openvpnIP=$checkmode
-		;;
-		esac
+	case "$checkmode" in
+	"ifconfig"|"")
+		syslogger "debug" "get ip address from client.conf"
+		if [ -e /etc/openvpn/client.conf ]; then
+			openvpnIP=`grep 'ifconfig' /etc/openvpn/client.conf | awk '{print $3}'`
+		fi
+	;;
+	"watchdog")
+		syslogger "debug" "get ip address from watchdog settings"
+		openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
+	;;
+	*)
+		syslogger "debug"  "validate ip address"
+		openvpnIP=$checkmode
+	;;
+	esac
 
-		# Ping the peer address
-		if (valid_ip $openvpnIP); then
-			if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
-				/usr/share/mcbsystools/leds.sh vpn on
-				tunnelstate="up"
-			else
-				/usr/share/mcbsystools/leds.sh vpn off
-				tunnelstate="down"
-			fi
-		else 
-			syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
+	# Ping the peer address
+	if (valid_ip $openvpnIP); then
+		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
+			/usr/share/mcbsystools/leds.sh vpn on
+			tunnelstate="up"
+		else
+			/usr/share/mcbsystools/leds.sh vpn off
 			tunnelstate="down"
 		fi
-
-		# Set Tunnel state
-		echo $tunnelstate > $VPN_STATE_FILE
-		syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
+	else 
+		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
+		tunnelstate="down"
 	fi
-	[ "$tunnelstae" = "down" ] && return 1
-	return 0
+
+	# Set Tunnel state
+	echo $tunnelstate > $VPN_STATE_FILE
+	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
+    fi
+    [ "$tunnelstate" = "down" ] && return 1
+    return 0
 }
 
-function startup_vpn_connection ()
+function check_vpn_status ()
 {
-	if [ $START_VPN_ENABLED -eq 1 ]; then
-		syslogger "debug" "Restarting VPN connection FIXME"
-	fi
+    if [ $START_VPN_ENABLED -eq 1 ]; then
+	[ $VPN_START_BACKEND -gt ${#VPN_BACKENDS[@]} ] &&
+	    syslogger "debug" "unknown backend index $VPN_START_BACKEND" &&
+	    return 1
+	case ${VPN_BACKENDS[$VPN_START_BACKEND]} in
+	ipsec)		check_ipsec_status ;;
+	openvpn)	check_openvpn_status ;;
+	*)		syslogger "debug" "no VPN backend checked" ;;
+	esac
+    fi
+}
+
+function restart_vpn_connection ()
+{
+    if [ $START_VPN_ENABLED -eq 1 ]; then
+	[ $VPN_START_BACKEND -gt ${#VPN_BACKENDS[@]} ] &&
+	    syslogger "debug" "unknown backend index $VPN_START_BACKEND" &&
+	    return 1
+	case ${VPN_BACKENDS[$VPN_START_BACKEND]} in
+	ipsec)	ipsec restart ;;
+	openvpn)	syslogger "debug" "Restarting OpenVPN connection FIXME" ;;
+	*)		syslogger "debug" "no VPN backend restarted" ;;
+	esac
+    fi
 }
 
 #-----------------------------------------------------------------------

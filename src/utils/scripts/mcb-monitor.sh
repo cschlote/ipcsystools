@@ -198,7 +198,9 @@ if [ $START_WAN_ENABLED -eq 1 ]; then
 fi
 
 #-- Status checks ------------------------------------------------------
-check_openvpn_status
+if ! check_vpn_status; then
+    reset_vpn=true
+fi
 
 #--- Ping a remote target and count faults eventually rebooting
 syslogger "debug" "Run Remote ping test..."
@@ -220,7 +222,7 @@ if [ $reset_system = "true" ]; then
 else
     if [ $reset_vpn = "true" ]; then
 	syslogger "warn" "Restarting VPN connection..."
-	startup_vpn_connection
+	restart_vpn_connection
     else 
 	if [ $reset_wan = "true" ]; then
 	    syslogger "warn" "Restarting WAN connection..."
