@@ -32,6 +32,15 @@ case "$1" in
 				crontab /tmp/crontab.dump
 				rm -f /tmp/crontab.dump
 			fi
+
+			#entry=`crontab -l 2>/dev/null | grep gps-monitor.sh | wc -l` > /dev/null
+			#if [ $entry -eq 0 ]; then	
+			#	echo "Creating crontab entry for gps-monitor.sh ..."
+			#	crontab -l 2>/dev/null /tmp/crontab.dump
+			#	echo "*/2 * * * * /usr/share/mcbsystools/gps-monitor.sh" >> /tmp/crontab.dump
+			#	crontab /tmp/crontab.dump
+			#	rm -f /tmp/crontab.dump
+			#fi
 		else
 			echo "(cross-install) Checking root crontab entries..."
 			
@@ -40,6 +49,11 @@ case "$1" in
 				echo "(cross-install) Creating crontab entry for mcb-monitor.sh ..."
 				echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> $DESTDIR/var/spool/cron/crontabs/root
 			fi
+			#entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep gps-monitor.sh | wc -l` > /dev/null
+			#if [ $entry -eq 0 ]; then	
+			#	echo "(cross-install) Creating crontab entry for gps-monitor.sh ..."
+			#	echo "*/2 * * * * /usr/share/mcbsystools/gps-monitor.sh" >> $DESTDIR/var/spool/cron/crontabs/root
+			#fi
 		fi
 	;;
 
@@ -63,6 +77,11 @@ case "$1" in
 				echo "Removing crontab entry for mcb-monitor.sh ..."
 				crontab -l 2>/dev/null | grep -v "mcb-monitor.sh" | crontab
 			fi
+			#entry=`crontab -l 2>/dev/null | grepgps-monitor.sh | wc -l` > /dev/null
+			#if [ $entry -ne 0 ]; then	
+			#	echo "Removing crontab entry for gps-monitor.sh ..."
+			#	crontab -l 2>/dev/null | grep -v "gps-monitor.sh" | crontab
+			#fi
 		else
 			entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
 			if [ $entry -ne 0 ]; then	
@@ -70,6 +89,12 @@ case "$1" in
 				grep -v "mcb-monitor.sh" $DESTDIR/var/spool/cron/crontabs/root > /tmp/crontab.temp
 				mv /tmp/crontab.temp $DESTDIR/var/spool/cron/crontabs/root
 			fi
+			#entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep gps-monitor.sh | wc -l` > /dev/null
+			#if [ $entry -ne 0 ]; then	
+			#	echo "(cross-install) Removing crontab entry for gps-monitor.sh ..."
+			#	grep -v "gps-monitor.sh" $DESTDIR/var/spool/cron/crontabs/root > /tmp/crontab.temp
+			#	mv /tmp/crontab.temp $DESTDIR/var/spool/cron/crontabs/root
+			#fi
 		fi
 	;;
 esac

@@ -169,8 +169,14 @@ function check_connection_maxlost () {
 obtainlock $MCB_MONITOR_PID_FILE
 syslogger "debug" "Started monitor (`date`)"
 
-# Update files and links for GSM modem connection
-WriteGSMConnectionInfoFiles
+# 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
+if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
+    syslogger "error" "No modem detected - no ConnectionInfo files."
+    DetectModemCard
+else
+    # Update files and links for GSM modem connection
+    WriteGSMConnectionInfoFiles
+fi
 
 # Automatically start configured WAN connections
 if [ $START_WAN_ENABLED -eq 1 ]; then
@@ -234,4 +240,7 @@ fi
 #-- End of script ------------------------------------------------------
 syslogger "debug" "Finished monitor (`date`)"
 releaselock
+
+/usr/share/mcbsystools/gps-monitor.sh monitor
+
 exit 0

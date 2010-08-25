@@ -526,12 +526,18 @@ if ! [ $# -ge 1 ]; then
     print_usage; exit 1
 fi
 
+# 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
+if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
+    syslogger "error" "No modem detected - no GPS device."
+    exit 1
+fi
+
 obtainlock $MCB_MONITOR_PID_FILE
 syslogger "debug" "Started monitor (`date`)"
 
 # Update files and links for GSM modem connection
 WriteGSMConnectionInfoFiles
-
+ 
 if gps_checkmodem_feature; then
 
     case "$1" in
