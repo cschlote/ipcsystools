@@ -169,6 +169,8 @@ function check_connection_maxlost () {
 obtainlock $MCB_MONITOR_PID_FILE
 syslogger "debug" "Started monitor (`date`)"
 
+# Refresh current MODEM_STATUS
+ReadModemStatusFile
 # 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
 if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
     syslogger "error" "No modem detected - no ConnectionInfo files."
@@ -241,6 +243,7 @@ fi
 syslogger "debug" "Finished monitor (`date`)"
 releaselock
 
-/usr/share/mcbsystools/gps-monitor.sh monitor
+#-- GPS deactivated --
+#/usr/share/mcbsystools/gps-monitor.sh monitor
 
 exit 0
