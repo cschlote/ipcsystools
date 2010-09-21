@@ -72,6 +72,8 @@ AC_CONFIG_FILES([
 	src/utils/Makefile
 	src/utils/scripts/Makefile
 	src/utils/umtscardtool/Makefile
+	src/utils/binblob/Makefile
+	src/utils/binblob/scripts/Makefile
 	src/etc/Makefile
 ])
 AC_OUTPUT

@@ -1,0 +1,55 @@
+#-- Init blobsize
+init=0x99
+
+#-- Header
+version@0:8=2
+length@8:8=__BLOBSIZE__
+msgcode@8:8=2
+IMEI@24:54U=0x123456789abcdef
+
+#-- GPS Data @78:237
+GPS_Tag@78:5=$(date +%d) 
+GPS_Monat@:4=$(date +%m)
+GPS_Jahr@:6=$(date +%y)
+GPS_Std@:5=$(date +%H)
+GPS_Minute@:6=$(date +%M)
+GPS_Sekunde@:6=$(date +%S)
+GPS_mSek@:10=0
+Latitude@:27S=-234
+Longitude@:28S=-5
+Speed@:10=0
+Height@:16=0
+Heading@:9=0
+SatAnzahl@:5=0
+statCh@:1=0
+pvtFixType@:2=0
+SatNr_1@:5=0
+SatNr_2@:5=0
+SatNr_3@:5=0
+SatNr_4@:5=0
+SatNr_5@:5=0
+SatNr_6@:5=0
+SatNr_7@:5=0
+SatNr_8@:5=0
+SatNr_9@:5=0
+SatNr_10@:5=0
+SatNr_11@:5=0
+SatNr_12@:5=0
+Differential@:1=0
+hdop@:10=0
+pdop@:10=0
+vdop@:10=0
+
+#-- GSM @315:86
+
+#-- Environment @401:35
+
+#-- Malfunction Code @436:8
+malfunccode@436:8=0x00
+
+#-- GPSSat @444:340
+chksumxor8@784:8=0xFF
+
+#-- Checksum and output results
+xor8
+

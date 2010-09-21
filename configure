@@ -10451,7 +10451,7 @@ else
 fi
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/commonlib/Makefile src/utils/Makefile src/utils/scripts/Makefile src/utils/umtscardtool/Makefile src/etc/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/commonlib/Makefile src/utils/Makefile src/utils/scripts/Makefile src/utils/umtscardtool/Makefile src/utils/binblob/Makefile src/utils/binblob/scripts/Makefile src/etc/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11446,6 +11446,8 @@ do
     "src/utils/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/Makefile" ;;
     "src/utils/scripts/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/scripts/Makefile" ;;
     "src/utils/umtscardtool/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/umtscardtool/Makefile" ;;
+    "src/utils/binblob/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/binblob/Makefile" ;;
+    "src/utils/binblob/scripts/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/binblob/scripts/Makefile" ;;
     "src/etc/Makefile") CONFIG_FILES="$CONFIG_FILES src/etc/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -2,7 +2,8 @@
 
 SUBDIRS = \
  scripts \
- umtscardtool
+ umtscardtool \
+ binblob
 
 DISTCLEANFILES = Makefile.in
 
