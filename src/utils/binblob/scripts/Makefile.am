@@ -20,9 +20,9 @@ nobase_dist_pkgdata_DATA = \
 	getgsmroaming.sh        \
 	getipdez.sh     \
 	gettemp.sh      \
-	header-1.script \
-	header-2.script \
-	header-3.script \
-	header-4.script \
-	header-5.script \
+	mcb2msg1.script \
+	mcb2msg2.script \
+	mcb2msg3.script \
+	mcb2msg4.script \
+	mcb2msg5.script \
 	statusmsg.script
