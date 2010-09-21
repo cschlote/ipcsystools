@@ -755,7 +755,6 @@ retry_alloc:
 			}
 			optind++;
 		}
-		putchar ('\n');
 	}
 
 
