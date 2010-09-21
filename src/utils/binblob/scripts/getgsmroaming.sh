@@ -1,9 +1,8 @@
 #!/bin/bash
 #set -x
-let value=`cat /sys/bus/w1/devices/10-*/w1_slave | sed -n -e 's~.*t=\(.*\)~\1~p'`
-let temp=0
-let temp=$value+500
-let temp=$temp/1000 
-let temp=$temp+40
-echo $temp
+value=0
+if [ -e /var/run/connection_gsminfo ]; then
+	value="`cat /var/run/connection_gsminfo | sed -n -e 's~ROAMING:.\(.*\)~\1~p'`"
+fi
+echo $value
 
