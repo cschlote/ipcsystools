@@ -1,12 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-#bin_SCRIPTS = \
-# fs.sh op.sh ni.sh
-
-DISTCLEANFILES = Makefile.in
-
-nobase_dist_pkgdata_DATA = \
-	asciimsg.script \
+bin_SCRIPTS = \
 	getfirmware.sh  \
 	getgpslatitude.sh       \
 	getgpslongitude.sh      \
@@ -19,10 +13,16 @@ nobase_dist_pkgdata_DATA = \
 	getgsmplmn.sh   \
 	getgsmroaming.sh        \
 	getipdez.sh     \
-	gettemp.sh      \
+	gettemp.sh      
+
+DISTCLEANFILES = Makefile.in
+
+nobase_dist_pkgdata_DATA = \
+	asciimsg.script \
 	mcb2msg1.script \
 	mcb2msg2.script \
 	mcb2msg3.script \
 	mcb2msg4.script \
-	mcb2msg5.script \
-	statusmsg.script
+	mcb2msg5.script
+	
+#devel:	statusmsg.script 

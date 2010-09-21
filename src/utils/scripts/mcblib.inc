@@ -131,7 +131,7 @@ function WriteConnectionFieldStrengthFile ()
 	field_strength=$?
 
 	echo $field_strength > $CONNECTION_FS_FILE
-	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
+	bash /usr/share/mcbsystools/leds.sh gsmfs $field_strength
 }
 
 function ResetModem ()
@@ -295,7 +295,7 @@ function shutdown_wan_connection ()
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		syslogger "debug" "Shutdown WAN connection $wan_if"
-		$MCB_SCRIPTS_DIR/connection-$wan_if.sh stop
+		bash $MCB_SCRIPTS_DIR/connection-$wan_if.sh stop
 	fi
 }
 function startup_wan_connection ()
@@ -305,7 +305,7 @@ function startup_wan_connection ()
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		syslogger "debug" "Starting WAN connection $wan_if"
-		$MCB_SCRIPTS_DIR/connection-$wan_if.sh start
+		bash $MCB_SCRIPTS_DIR/connection-$wan_if.sh start
 	fi
 }
 function check_wan_connection ()
@@ -319,7 +319,7 @@ function check_wan_connection ()
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
-		$MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
+		bash $MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
 		if [ $? != 0 ]; then
 			syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
 			rc=1;
@@ -336,7 +336,7 @@ function check_wan_connection_status ()
 			wan_curr=$1
 		fi
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
-		$MCB_SCRIPTS_DIR/connection-$wan_if.sh status
+		bash $MCB_SCRIPTS_DIR/connection-$wan_if.sh status
 		if [ $? != 0 ]; then
 			syslogger "error" "WAN interface $wan_if has broken status"
 			rc=1;

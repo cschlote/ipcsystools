@@ -5,7 +5,7 @@ init=14
 devtype@0:8=5
 version@8:8=1
 blksel@16:16=0x0000
-ident@32:64=$(./getipdez.sh)
+ident@32:64=$(getipdez.sh)
 length@96:16=__BLOBSIZE__
 
 #-- Checksum and output results

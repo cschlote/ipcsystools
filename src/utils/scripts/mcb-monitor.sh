@@ -243,7 +243,13 @@ fi
 syslogger "debug" "Finished monitor (`date`)"
 releaselock
 
-#-- GPS deactivated --
-#/usr/share/mcbsystools/gps-monitor.sh monitor
+gps-monitor.sh monitor
+
+(cd /usr/share/mcbsystools
+for i in mcb2msg*; do
+    binblob -s $i base64 | nc -c 172.25.0.175 3003
+done;
+binblob -s asciimsg.script base64 | nc -c 172.25.0.175 3003
+)
 
 exit 0

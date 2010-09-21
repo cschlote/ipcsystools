@@ -5,26 +5,26 @@ init=40
 devtype@0:8=5
 version@8:8=1
 blksel@16:16=0x0007
-ident@32:64=$(./getipdez.sh)
+ident@32:64=$(getipdez.sh)
 length@96:16=__BLOBSIZE__
 
 #-- GSM Data ---------------------------------------------------------
-Signal@112:7=$(./getgsmfs.sh)
-Roaming@119:1=$(./getgsmroaming.sh)
-NetworkMode@120:2=$(./getgsmmode.sh)
-CellPLMN@122:24=$(./getgsmplmn.sh)
-CellLAC@146:16=$(./getgsmlac.sh)
-CellID@162:16=$(./getgsmcellid.sh)
+Signal@112:7=$(getgsmfs.sh)
+Roaming@119:1=$(getgsmroaming.sh)
+NetworkMode@120:2=$(getgsmmode.sh)
+CellPLMN@122:24=$(getgsmplmn.sh)
+CellLAC@146:16=$(getgsmlac.sh)
+CellID@162:16=$(getgsmcellid.sh)
 
 #-- GPS Data ---------------------------------------------------------
-GpsTime@178:32=$(./getgpstime.sh)
+GpsTime@178:32=$(getgpstime.sh)
 GpsTimeMS@210:10=0
-Latitude@220:27S=$(./getgpslatitude.sh)
-Longitude@247:28S=$(./getgpslongitude.sh)
-CountSat@275:8=$(./getgpssatinfo.sh)
+Latitude@220:27S=$(getgpslatitude.sh)
+Longitude@247:28S=$(getgpslongitude.sh)
+CountSat@275:8=$(getgpssatinfo.sh)
 
 #-- Environment -----------------------------------------------------
-Temperature@283:8=$(./gettemp.sh)
+Temperature@283:8=$(gettemp.sh)
 Malfunction@291:8=0
 Gpio@299:16=0x0000
 
