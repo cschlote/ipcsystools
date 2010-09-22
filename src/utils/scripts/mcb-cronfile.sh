@@ -5,6 +5,6 @@
 
 /usr/bin/mcb-monitor.sh
 
-/usr/bin/gps-monitor.sh monitor
+/usr/bin/gps-monitor.sh monitor > /dev/null
 
 /usr/bin/mcb-reportstatus.sh

@@ -13,8 +13,10 @@ GPS_STATUS_FILE=$MCB_STATUSFILE_DIR/gps_status
 GPS_LOCATION_FILE=$MCB_STATUSFILE_DIR/gps_location
 GPS_SATINFO_FILE=$MCB_STATUSFILE_DIR/gps_satinfo
 
-MCB_MONITOR_PID_FILE=/var/lock/gps-monitor.pid
+GPS_MONITOR_PID_FILE=/var/lock/gps-monitor.pid
+GPS_MONITOR_STATUS=/var/run/gps-monitor-status
 
+GPS_ENABLE=`getmcboption monitor.gps.enable`
 GPS_FIXPREC=`getmcboption monitor.gps.fix_prec`
 GPS_TRKPREC=`getmcboption monitor.gps.trk_prec`
 GPS_START_BACKEND=`getmcboption monitor.gps.start_backend`
@@ -465,6 +467,9 @@ function stop_backend ()
 
 function gps_start ()
 {
+    syslogger "debug" "Starting GPS receiver and backend"
+    echo "Starting GPS receiver and backend"
+
     # --- Get an intitial GPS fix ----------------------------
     query_gpsstatus
     if [ "$GPS_CURRSTATUS" = "ACTIVE" ]; then
@@ -487,22 +492,36 @@ function gps_start ()
     fi
 
     start_backend
+    touch > $GPS_MONITOR_STATUS
 }
 
 function gps_stop ()
 {
+    syslogger "debug" "Stopping GPS receiver and backend"
+    echo "Stopping GPS receiver and backend"
     stop_backend
+    gps_gpsend
+    rm $GPS_MONITOR_STATUS
 }
 
 function gps_monitor ()
 {
-    if ! check_backend; then
-	syslogger "debug" "Starting active GPS tracking session (again)"
-	start_backend
+    if [ "$GPS_ENABLE" -eq "1" ]; then
+	if [ ! -e $GPS_MONITOR_STATUS ]; then
+	    syslogger "debug" "Starting GPS receiver"
+	    gps_start
+	    
+	fi
+	if ! check_backend; then
+	    syslogger "debug" "Starting GPS backend (again)"
+	    start_backend
+	fi
+	query_gpsstatus
+	query_gpsloc
+	query_gpssatinfo
+    else
+	syslogger "debug" "GPS monitoring diabled"
     fi
-    query_gpsstatus
-    query_gpsloc
-    query_gpssatinfo
 }
 
 function print_usage {
@@ -526,20 +545,15 @@ if ! [ $# -ge 1 ]; then
     print_usage; exit 1
 fi
 
-# 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
-if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
-    DetectModemCard
-else
-    # Update files and links for GSM modem connection
-    WriteGSMConnectionInfoFiles
-fi
-
-obtainlock $MCB_MONITOR_PID_FILE
+obtainlock $GPS_MONITOR_PID_FILE
 syslogger "debug" "Started monitor (`date`)"
 
-# Update files and links for GSM modem connection
-WriteGSMConnectionInfoFiles
- 
+# 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
+ReadModemStatusFile
+if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
+    DetectModemCard
+fi
+
 if gps_checkmodem_feature; then
 
     case "$1" in
