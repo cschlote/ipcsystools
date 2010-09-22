@@ -19,16 +19,16 @@ case "$1" in
 		fi
 
 		#
-		# Add mcb-monitor.sh to system cron table
+		# Add mcb-cronfile.sh to system cron table
 		#
 		if [ -z "$DESTDIR" ]; then
 			echo "Checking root crontab entries..."
 
-			entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+			entry=`crontab -l 2>/dev/null | grep mcb-cronfile.sh | wc -l` > /dev/null
 			if [ $entry -eq 0 ]; then	
-				echo "Creating crontab entry for mcb-monitor.sh ..."
+				echo "Creating crontab entry for mcb-cronfile.sh ..."
 				crontab -l 2>/dev/null /tmp/crontab.dump
-				echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
+				echo "*/2 * * * * /usr/bin/mcb-cronfile.sh" >> /tmp/crontab.dump
 				crontab /tmp/crontab.dump
 				rm -f /tmp/crontab.dump
 			fi
@@ -37,22 +37,22 @@ case "$1" in
 			#if [ $entry -eq 0 ]; then	
 			#	echo "Creating crontab entry for gps-monitor.sh ..."
 			#	crontab -l 2>/dev/null /tmp/crontab.dump
-			#	echo "*/2 * * * * /usr/share/mcbsystools/gps-monitor.sh" >> /tmp/crontab.dump
+			#	echo "*/2 * * * * /usr/bin/gps-monitor.sh" >> /tmp/crontab.dump
 			#	crontab /tmp/crontab.dump
 			#	rm -f /tmp/crontab.dump
 			#fi
 		else
 			echo "(cross-install) Checking root crontab entries..."
 			
-			entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+			entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep mcb-cronfile.sh | wc -l` > /dev/null
 			if [ $entry -eq 0 ]; then	
-				echo "(cross-install) Creating crontab entry for mcb-monitor.sh ..."
-				echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> $DESTDIR/var/spool/cron/crontabs/root
+				echo "(cross-install) Creating crontab entry for mcb-cronfile.sh ..."
+				echo "*/2 * * * * /usr/bin/mcb-cronfile.sh" >> $DESTDIR/var/spool/cron/crontabs/root
 			fi
 			#entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep gps-monitor.sh | wc -l` > /dev/null
 			#if [ $entry -eq 0 ]; then	
 			#	echo "(cross-install) Creating crontab entry for gps-monitor.sh ..."
-			#	echo "*/2 * * * * /usr/share/mcbsystools/gps-monitor.sh" >> $DESTDIR/var/spool/cron/crontabs/root
+			#	echo "*/2 * * * * /usr/bin/gps-monitor.sh" >> $DESTDIR/var/spool/cron/crontabs/root
 			#fi
 		fi
 	;;
@@ -67,15 +67,15 @@ case "$1" in
 		fi
 
 		#
-		# Remove mcb-monitor.sh to system cron table
+		# Remove mcb-cronfile.sh to system cron table
 		#
 		echo "Removing root crontab entries..."
 		if [ -z "$DESTDIR" ]; then
 
-			entry=`crontab -l 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+			entry=`crontab -l 2>/dev/null | grep mcb-cronfile.sh | wc -l` > /dev/null
 			if [ $entry -ne 0 ]; then	
-				echo "Removing crontab entry for mcb-monitor.sh ..."
-				crontab -l 2>/dev/null | grep -v "mcb-monitor.sh" | crontab
+				echo "Removing crontab entry for mcb-cronfile.sh ..."
+				crontab -l 2>/dev/null | grep -v "mcb-cronfile.sh" | crontab
 			fi
 			#entry=`crontab -l 2>/dev/null | grepgps-monitor.sh | wc -l` > /dev/null
 			#if [ $entry -ne 0 ]; then	
@@ -83,10 +83,10 @@ case "$1" in
 			#	crontab -l 2>/dev/null | grep -v "gps-monitor.sh" | crontab
 			#fi
 		else
-			entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep mcb-monitor.sh | wc -l` > /dev/null
+			entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep mcb-cronfile.sh | wc -l` > /dev/null
 			if [ $entry -ne 0 ]; then	
-				echo "(cross-install) Removing crontab entry for mcb-monitor.sh ..."
-				grep -v "mcb-monitor.sh" $DESTDIR/var/spool/cron/crontabs/root > /tmp/crontab.temp
+				echo "(cross-install) Removing crontab entry for mcb-cronfile.sh ..."
+				grep -v "mcb-cronfile.sh" $DESTDIR/var/spool/cron/crontabs/root > /tmp/crontab.temp
 				mv /tmp/crontab.temp $DESTDIR/var/spool/cron/crontabs/root
 			fi
 			#entry=`cat $DESTDIR/var/spool/cron/crontabs/root 2>/dev/null | grep gps-monitor.sh | wc -l` > /dev/null

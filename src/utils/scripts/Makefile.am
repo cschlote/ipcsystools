@@ -1,8 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
+	mcb-cronfile.sh \
 	mcb-monitor.sh \
 	gps-monitor.sh \
+	mcb-reportstatus.sh \
 	fs.sh op.sh ni.sh
 
 DISTCLEANFILES = Makefile.in
