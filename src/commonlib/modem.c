@@ -98,7 +98,7 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	int nRes;
 	bool bRes = false;
 	char strCmd [ nCommandSize+4 ];
-	fd_set readfs;
+	fd_set readfs, writefs;
 	struct timeval tv;
 	int i;
 
@@ -117,8 +117,25 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	for (i = 0; i < (int)strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
 
 	/* Send AT command */
-	nRes = write(nSerFD, strCmd, strlen(strCmd));
-	syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
+	nRes = 0;
+	FD_ZERO(&writefs);
+	while (nRes < (int)strlen(strCmd))
+	{
+		FD_SET(nSerFD, &writefs);
+		tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
+		i = select( nSerFD+1, NULL, &writefs, NULL, &tv );
+		if (i<=0)
+			return false;
+		if (i>0 && FD_ISSET(nSerFD, &readfs))
+		{
+			i = write(nSerFD, &strCmd[nRes], strlen(strCmd) - nRes);
+			if (i >= 0)
+				nRes += i;
+		}
+		syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
+	}
+	
+	FD_ZERO(&readfs);
 	if (nRes == (int)strlen(strCmd))
 	{
 		memset(strResult, 0, nResultSize);
