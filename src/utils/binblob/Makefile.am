@@ -2,9 +2,16 @@
 # automake config
 #
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/include \
-	-I$(top_builddir)/include
-#	$(some_CFLAGS)
+	-I$(top_srcdir)/src/commonlib \
+	-I$(top_srcdir)/src/include $(all_includes) \
+	-DPKGLIBDIR=\"$(pkglibdir)/\" \
+	-DPKGDATADIR=\"$(pkgdatadir)/\" \
+	-DPKGBLDDATE=\"`date +%F-%R`\" \
+	@CPPFLAGS@
+AM_CFLAGS = -Wall
+AM_CXXFLAGS = -Wall
+
+#AM_LDFLAGS = -Wl,-rpath-link -Wl,$(lib_srcdir) 
 
 MAINTAINERCLEANFILES = \
 	Makefile.in
