@@ -13,6 +13,11 @@ DISTCLEANFILES = Makefile.in
 
 ## -- Build a static/shared library for the mcbsystools binaries -------------
 
+lib_LTLIBRARIES = \
+ libbinblob.la
+
+libbinblob_la_SOURCES = libbinblob.c libbinblob.h
+
 pkglib_LTLIBRARIES = \
  libmcbtoolset.la \
  libinifile.la \
@@ -27,3 +32,4 @@ libmcbtoolset_la_SOURCES = \
 libinifile_la_SOURCES = inifile.c inifile.h
 
 libbstrlib_la_SOURCES = bstrlib.c bstrlib.h
+

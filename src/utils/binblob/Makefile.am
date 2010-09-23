@@ -15,18 +15,6 @@ SUBDIRS = \
 bin_PROGRAMS = \
 	binblob
 
-lib_LTLIBRARIES = \
-	libbinblob.la
-
-#
-# library
-#
-libbinblob_la_SOURCES = \
-	libbinblob.c
-
-#
-# binary
-#
 binblob_SOURCES = binblob.c
 
 binblob_LDADD = -lbinblob
