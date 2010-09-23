@@ -492,7 +492,7 @@ function gps_start ()
     fi
 
     start_backend
-    touch > $GPS_MONITOR_STATUS
+    touch $GPS_MONITOR_STATUS
 }
 
 function gps_stop ()
