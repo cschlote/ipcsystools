@@ -1,0 +1,25 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4
+# Default-Stop:			 
+# Short-Description: Startup the MCB Enviroment
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+. /usr/share/mcbsystools/mcblib.inc
+
+DESC="mcb-startup[$$]"
+
+syslogger "info" "Startup mcb environment... "
+
+# Initialize the UMTS Modem
+InitializeModem
+
+# Startup the UMTS Connection
+startup_wan_connection
+
+# Initialize the cronjob if not already done.
+setup_mcb_cronjob 

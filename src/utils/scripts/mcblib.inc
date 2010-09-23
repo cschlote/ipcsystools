@@ -489,15 +489,15 @@ function ping_target ()
 }
 
 #
-# Add mcb-monitor.sh to system cron table
+# Add mcb-cronfile.sh to system cron table
 #
-function setup_checkconnection ()
+function setup_mcb_cronjob ()
 {
 	if [ $START_MCB_MONITOR -eq 1 ] ; then
 		if ! crontab -l 2>/dev/null | grep -q mcb-monitor.sh; then	
-			syslogger "info" "Creating crontab entry for mcb-monitor.sh ..."
+			syslogger "info" "Creating crontab entry for mcb-cronfile.sh ..."
 			crontab -l 2>/dev/null /tmp/crontab.dump
-			echo "*/2 * * * * /usr/share/mcbsystools/mcb-monitor.sh" >> /tmp/crontab.dump
+			echo "*/2 * * * * /usr/bin/mcb-cronfile.sh" >> /tmp/crontab.dump
 			crontab /tmp/crontab.dump
 			rm -f /tmp/crontab.dump
 		fi

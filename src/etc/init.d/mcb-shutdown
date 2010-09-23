@@ -1,0 +1,23 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     0 6
+# Default-Stop:			 
+# Short-Description: Shutdown the MCB Enviroment
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+. /usr/share/mcbsystools/mcblib.inc
+
+DESC="mcb-shutdown[$$]"
+
+syslogger "info" "Shuting down mcb environment... "
+bash /usr/share/mcbsystools/leds.sh all-off
+
+# WWAN LED off
+echo 0 > /sys/class/gpio/gpio174/value 2> /dev/null
+
+syslogger "info" "Shutdown mcb environment complete"
+exit 0
