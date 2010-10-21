@@ -1,0 +1,4 @@
+''      ATZ
+OK      AT+CGDCONT=1,"IP","web.vodafone.de"
+OK      AT!SCACT=1,1
+OK      ''

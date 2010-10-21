@@ -16,5 +16,8 @@ nobase_dist_pkgdata_DATA = \
 	connection-umts.sh \
 	mcblib.inc \
 	options.umts \
-	ppp-umts.chat
+	ppp-umts.chat \
+	sierra-dip-disable.chat \
+	sierra-dip-enable.chat \
+	sierra-dip.chat
 
