@@ -28,14 +28,14 @@
 #
 #***********************************************************************************
 
-DESC=ipsec-monitor
+DESC=ipsec-monitor[$$]
 STATUSFILE_DIR=/var/run
 VPN_STATE_FILE=$STATUSFILE_DIR/vpn_status
 RESTART_COUNT=4
 CHECK_PING_TIME=60
 
 # only applicable when ipsec is running  
-[ -e /var/run/pluto.pid ] || exit
+[ -e /var/run/pluto.pid ] || exit 1
 
 # Restart the ipsec tunnel
 # void RestartIPSecTunnel (char *connname)
@@ -128,29 +128,49 @@ ProcessPeerAddress()
 # ------------------------
 # --- MAIN starts here ---
 #-------------------------
+rc_code=0
 
-# set tunnel down counter
-TUNNEL_UP_COUNT=0
+if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
+case "$cmd" in
+	check)
+		# set tunnel down counter
+		TUNNEL_UP_COUNT=0
 
-monitor_peers=( `grep 'vpn.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2` )
-#echo ${monitor_peers[@]}
+		monitor_peers=( `grep 'ipsec.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2` )
+		#echo ${monitor_peers[@]}
 
-if ( test ${#monitor_peers[*]} -gt 0 ); then
-	# Check peeraddresses
-	for peer in "${monitor_peers[@]}"
-	do 	
-		ProcessPeerAddress $peer
-	done
+		if ( test ${#monitor_peers[*]} -gt 0 ); then
+			# Check peeraddresses
+			for peer in "${monitor_peers[@]}"
+			do 	
+				ProcessPeerAddress $peer
+			done
 
-	# Turn on/of VPN LED
-	if ( test $TUNNEL_UP_COUNT -gt 0 ); then
-		/usr/share/mcbsystools/leds.sh vpn on
-		echo "up" > $VPN_STATE_FILE
-	else
-		/usr/share/mcbsystools/leds.sh vpn off
-		echo "down" > $VPN_STATE_FILE
-	fi
-fi
+			# Turn on/of VPN LED
+			if ( test $TUNNEL_UP_COUNT -gt 0 ); then
+				/usr/share/mcbsystools/leds.sh vpn on
+				echo "up" > $VPN_STATE_FILE
+				rc_code=0
+			else
+				/usr/share/mcbsystools/leds.sh vpn off
+				echo "down" > $VPN_STATE_FILE
+				rc_code=1
+			fi
+		fi
+	;;
+	status)
+		tunnel_state=`cat $VPN_STATE_FILE`
+		if [ $tunnel_state == "up" ]; then
+			rc_code=0
+		else
+			rc_code=1
+		fi
+	;;
+	*)	
+		echo "Usage: $0 check|status"
+		rc_code=1;	
+	;;
+esac
 
-exit 0
+exit $rc_code
 

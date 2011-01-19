@@ -126,8 +126,7 @@ PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin"
 export PATH
 
 # MTU for the ipsec tunnel
-#MTU_SIZE=1352
-MTU_SIZE=1390
+MTU_SIZE=1350
 
 # uncomment to log VPN connections
 VPN_LOGGING=1
@@ -348,11 +347,13 @@ case "$PLUTO_VERB:$1" in
 	route-host:*|route-client:*)
 		# connection to me or my client subnet being routed
 		uproute
+		/usr/share/mcbsystools/leds.sh vpn on
 		;;
 
 	unroute-host:*|unroute-client:*)
 		# connection to me or my client subnet being unrouted
 		downroute
+		/usr/share/mcbsystools/leds.sh vpn off
 		;;
 
 	up-host:)
