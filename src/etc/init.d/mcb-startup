@@ -1,0 +1,26 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4
+# Default-Stop:			 
+# Short-Description: Startup the MCB Enviroment
+### END INIT INFO
+
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
+
+# Basis Bibliothek f?r die MCB-2
+. /usr/share/mcbsystools/mcblib.inc
+
+echo "Startup mcb environment... "
+
+# Start a new subshell for modem stuff
+(
+	# Initialize the UMTS Modem
+	InitializeModem
+
+	# Startup WAN Connection
+	startup_wan_connection
+)
+

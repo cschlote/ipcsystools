@@ -17,5 +17,7 @@ install-data-local:
 	$(INSTALL_DATA) $(srcdir)/ppp/50_openvpn-up $(DESTDIR)/etc/ppp/ip-up.d/50_openvpn-up
 	$(INSTALL_DATA) $(srcdir)/ppp/50_openvpn-down $(DESTDIR)/etc/ppp/ip-down.d/50_openvpn-down
 	$(INSTALL_DATA) $(srcdir)/ppp/50_ipsec-up $(DESTDIR)/etc/ppp/ip-up.d/50_ipsec-up
-	$(INSTALL_DATA) $(srcdir)/ppp/50_ipsec-down $(DESTDIR)/etc/ppp/ip-down.d/50_ipsec-down
+	$(INSTALL_DATA) $(srcdir)/ppp/50_ipsec-down $(DESTDIR)/etc/ppp/ip-down.d/50_ipsec-down	
+	$(INSTALL_DATA) $(srcdir)/init.d/mcb-startup $(DESTDIR)/etc/init.d/mcb-startup
+	$(INSTALL_DATA) $(srcdir)/init.d/mcb-shutdown $(DESTDIR)/etc/init.d/mcb-shutdown
 
