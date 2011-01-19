@@ -192,13 +192,16 @@ bin_SCRIPTS = \
 
 DISTCLEANFILES = Makefile.in
 nobase_dist_pkgdata_DATA = \
-	checkconnection.sh \
+	mcb-monitor.sh \
 	mcblib.inc \
 	options.umts \
 	ppp-umts.chat \
-	umts-connection.sh \
+	connection-eth.sh \
+	connection-umts.sh \
 	mcb-initsystem.sh \
-	leds.sh
+	leds.sh \
+	ipsec-monitor.sh \
+	msvpn_updown
 
 all: all-am
 
