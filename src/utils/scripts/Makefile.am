@@ -13,7 +13,10 @@ nobase_dist_pkgdata_DATA = \
 	connection-eth.sh \
 	connection-umts.sh \
 	ipc-initsystem.sh \
-	leds.sh \
-	ipsec-monitor.sh \
-	msvpn_updown
+	leds.sh
+
+
+# Disabled for now
+#	ipsec-monitor.sh \
+#	msvpn_updown
 

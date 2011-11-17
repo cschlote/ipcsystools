@@ -19,8 +19,8 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-down.d/
 	$(INSTALL_DATA) $(srcdir)/ppp/ip-down.d/01-3g-led-off $(DESTDIR)/etc/ppp/ip-down.d/01-3g-led-off
 	$(INSTALL_DATA) $(srcdir)/ppp/ip-down.d/50_openvpn-down $(DESTDIR)/etc/ppp/ip-down.d/50_openvpn-down
-	$(mkinstalldirs) $(DESTDIR)/etc/udev/
-	$(INSTALL_DATA) $(srcdir)/etc/udev/rules.d/10-ncu-firmware.rules $(DESTDIR)/etc/udev/rules.d/10-ncu-firmware.rules
+	$(mkinstalldirs) $(DESTDIR)/etc/udev/rules.d
+	$(INSTALL_DATA) $(srcdir)/udev/rules.d/10-ncu-firmware.rules $(DESTDIR)/etc/udev/rules.d/10-ncu-firmware.rules
 
 # Not yet used???
 #	#$(INSTALL_DATA) $(srcdir)/ppp/50_ipsec-up $(DESTDIR)/etc/ppp/ip-up.d/50_ipsec-up

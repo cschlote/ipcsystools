@@ -200,9 +200,7 @@ nobase_dist_pkgdata_DATA = \
 	connection-eth.sh \
 	connection-umts.sh \
 	ipc-initsystem.sh \
-	leds.sh \
-	ipsec-monitor.sh \
-	msvpn_updown
+	leds.sh
 
 all: all-am
 
@@ -450,6 +448,10 @@ uninstall-am: uninstall-binSCRIPTS uninstall-nobase_dist_pkgdataDATA
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-binSCRIPTS uninstall-nobase_dist_pkgdataDATA
 
+
+# Disabled for now
+#	ipsec-monitor.sh \
+#	msvpn_updown
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
