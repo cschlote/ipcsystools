@@ -5,15 +5,15 @@
 # Required-Stop:     $local_fs
 # Default-Start:     2 3 4
 # Default-Stop:			 
-# Short-Description: Startup the MCB Enviroment
+# Short-Description: Startup the IPC Enviroment
 ### END INIT INFO
 
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+/usr/bin/ipc-set-led all-off
 
 # Basis Bibliothek f?r die MCB-2
-. /usr/share/mcbsystools/mcblib.inc
+. /usr/share/ipcsystools/ipclib.inc
 
-echo "Startup mcb environment... "
+echo "Startup IPC environment... "
 
 # Start a new subshell for modem stuff
 (
@@ -24,3 +24,7 @@ echo "Startup mcb environment... "
 	startup_wan_connection
 )
 
+# Set "ready" Led on
+/usr/bin/ipc-set-led ready on
+
+exit 0

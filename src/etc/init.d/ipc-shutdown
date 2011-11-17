@@ -1,0 +1,22 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     0 6
+# Default-Stop:			 
+# Short-Description: Shutdown the IPC Enviroment
+### END INIT INFO
+
+echo -n "Shutdown ipc environment... "
+
+# PPP Verbindungen trennen
+PPP_PIDS=`pidof pppd`
+kill -TERM $PPP_PIDS 2> /dev/null
+
+# All leds off
+/usr/bin/ipc-set-led all-off
+
+echo "done."
+
+exit 0
