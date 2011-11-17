@@ -1,0 +1,18 @@
+Source: ipcsystools
+Section: unknown
+Priority: extra
+Maintainer: Carsten Schlote <c.schlote@konzeptpark.de>
+Build-Depends: debhelper (>= 7), autotools-dev
+Standards-Version: 3.8.3
+Homepage: <insert the upstream URL, if relevant>
+
+Package: ipcsystools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>
+
+Package: ipcsystools-doc
+Architecture: all
+Description: documentation for ipcsystools
+ <insert long description, indented with spaces>
