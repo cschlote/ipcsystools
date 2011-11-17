@@ -1,0 +1,21 @@
+####################################
+# Optionen für die UMTS Verbindung #
+####################################
+noipdefault
+defaultroute
+replacedefaultroute
+noauth
+crtscts
+lock
+modem
+ipcp-accept-remote
+ipcp-accept-local
+lcp-echo-interval 20
+lcp-echo-failure 2
+
+#usepeerdns
+#kdebug 1
+dump
+#nodetach
+#debug
+

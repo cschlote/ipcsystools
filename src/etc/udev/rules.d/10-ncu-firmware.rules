@@ -1,0 +1,9 @@
+
+# Special Rules für the NCU Hardware
+
+# Rules for the internal USB Port - Sierra Wireless Modem
+SUBSYSTEMS=="usb", DRIVERS=="sierra", ATTRS{bInterfaceNumber}=="03", SYMLINK+="usbmodem-ctrl"
+SUBSYSTEMS=="usb", DRIVERS=="sierra", ATTRS{bInterfaceNumber}=="04", SYMLINK+="usbmodem-data"
+SUBSYSTEMS=="usb", DRIVERS=="sierra", ATTRS{bInterfaceNumber}=="05", SYMLINK+="usbmodem-gps"
+
+LABEL="ncu_internal_usb_end"
