@@ -3,7 +3,7 @@
 bin_SCRIPTS = \
  fs.sh op.sh ni.sh
 
-DISTCLEANFILES = Makefile.in
+#DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	mcb-monitor.sh \

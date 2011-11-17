@@ -6,6 +6,6 @@ AM_CPPFLAGS = -DPKGLIBDIR=\"$(pkglibdir)/\" -DPKGDATADIR=\"$(pkgdatadir)/\" -DPK
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
 
-DISTCLEANFILES = Makefile.in
+#DISTCLEANFILES = Makefile.in
 
 

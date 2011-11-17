@@ -3,7 +3,7 @@
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
 
-DISTCLEANFILES = Makefile.in
+#DISTCLEANFILES = Makefile.in
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/etc/

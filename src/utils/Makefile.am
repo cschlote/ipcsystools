@@ -4,5 +4,5 @@ SUBDIRS = \
  scripts \
  umtscardtool
 
-DISTCLEANFILES = Makefile.in
+#DISTCLEANFILES = Makefile.in
 

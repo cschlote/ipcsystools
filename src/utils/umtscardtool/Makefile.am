@@ -10,7 +10,7 @@ AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
 AM_LDFLAGS = -L$(top_srcdir)/src/commonlib -Wl,-rpath-link -Wl,$(top_srcdir)/src/commonlib/.libs/ -lbstrlib -linifile -lmcbtoolset
 
-DISTCLEANFILES = Makefile.in
+#DISTCLEANFILES = Makefile.in
 
 ## -------------------------------------------------------------------
 
