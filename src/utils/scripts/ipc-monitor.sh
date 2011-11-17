@@ -4,42 +4,42 @@
 #
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-. /usr/share/mcbsystools/mcblib.inc
+. /usr/share/ipcsystools/ipclib.inc
 
 DESC="mcb-monitor[$$]"
 
-MCB_MONITOR_PID_FILE=/var/lock/mcb-monitor.pid
+IPC_MONITOR_PID_FILE=/var/lock/mcb-monitor.pid
 
 #-----------------------------------------------------------------------
 # Read variables from config file
 #-----------------------------------------------------------------------
 
 # Sektion [WATCHDOG-CONNECTION]
-CHECK_CONNECTION_REBOOT=`getmcboption watchdog.wan.connection.max_restarts`
-MAX_CONNECTION_LOST=`getmcboption watchdog.wan.connection.max_time`
+CHECK_CONNECTION_REBOOT=`getipcoption watchdog.wan.connection.max_restarts`
+MAX_CONNECTION_LOST=`getipcoption watchdog.wan.connection.max_time`
 
 # Sektion [WATCHDOG-PING]
-CHECK_PING_ENABLED=`getmcboption watchdog.ping.check_ping_enabled`
-CHECK_PING_IP=`getmcboption watchdog.ping.check_ping_ip`
-CHECK_PING_REBOOT=`getmcboption watchdog.ping.check_ping_reboot`
-CHECK_PING_TIME=`getmcboption watchdog.ping.check_ping_time`
+CHECK_PING_ENABLED=`getipcoption watchdog.ping.check_ping_enabled`
+CHECK_PING_IP=`getipcoption watchdog.ping.check_ping_ip`
+CHECK_PING_REBOOT=`getipcoption watchdog.ping.check_ping_reboot`
+CHECK_PING_TIME=`getipcoption watchdog.ping.check_ping_time`
 
 # Lokale Variablen fuer die Ueberwachung Internetverbindung (PPPD)
-CONNECTION_FAULT_FILE=$MCB_STATUSFILE_DIR/connection_fault
+CONNECTION_FAULT_FILE=$IPC_STATUSFILE_DIR/connection_fault
 if [ ! -e $CONNECTION_FAULT_FILE ]; then
   echo 0 > $CONNECTION_FAULT_FILE
 fi
 CONNECTION_FAULT=`cat $CONNECTION_FAULT_FILE`
 
 # Lokale Variablen fuer die Ueberwachung externe Verbindung
-PING_FAULT_FILE=$MCB_STATUSFILE_DIR/connection_ping_fault
+PING_FAULT_FILE=$IPC_STATUSFILE_DIR/connection_ping_fault
 if [ ! -e $PING_FAULT_FILE ]; then
   echo 0 > $PING_FAULT_FILE
 fi
 PING_FAULT=`cat $PING_FAULT_FILE`
 
 # Zeitpunkt des letzten abgesetzten "ping"
-LAST_PING_FILE=$MCB_STATUSFILE_DIR/last_ping_time
+LAST_PING_FILE=$IPC_STATUSFILE_DIR/last_ping_time
 
 reset_wan=false
 reset_system=false
@@ -155,7 +155,7 @@ function check_connection_maxlost () {
 }
 
 #-----------------------------------------------------------------------
-# MCB Connection Monitor
+# IPC Connection Monitor
 #
 # - obtains runtime lock to prevent multiple instances run
 # - check connection to WAN (either eth or umts)
@@ -165,8 +165,8 @@ function check_connection_maxlost () {
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
-obtainlock $MCB_MONITOR_PID_FILE
-syslogger "debug" "Started monitor (`date`)"
+obtainlock $IPC_MONITOR_PID_FILE
+syslogger "info" "Started monitor (`date`)"
 
 # Refresh current MODEM_STATUS
 ReadModemStatusFile
@@ -209,24 +209,28 @@ fi
 check_vpn_status;
 
 #--- Ping a remote target and count faults eventually rebooting
-syslogger "debug" "Run Remote ping test..."
+syslogger "info" "Run Remote ping test..."
 if ! check_connection_maxping; then
-    syslogger "debug" "... remote ping test reported failure!"
+    syslogger "info" "... remote ping test reported failure!"
+else
+    syslogger "info" "...remote ping test ok."
 fi
 
 #--- Check for connection status and PING_FAULT==0 and trigger reboot
 #--- when no valid connection after n times OR n seconds.
-syslogger "debug" "Run connection status test..."
+syslogger "info" "Run connection status test..."
 if ! check_connection_maxlost; then
-    syslogger "debug" "...remote connection test failt!"
+    syslogger "warn" "...remote connection test failt!"
+else
+    syslogger "info" "...remote connection test ok."
 fi
 
 #-- Restart components -------------------------------------------------
 syslogger "debug" "Variables - reset_wan: $reset_wan, reset_system: $reset_system"
 
 if [ $reset_system = "true" ]; then
-    syslogger "warn" "Restarting MCB..."
-    RebootMCB
+    syslogger "warn" "Restarting IPC..."
+    RebootIPC
 else
     if [ $reset_wan = "true" ]; then
     	syslogger "warn" "Restarting WAN connection..."
@@ -235,7 +239,7 @@ else
 fi
 
 #-- End of script ------------------------------------------------------
-syslogger "debug" "Finished monitor (`date`)"
+syslogger "info" "Finished monitor (`date`)"
 releaselock
 
 exit 0

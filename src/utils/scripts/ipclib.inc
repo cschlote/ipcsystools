@@ -4,25 +4,25 @@
 #
 
 # Base directory of UMTS tools
-MCB_TOOLS_DIR=/usr/bin
+IPC_TOOLS_DIR=/usr/bin
 
-# Base directory of mcbsystools scripts
-MCB_SCRIPTS_DIR=/usr/share/mcbsystools
+# Base directory of IPC-Systools scripts
+IPC_SCRIPTS_DIR=/usr/share/ipcsystools
 
 # Configuration file
-MCBCTL_CONFIG=/etc/mcbctl.conf
+IPCCTL_CONFIG=/etc/ipcctl.conf
 
 # Base directory for status files
-MCB_STATUSFILE_DIR=/var/run
+IPC_STATUSFILE_DIR=/var/run
 
 # Programm zur Netzidentifizierung
-UMTS_NI="$MCB_TOOLS_DIR/umtscardtool -i"
+UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
 
 # Programm f�r das Messen der Feldst�rke UMTS
-UMTS_FS="$MCB_TOOLS_DIR/umtscardtool -f"
+UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
-UMTS_PIN="$MCB_TOOLS_DIR/umtscardtool -p"
+UMTS_PIN="$IPC_TOOLS_DIR/umtscardtool -p"
 
 #TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
 
@@ -38,36 +38,36 @@ registeredID=5
 connected=6
 
 # Define paths to persistent status variables 
-COMMAND_DEVICE_FILE=$MCB_STATUSFILE_DIR/command_dev
-CONNECTION_DEVICE_FILE=$MCB_STATUSFILE_DIR/connection_dev
-MODEM_STATUS_FILE=$MCB_STATUSFILE_DIR/modem_status
-CONNECTION_MODE_FILE=$MCB_STATUSFILE_DIR/connection_mode
-CONNECTION_FS_FILE=$MCB_STATUSFILE_DIR/connection_fs
-CONNECTION_GSMINFO_FILE=$MCB_STATUSFILE_DIR/connection_gsminfo
-VPN_STATE_FILE=$MCB_STATUSFILE_DIR/vpn_status
+COMMAND_DEVICE_FILE=$IPC_STATUSFILE_DIR/command_dev
+CONNECTION_DEVICE_FILE=$IPC_STATUSFILE_DIR/connection_dev
+MODEM_STATUS_FILE=$IPC_STATUSFILE_DIR/modem_status
+CONNECTION_MODE_FILE=$IPC_STATUSFILE_DIR/connection_mode
+CONNECTION_FS_FILE=$IPC_STATUSFILE_DIR/connection_fs
+CONNECTION_GSMINFO_FILE=$IPC_STATUSFILE_DIR/connection_gsminfo
+VPN_STATE_FILE=$IPC_STATUSFILE_DIR/vpn_status
 
-WAN_STATE_FILE=$MCB_STATUSFILE_DIR/wan_status
+WAN_STATE_FILE=$IPC_STATUSFILE_DIR/wan_status
 if [ ! -e $WAN_STATE_FILE ] ; then
 	echo 0 > $WAN_STATE_FILE
 fi
 
 # Connection monitoring, remember successful test time
-CONNECTION_AVAILABLE_FILE=$MCB_STATUSFILE_DIR/connection_available
+CONNECTION_AVAILABLE_FILE=$IPC_STATUSFILE_DIR/connection_available
 
 #-----------------------------------------------------------------------
 # Configuration file
 #-----------------------------------------------------------------------
-function getmcboption () {
-	echo `cat $MCBCTL_CONFIG | grep ^$1 | cut -d"=" -f2`
+function getipcoption () {
+	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2`
 }
 
-# Read GENERAL parameters from mcbctl.conf
-LOG_LEVEL=`getmcboption general.log_level`
+# Read GENERAL parameters from ipcctl.conf
+LOG_LEVEL=`getipcoption general.log_level`
 
-WAN_FALLBACKMODE=`getmcboption general.wan.fallbackmode`
-WAN_INTERFACES=(`getmcboption general.wan.interfaces`)
-WAN_CHECKTARGETS=(`getmcboption general.wan.checktargets`)
-WAN_CHECKGATEWAYS=(`getmcboption general.wan.checkgateways`)
+WAN_FALLBACKMODE=`getipcoption general.wan.fallbackmode`
+WAN_INTERFACES=(`getipcoption general.wan.interfaces`)
+WAN_CHECKTARGETS=(`getipcoption general.wan.checktargets`)
+WAN_CHECKGATEWAYS=(`getipcoption general.wan.checkgateways`)
 
 # Evaluate parameter START_UMTS_ENABLED
 if [ ${WAN_INTERFACES[0]} == "umts" ]; then
@@ -135,18 +135,17 @@ function WriteConnectionFieldStrengthFile ()
 	field_strength=$?
 
 	echo $field_strength > $CONNECTION_FS_FILE
-	/usr/share/mcbsystools/leds.sh gsmfs $field_strength
 }
 
 function ResetModem ()
 {
-	$MCB_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
+	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
 }
 
 # Write the radio access technology (RAT) mode to a file
 function WriteConnectionRATModeFile ()
 {
-	local connectionmode=`$MCB_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
+	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 # Write the current network mode to a file
@@ -168,11 +167,11 @@ function WriteConnectionNetworkModeFile ()
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
-	local gsminfo=`$MCB_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
+	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
 	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
 
 	# Write roaming info 
-	local roaming=`$MCB_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
+	local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
 	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
 }
 
@@ -205,8 +204,8 @@ function DetectModemCard ()
 {
 	# Sierra Wireless Modems
 	if lsusb -d 1199: > /dev/null; then
-		echo "/dev/ttyUSB4" > $CONNECTION_DEVICE_FILE
-		echo "/dev/ttyUSB3" > $COMMAND_DEVICE_FILE
+		echo "/dev/usbmodem-data" > $CONNECTION_DEVICE_FILE
+		echo "/dev/usbmodem-ctrl" > $COMMAND_DEVICE_FILE
 
 		WriteModemStatusFile ${MODEM_STATES[detectedID]}
 		return 0
@@ -218,7 +217,7 @@ function DetectModemCard ()
 
 function SetSIMPIN ()
 {
-	local sim_pin=`getmcboption sim.pin`
+	local sim_pin=`getipcoption sim.pin`
 
 	$UMTS_PIN $sim_pin
 	local pin_state=$?
@@ -255,9 +254,9 @@ function CheckNIState ()
 
 function SetConnectionRAT ()
 {	
-	ratcode=`getmcboption modem.connectionmode`
+	ratcode=`getipcoption modem.connectionmode`
 	RefreshModemDevices
-	$MCB_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
+	$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
 }
 
 function InitializeModem ()
@@ -298,7 +297,7 @@ function shutdown_wan_connection ()
 	local wan_if=${WAN_INTERFACES[$wan_curr]}
 	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 	syslogger "debug" "Shutdown WAN connection $wan_if"
-	$MCB_SCRIPTS_DIR/connection-$wan_if.sh stop
+	$IPC_SCRIPTS_DIR/connection-$wan_if.sh stop
 }
 function startup_wan_connection ()
 {
@@ -307,7 +306,7 @@ function startup_wan_connection ()
 	local wan_if=${WAN_INTERFACES[$wan_curr]}
 	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 	syslogger "debug" "Starting WAN connection $wan_if"
-	$MCB_SCRIPTS_DIR/connection-$wan_if.sh start
+	$IPC_SCRIPTS_DIR/connection-$wan_if.sh start
 
 }
 function check_wan_connection ()
@@ -320,7 +319,7 @@ function check_wan_connection ()
 	local wan_if=${WAN_INTERFACES[$wan_curr]}
 	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 	local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
-	$MCB_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
+	$IPC_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
 	if [ $? != 0 ]; then
 		syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
 		rc=1;
@@ -335,7 +334,7 @@ function check_wan_connection_status ()
 		wan_curr=$1
 	fi
 	local wan_if=${WAN_INTERFACES[$wan_curr]}
-	$MCB_SCRIPTS_DIR/connection-$wan_if.sh status
+	$IPC_SCRIPTS_DIR/connection-$wan_if.sh status
 	if [ $? != 0 ]; then
 		syslogger "error" "WAN interface $wan_if has broken status"
 		rc=1;
@@ -347,14 +346,14 @@ function check_wan_connection_status ()
 # VPN related functions
 #-------------------------------------------------------------------------------
 
-START_OVPN_ENABLED=`getmcboption ovpn.start_enabled`
-START_IPSEC_ENABLED=`getmcboption ipsec.start_enabled`
+START_OVPN_ENABLED=`getipcoption ovpn.start_enabled`
+START_IPSEC_ENABLED=`getipcoption ipsec.start_enabled`
 
 function check_ipsec_status ()
 {
-	if [ -e $MCB_SCRIPTS_DIR/ipsec-monitor.sh ]; then
+	if [ -e $IPC_SCRIPTS_DIR/ipsec-monitor.sh ]; then
 		syslogger "debug" "Checking for ipsec running"
-		$MCB_SCRIPTS_DIR/ipsec-monitor.sh check > /dev/null
+		$IPC_SCRIPTS_DIR/ipsec-monitor.sh check > /dev/null
 		if [ $? != 0 ]; then
 			syslogger "warn" "IPSec not running - trigger restart"
 			return 1
@@ -367,7 +366,7 @@ function check_openvpn_status ()
 {	
     if [ $START_OVPN_ENABLED -eq 1 ]; then
 	local tunnelstate="down"
-	local checkmode=`getmcboption ovpn.monitorpeers`
+	local checkmode=`getipcoption ovpn.monitorpeers`
 
 	case "$checkmode" in
 	"ifconfig"|"")
@@ -378,7 +377,7 @@ function check_openvpn_status ()
 	;;
 	"watchdog")
 		syslogger "debug" "get ip address from watchdog settings"
-		openvpnIP=`getmcboption watchdog.ping.check_ping_ip`
+		openvpnIP=`getipcoption watchdog.ping.check_ping_ip`
 	;;
 	*)
 		syslogger "debug"  "validate ip address"
@@ -389,10 +388,10 @@ function check_openvpn_status ()
 	# Ping the peer address
 	if (valid_ip $openvpnIP); then
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
-			/usr/share/mcbsystools/leds.sh vpn on
+			$IPC_SCRIPTS_DIR/leds.sh vpn on
 			tunnelstate="up"
 		else
-			/usr/share/mcbsystools/leds.sh vpn off
+			$IPC_SCRIPTS_DIR/leds.sh vpn off
 			tunnelstate="down"
 		fi
 	else 
@@ -425,7 +424,7 @@ function restart_vpn_connection ()
 	# restart OpenVPN status
 	if [ $START_OVPN_ENABLED -eq 1 ]; then
 		syslogger "debug" "Restarting OpenVPN connection" 
-		/etc/init.d/openvpn restart &	
+		/etc/init.d/openvpn restart client &	
 	fi
 	# Restart ipsec
 	if [ $START_IPSEC_ENABLED -eq 1 ]; then
@@ -438,10 +437,10 @@ function restart_vpn_connection ()
 # Misc
 #-----------------------------------------------------------------------
 
-function RebootMCB ()
+function RebootIPC()
 {
-	local fake=`getmcboption general.reboot.fake`
-	syslogger "error" "MCB wird neu gestartet."
+	local fake=`getipcoption general.reboot.fake`
+	syslogger "error" "IPC wird neu gestartet."
 	if [ "$fake" -eq "1" ]; then
 		syslogger "debug" "Fake mode: do not reset box."
 	else

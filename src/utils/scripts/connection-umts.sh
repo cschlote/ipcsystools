@@ -1,15 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 # DESCRIPTION: Script starts the UMTS Connection
 #       USAGE: $0 start | stop | check <ip> <gw> | status
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-. /usr/share/mcbsystools/mcblib.inc
+. /usr/share/ipcsystools/ipclib.inc
 
 DESC="connection-umts[$$]"
 
 UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
 
-UMTS_DEV=`getmcboption connection.umts.dev`
+UMTS_DEV=`getipcoption connection.umts.dev`
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
@@ -30,7 +30,7 @@ function StartPPPD ()
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $MCB_SCRIPTS_DIR/ppp-umts.chat" &
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-umts.chat" &
     fi
 }
 function StopPPPD ()
@@ -142,7 +142,7 @@ case "$cmd" in
 		[ $MODEM_STATUS == ${MODEM_STATES[registeredID]} ]; then
 
 	    # LED 3g Timer blinken
-	    $MCB_SCRIPTS_DIR/leds.sh 3g timer
+	    $IPC_SCRIPTS_DIR/leds.sh 3g timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -155,7 +155,7 @@ case "$cmd" in
 			WriteModemStatusFile ${MODEM_STATES[connected]}
 		    else
 			syslogger "debug" "ppp deamon didn't startup."
-			$MCB_SCRIPTS_DIR/leds.sh 3g off
+			$IPC_SCRIPTS_DIR/leds.sh 3g off
 			rc_code=1
 		    fi
 		else
@@ -164,7 +164,7 @@ case "$cmd" in
 		fi
 	    else
 		syslogger "error" "Could not initialize datacard (timeout)"
-		$MCB_SCRIPTS_DIR/leds.sh 3g off
+		$IPC_SCRIPTS_DIR/leds.sh 3g off
 		$UMTS_FS
 		syslogger "info" "reported fieldstrength is $?."
 		rc_code=1

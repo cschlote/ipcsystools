@@ -1,16 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 # DESCRIPTION: Script starts an ETH Connection
 #       USAGE: $0 start | stop | check <ip> <gw> | status
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-. /usr/share/mcbsystools/mcblib.inc
+. /usr/share/ipcsystools/ipclib.inc
 
 DESC="connection-eth[$$]"
 
 ETH_CONNECTION_PID_FILE=/var/run/eth_connection.pid
 
-ETH_DEV=`getmcboption connection.eth.dev`
-ETH_KEEPUP=`getmcboption connection.eth.keepup`
+ETH_DEV=`getipcoption connection.eth.dev`
+ETH_KEEPUP=`getipcoption connection.eth.keepup`
 
 #-----------------------------------------------------------------------
 function IsETHAlive ()
@@ -19,10 +19,9 @@ function IsETHAlive ()
 	syslogger "error" "status - interface $ETH_DEV has no ipv4 addr"
 	return 1;
     fi
-    if ! mii-diag -s $ETH_DEV 2>&1 >/dev/null; then
-	syslogger "error" "status - interface $ETH_DEV has no link beat"
-	return 1;
-    fi
+    
+    #TODO: Link - Überwachung einführen?
+    
     if ! ifconfig $ETH_DEV | grep -q UP ; then
 	syslogger "warn" "status - interface $ETH_DEV is not up"
 	return 1;
