@@ -1,5 +1,5 @@
 #!/bin/bash
 
-/etc/init.d/openvpn stop client & 2> /dev/null
+invoke-rc.d openvpn stop client & 2> /dev/null
 
 exit 0
