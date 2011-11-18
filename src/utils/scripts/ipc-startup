@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if which ipc-set-led; then
+	/usr/bin/ipc-set-led all-off
+fi
+
+echo -n "Startup IPC environment... "
+
+# Start a new subshell for modem stuff
+. /usr/share/ipcsystools/ipclib.inc
+( InitializeModem; startup_wan_connection )
+
+if which ipc-set-led; then
+	ipc-set-led ready on
+fi
+
+echo "done."
+exit 0
