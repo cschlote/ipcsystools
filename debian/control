@@ -1,18 +1,14 @@
 Source: ipcsystools
-Section: unknown
+Section: restricted/admin
 Priority: extra
 Maintainer: Carsten Schlote <c.schlote@konzeptpark.de>
 Build-Depends: debhelper (>= 7), autotools-dev
 Standards-Version: 3.8.3
-Homepage: <insert the upstream URL, if relevant>
+Homepage: http://www.konzeptpark.de
 
 Package: ipcsystools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
-
-Package: ipcsystools-doc
-Architecture: all
-Description: documentation for ipcsystools
- <insert long description, indented with spaces>
+Description: Tool to operate umts modems with sophisticated network environments
+ This package provides a set of tools and services for the
+ the firmware of Nordex NCU
