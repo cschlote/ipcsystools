@@ -1,3 +1,11 @@
+ipcsystools (2011.11.17-1lucid1) lucid; urgency=low
+
+  * [debian] Added {post,pre}{inst,rm} scripts
+  * [debian] Added git-buildpackage config
+  * [debian] Updated changelog, copyright et al.
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Fri, 18 Nov 2011 11:39:40 +0100
+
 ipcsystools (2011.11.17-1) lucid; urgency=low
 
   * Initial release
