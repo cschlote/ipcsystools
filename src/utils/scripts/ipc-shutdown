@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo -n "Shutdown ipc environment... "
+
+# Terminate running PPP daemon
+PPP_PIDS=`pidof pppd`
+kill -TERM $PPP_PIDS 2> /dev/null
+
+if which ipc-set-led; then
+	ipc-set-led all-off
+fi
+echo "done."
+
+exit 0

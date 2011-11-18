@@ -3,6 +3,9 @@
 bin_SCRIPTS = \
  fs.sh op.sh ni.sh
 
+sbin_SCRIPTS = \
+ ipc-startup ipc-shutdown
+
 #DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
