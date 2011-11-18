@@ -9,11 +9,11 @@ sbin_SCRIPTS = \
 #DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	ipclib.inc \
 	options.umts \
 	ppp-umts.chat
 
 nobase_dist_pkgdata_EXEC = \
+	ipclib.inc \
 	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
