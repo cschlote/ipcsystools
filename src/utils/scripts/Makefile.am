@@ -9,15 +9,16 @@ sbin_SCRIPTS = \
 #DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	ipc-monitor.sh \
 	ipclib.inc \
 	options.umts \
-	ppp-umts.chat \
+	ppp-umts.chat
+
+nobase_dist_pkgdata_EXEC = \
+	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
 	ipc-initsystem.sh \
 	leds.sh
-
 
 # Disabled for now
 #	ipsec-monitor.sh \
