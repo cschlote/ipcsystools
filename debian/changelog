@@ -1,3 +1,12 @@
+ipcsystools (2011.11.18-1lucid2~1.gbpf254b9) lucid; urgency=low
+
+  ** SNAPSHOT build @f254b94a94d52fbb473055cc4846693e21308b60 **
+
+  * [ipsystools/umtscardtool] Changed paths
+  * [ipsystools/umtscardtool] Commented out unused code
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Mon, 21 Nov 2011 16:27:32 +0100
+
 ipcsystools (2011.11.18-1lucid1) lucid; urgency=low
 
   * [ipcsystools] Fixed script permissions for ipclib.inc
