@@ -1,2 +1,11 @@
 autom4te.cache/*
 *~
+*.Po
+*.Plo
+Makefile
+Makefile.in
+config.h
+config.log
+config.status
+libtool
+stamp-h1
