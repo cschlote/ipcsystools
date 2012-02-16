@@ -1,5 +1,9 @@
 autom4te.cache/*
 *~
+*.[oa]
+*.l[oa]
+/*/*/.libs/*
+./*/.deps/*
 *.Po
 *.Plo
 Makefile
