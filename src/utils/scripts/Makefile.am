@@ -10,6 +10,7 @@ sbin_SCRIPTS = \
 
 nobase_dist_pkgdata_DATA = \
 	options.umts \
+	dip-umts.chat \
 	ppp-umts.chat
 
 nobase_dist_pkgdata_EXEC = \
