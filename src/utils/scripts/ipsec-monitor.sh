@@ -10,7 +10,7 @@
 #
 #       USAGE:  
 #
-#         Die Datei "/etc/mcbctl.conf" muss um einen Eintrag in der Sektion 
+#         Die Datei "/etc/ipcsystools.conf" muss um einen Eintrag in der Sektion 
 #         #[WATCHDOG-VPN]
 #         "vpn.monitorpeers=..." 
 #         erweitert werden. In dem Eintrag stehen dann die Peer Informationen.
@@ -172,7 +172,7 @@ case "$cmd" in
 		# set tunnel down counter
 		TUNNEL_UP_COUNT=0
 
-		monitor_peers=( `grep 'ipsec.monitorpeers' /etc/mcbctl.conf | cut -d "=" -f2` )
+		monitor_peers=( `grep 'ipsec.monitorpeers' /etc/ipcsystools.conf | cut -d "=" -f2` )
 		#echo ${monitor_peers[@]}
 
 		if ( test ${#monitor_peers[*]} -gt 0 ); then
