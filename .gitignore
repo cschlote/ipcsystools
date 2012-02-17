@@ -3,6 +3,7 @@ autom4te.cache/*
 *.[oa]
 *.l[oa]
 /*/*/.libs/*
+/*/*/*/.libs/*
 ./*/.deps/*
 *.Po
 *.Plo
@@ -13,3 +14,4 @@ config.log
 config.status
 libtool
 stamp-h1
+umtscardtool

@@ -5,7 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/commonlib -I$(top_srcdir)/src/include $(all_in
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
 	-DPKGBLDDATE=\"`date +%F-%R`\" \
-	-DPKGBLDREV=\"$(strip $(shell svnversion))\" \
+	-DPKGBLDREV=\"$(strip $(shell git describe))\" \
 	@CPPFLAGS@
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall

@@ -34,6 +34,7 @@ int SendCustomCommand(const char* strCommand)
 	bool bError = false;
 	bool bOk = false;
 	int nResult = UMTS_RESULT_ERR_UNKNOWN;
+	int wrbytes;
 	
 	memset(strResult, 0, sizeof(strResult));
 	
@@ -41,7 +42,7 @@ int SendCustomCommand(const char* strCommand)
 	SendAT(nSerFD, strCommand, strlen(strCommand), strResult, sizeof(strResult), &bOk, &bError);	
 		
 	// Write to stdout
-	write(STDOUT_FILENO, strResult, strlen(strResult));
+	wrbytes = write(STDOUT_FILENO, strResult, strlen(strResult));
 	
 	if (bOk)
 	{
