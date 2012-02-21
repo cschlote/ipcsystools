@@ -1,23 +1,26 @@
-/*******************************************************************************
+/***********************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright Â© 2004-2012
  *
  * konzeptpark GmbH
- * Georg-Ohm-Straße 2
+ * Georg-Ohm-StraÃŸe 2
  * 35633 Lahnau, Germany
  *
- * No part of the source code may be copied or reproduced without the written
- * permission of konzeptpark. All rights reserved.
+ * No part of the source code may be copied or reproduced without the
+ * written permission of konzeptpark. All rights reserved.
  *
  * Kein Teil dieses Quelltextes darf ohne schriftliche Genehmigung der
- * konzeptpark GmbH kopiert oder reproduziert werden. Alle Rechte vorbehalten.
+ * konzeptpark GmbH kopiert oder reproduziert werden.
  *
- *******************************************************************************
+ * Alle Rechte vorbehalten.
+ *
+ ***********************************************************************
  */
+
 /*
- * Ermittelt die verfügbaren Netzbetreiber ueber den seriellen USB Port 2.
+ * Ermittelt die verfÃ¼gbaren Netzbetreiber ueber den seriellen USB Port 2.
  * Bei Misserfolg wird ein Fehlercode zurckgegeben:
- * -1:  Serieller Port konnte nicht geöffnet werden
+ * -1:  Serieller Port konnte nicht geÃ¶ffnet werden
  * -2:  Der AT-Befehl zum Ermitteln der Netzbetreiber hat einen Fehler erzeugt.
  * -4:  Unbekannter Fehler (sollte nie auftreten)
  * -5:  Die serielle Schnittstelle ist von einer anderen Applikation gelockt

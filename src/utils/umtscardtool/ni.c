@@ -1,25 +1,28 @@
-/*******************************************************************************
+/***********************************************************************
  *
- * Copyright © 2004-2008
+ * Copyright Â© 2004-2012
  *
  * konzeptpark GmbH
- * Georg-Ohm-Straße 2
+ * Georg-Ohm-StraÃŸe 2
  * 35633 Lahnau, Germany
  *
- * No part of the source code may be copied or reproduced without the written
- * permission of konzeptpark. All rights reserved.
+ * No part of the source code may be copied or reproduced without the
+ * written permission of konzeptpark. All rights reserved.
  *
  * Kein Teil dieses Quelltextes darf ohne schriftliche Genehmigung der
- * konzeptpark GmbH kopiert oder reproduziert werden. Alle Rechte vorbehalten.
+ * konzeptpark GmbH kopiert oder reproduziert werden.
  *
- *******************************************************************************
+ * Alle Rechte vorbehalten.
+ *
+ ***********************************************************************
  */
+
 /*
  * Fragt die Netzkennung der UMTS/GPRS Karte ber den seriellen USB Port 2 ab.
  *
- * Ist die Kennung leer oder "0", so wird 1 zurückgegeben.
- * Ist die Kennung dagegen "Limited Service", so wird 2 zurückgegeben.
- * In allen anderen Fällen wird 0 zurückgegeben.
+ * Ist die Kennung leer oder "0", so wird 1 zurÃ¼ckgegeben.
+ * Ist die Kennung dagegen "Limited Service", so wird 2 zurÃ¼ckgegeben.
+ * In allen anderen FÃ¤llen wird 0 zurÃ¼ckgegeben.
  *
  * Bei Misserfolg wird ein Fehlercode zurueckgegeben (siehe umtscardtool.h)
  */
@@ -71,7 +74,7 @@ static bool WriteStatusFile(const unsigned char* strStatus)
 	{
 		syslog(LOG_DEBUG, "Setting new provider '%s' in file %s", strStatus, UMTS_NI_PROVIDER_FILE);
 
-		fprintf(pFile, (char*)strStatus);
+		fprintf(pFile, "%s", (char*)strStatus);
 		fclose(pFile);
 
 		bRet = true;

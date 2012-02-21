@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# Shutdown ipcsystools and terminate umts connection
 echo -n "Shutdown ipc environment... "
 
 # Terminate running PPP daemon
@@ -9,6 +9,6 @@ kill -TERM $PPP_PIDS 2> /dev/null
 if which ipc-set-led; then
 	ipc-set-led all-off
 fi
-echo "done."
 
+echo "done."
 exit 0

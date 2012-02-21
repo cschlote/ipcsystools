@@ -1,14 +1,23 @@
 #!/bin/bash
+# Initialize ipcsystools for operation
+#  - detecting the umts modem
+#  - starting the initial connection
+echo -n "Startup IPC environment... "
 
 if which ipc-set-led; then
 	/usr/bin/ipc-set-led all-off
 fi
 
-echo -n "Startup IPC environment... "
-
-# Start a new subshell for modem stuff
+# Initialize modem (apn, sim, ...)
 . /usr/share/ipcsystools/ipclib.inc
-( InitializeModem; startup_wan_connection )
+InitializeModem
+
+# Startup WAN connection	
+if [ ! -e /etc/ipcsystools.disable ] ; do
+	startup_wan_connection
+else
+	echo -n "(WAN disabled) "
+fi
 
 if which ipc-set-led; then
 	ipc-set-led ready on

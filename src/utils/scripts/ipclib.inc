@@ -10,7 +10,7 @@ IPC_TOOLS_DIR=/usr/bin
 IPC_SCRIPTS_DIR=/usr/share/ipcsystools
 
 # Configuration file
-IPCCTL_CONFIG=/etc/ipcctl.conf
+IPCCTL_CONFIG=/etc/ipcsystools.conf
 
 # Base directory for status files
 IPC_STATUSFILE_DIR=/var/run
@@ -61,7 +61,7 @@ function getipcoption () {
 	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2`
 }
 
-# Read GENERAL parameters from ipcctl.conf
+# Read GENERAL parameters from ipcsystools.conf
 LOG_LEVEL=`getipcoption general.log_level`
 
 WAN_FALLBACKMODE=`getipcoption general.wan.fallbackmode`

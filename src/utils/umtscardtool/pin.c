@@ -1,35 +1,37 @@
-/*******************************************************************************
+/***********************************************************************
  *
- * Copyright © 2004-2009
+ * Copyright Â© 2004-2012
  *
  * konzeptpark GmbH
- * Georg-Ohm-Straße 2
+ * Georg-Ohm-StraÃŸe 2
  * 35633 Lahnau, Germany
  *
- * No part of the source code may be copied or reproduced without the written
- * permission of konzeptpark. All rights reserved.
+ * No part of the source code may be copied or reproduced without the
+ * written permission of konzeptpark. All rights reserved.
  *
  * Kein Teil dieses Quelltextes darf ohne schriftliche Genehmigung der
- * konzeptpark GmbH kopiert oder reproduziert werden. Alle Rechte vorbehalten.
+ * konzeptpark GmbH kopiert oder reproduziert werden.
  *
- *******************************************************************************
+ * Alle Rechte vorbehalten.
+ *
+ ***********************************************************************
  */
 
 /*
  * Prueft, ob eine PIN eingegeben werden muss und bergibt diese ggf. ber den USB-Port 2 an die UMTS/GPRS Karte.
  * Bei Misserfolg wird ein (negativer) Fehlercode zurueckgegeben: 
  *  0:  Alles ok
- * -1:  Serieller Port konnte nicht geöffnet werden
- * -2:  Der AT-Befehl zum Prüfen, ob eine PIN eingegeben werden muss, hat einen Fehler erzeugt.
- * -3:  Es muss eine PIN eingegeben werden, es wurde aber keine beim Aufruf übergeben
+ * -1:  Serieller Port konnte nicht geÃ¶ffnet werden
+ * -2:  Der AT-Befehl zum PrÃ¼fen, ob eine PIN eingegeben werden muss, hat einen Fehler erzeugt.
+ * -3:  Es muss eine PIN eingegeben werden, es wurde aber keine beim Aufruf Ã¼bergeben
  * -4:  Unbekannter Fehler	
  * -5:  Die serielle Schnittstelle ist von einer anderen Applikation gelockt
  * -6:  Watchdog konnte nicht initialisiert werden
  *
  *  1: PIN angegeben, musste aber nicht gesetzt werden
  *  2: SIM Karte wurde nicht erkannt
- *  3: Der PIN wird benötigt, wurde aber nicht angegeben
- *  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+ *  3: Der PIN wird benÃ¶tigt, wurde aber nicht angegeben
+ *  4: PUK oder SuperPIN benÃ¶tigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
  *  5: Die eingegebene PIN war falsch.
  *  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
  */

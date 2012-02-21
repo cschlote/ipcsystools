@@ -1,6 +1,6 @@
 #!/bin/bash
 
-START_OVPN_ENABLED=`cat /etc/ipcctl.conf | grep ^ovpn.start_enabled | cut -d"=" -f2`
+START_OVPN_ENABLED=`cat /etc/ipcsystools.conf | grep ^ovpn.start_enabled | cut -d"=" -f2`
 if [ $START_OVPN_ENABLED -eq 1 ] ; then
 	invoke-rc.d openvpn start client &
 fi
