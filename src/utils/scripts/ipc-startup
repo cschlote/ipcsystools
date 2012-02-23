@@ -16,7 +16,7 @@ InitializeModem
 if [ ! -e /etc/ipcsystools.disable ] ; do
 	startup_wan_connection
 else
-	echo -n "(WAN disabled) "
+	echo -n "(ipcsystools disabled) "
 fi
 
 if which ipc-set-led; then
