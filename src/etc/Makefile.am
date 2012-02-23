@@ -17,12 +17,14 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-up.d/
 	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-up.d/01-3g-led-on $(DESTDIR)/etc/ppp/ip-up.d/01-3g-led-on
 	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-up.d/50_openvpn-up $(DESTDIR)/etc/ppp/ip-up.d/50_openvpn-up
-	$(INSTALL_PROGRAM) $(srcdir)/ppp/50_ipsec-up $(DESTDIR)/etc/ppp/ip-up.d/50_ipsec-up
+	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-up.d/50_ipsec-up $(DESTDIR)/etc/ppp/ip-up.d/50_ipsec-up
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-down.d/
 	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-down.d/01-3g-led-off $(DESTDIR)/etc/ppp/ip-down.d/01-3g-led-off
 	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-down.d/50_openvpn-down $(DESTDIR)/etc/ppp/ip-down.d/50_openvpn-down
-	$(INSTALL_PROGRAM) $(srcdir)/ppp/50_ipsec-down $(DESTDIR)/etc/ppp/ip-down.d/50_ipsec-down
+	$(INSTALL_PROGRAM) $(srcdir)/ppp/ip-down.d/50_ipsec-down $(DESTDIR)/etc/ppp/ip-down.d/50_ipsec-down
 #	# Add alias udev rules for usbmodem-ctrl and usbmodem-data
 	$(mkinstalldirs) $(DESTDIR)/lib/udev/rules.d
 	$(INSTALL_DATA) $(srcdir)/udev/rules.d/40-sierra-umts.rules $(DESTDIR)/lib/udev/rules.d/40-sierra-umts.rules
-
+#	# Add cron fragment to cron.d system
+	$(mkinstalldirs) $(DESTDIR)/etc/cron.d/
+	$(INSTALL_DATA)  $(srcdir)/cron.d/ipcsystools $(DESTDIR)/etc/cron.d/ipcsystools
