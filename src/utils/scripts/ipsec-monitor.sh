@@ -34,6 +34,8 @@ VPN_STATE_FILE=$STATUSFILE_DIR/vpn_status
 RESTART_COUNT=4
 CHECK_STATE_TIME=60
 
+IPC_SCRIPTS_DIR=/usr/share/ipcsystools/
+
 # only applicable when ipsec is running  
 [ -e /var/run/pluto.pid ] || exit 1
 
@@ -184,11 +186,11 @@ case "$cmd" in
 
 			# Turn on/of VPN LED
 			if ( test $TUNNEL_UP_COUNT -gt 0 ); then
-				/usr/share/mcbsystools/leds.sh vpn on
+				$IPC_SCRIPTS_DIR/set_fp_leds vpn on
 				echo "up" > $VPN_STATE_FILE
 				rc_code=0
 			else
-				/usr/share/mcbsystools/leds.sh vpn off
+				$IPC_SCRIPTS_DIR/set_fp_leds vpn off
 				echo "down" > $VPN_STATE_FILE
 				rc_code=1
 			fi

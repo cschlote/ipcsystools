@@ -121,6 +121,8 @@
 #              restricted on the peer side.
 #
 
+IPC_SCRIPTS_DIR=/usr/share/ipcsystools/
+
 # define a minimum PATH environment in case it is not set
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/sbin"
 export PATH
@@ -347,13 +349,13 @@ case "$PLUTO_VERB:$1" in
 	route-host:*|route-client:*)
 		# connection to me or my client subnet being routed
 		uproute
-		/usr/share/mcbsystools/leds.sh vpn on
+		$IPC_SCRIPTS_DIR/set_fp_leds vpn on
 		;;
 
 	unroute-host:*|unroute-client:*)
 		# connection to me or my client subnet being unrouted
 		downroute
-		/usr/share/mcbsystools/leds.sh vpn off
+		$IPC_SCRIPTS_DIR/set_fp_leds vpn off
 		;;
 
 	up-host:)

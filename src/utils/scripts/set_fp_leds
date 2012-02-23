@@ -1,0 +1,32 @@
+#!/bin/bash
+# Wrapper script to abstract different HW platform
+LED_TOOL="/usr/bin/ipc-set-led"
+
+# Check for led tool - if not found gracefully exit and do nothing
+test -x $LED_TOOL || exit 0
+
+case "$1" in
+	"ready"|"error"|"vpn"|"3g"|"gpsfix"|"option1"|"option2")
+		case "$2" in
+			"on")
+				$LED_TOOL $1 on
+				;;
+			"off")
+				$LED_TOOL $1 off
+				;;
+			"timer")
+				# currently not implemented
+				#$LED_TOOL $1 trigger
+				;;
+		esac
+	;;
+	"all-off")
+		$LED_TOOL all-off
+		;;
+	*)
+		echo "$0: unknown parameters \`$*'" >&2
+		exit 2
+	;;
+esac
+
+exit 0

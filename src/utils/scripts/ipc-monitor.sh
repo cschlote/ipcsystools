@@ -6,9 +6,9 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/ipcsystools/ipclib.inc
 
-DESC="mcb-monitor[$$]"
+DESC="ipc-monitor[$$]"
 
-IPC_MONITOR_PID_FILE=/var/lock/mcb-monitor.pid
+IPC_MONITOR_PID_FILE=/var/lock/ipc-monitor.pid
 
 #-----------------------------------------------------------------------
 # Read variables from config file
@@ -44,11 +44,13 @@ LAST_PING_FILE=$IPC_STATUSFILE_DIR/last_ping_time
 reset_wan=false
 reset_system=false
 
+
 #-----------------------------------------------------------------------
 # Ping some connection with timeinterval and max fail count
 # - ping a target with a time interval
 # - record number of fails
 # - reset system of max number of fails
+
 function check_connection_maxping ()
 {
     local rc=0
@@ -154,6 +156,7 @@ function check_connection_maxlost () {
     return $rc
 }
 
+
 #-----------------------------------------------------------------------
 # IPC Connection Monitor
 #
@@ -168,9 +171,15 @@ function check_connection_maxlost () {
 obtainlock $IPC_MONITOR_PID_FILE
 syslogger "info" "Started monitor (`date`)"
 
+if [ -e /etc/ipcsystools.disable ] ; do
+    syslogger "debug" "ipcsystools disabled"
+	exit 0
+fi
+
 # Refresh current MODEM_STATUS
 ReadModemStatusFile
-# 'DetectModemCard' must becalled before, so MODEM_STATUS might be empty
+
+# 'DetectModemCard' must be called before, so MODEM_STATUS might be empty
 if [ -z "$MODEM_STATUS" -o "x$MODEM_STATUS" == "x${MODEM_STATES[no_modemID]}" ]; then
     syslogger "error" "No modem detected - no ConnectionInfo files."
     DetectModemCard
@@ -205,10 +214,12 @@ if [ $WAN_FALLBACKMODE -eq 1 ]; then
     fi
 fi
 
-#-- Monitor VPN Status ------------------------------------------------------
-check_vpn_status;
+#-- Monitor VPN Status -------------------------------------------------
+
+check_vpn_status
 
 #--- Ping a remote target and count faults eventually rebooting
+
 syslogger "info" "Run Remote ping test..."
 if ! check_connection_maxping; then
     syslogger "info" "... remote ping test reported failure!"
@@ -218,6 +229,7 @@ fi
 
 #--- Check for connection status and PING_FAULT==0 and trigger reboot
 #--- when no valid connection after n times OR n seconds.
+
 syslogger "info" "Run connection status test..."
 if ! check_connection_maxlost; then
     syslogger "warn" "...remote connection test failt!"
@@ -226,6 +238,7 @@ else
 fi
 
 #-- Restart components -------------------------------------------------
+
 syslogger "debug" "Variables - reset_wan: $reset_wan, reset_system: $reset_system"
 
 if [ $reset_system = "true" ]; then

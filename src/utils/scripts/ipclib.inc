@@ -388,10 +388,10 @@ function check_openvpn_status ()
 	# Ping the peer address
 	if (valid_ip $openvpnIP); then
 		if ping -c 1 -W 5 -s 8 $openvpnIP >& /dev/null ; then
-			$IPC_SCRIPTS_DIR/leds.sh vpn on
+			$IPC_SCRIPTS_DIR/set_fp_leds vpn on
 			tunnelstate="up"
 		else
-			$IPC_SCRIPTS_DIR/leds.sh vpn off
+			$IPC_SCRIPTS_DIR/set_fp_leds vpn off
 			tunnelstate="down"
 		fi
 	else 

@@ -142,7 +142,7 @@ case "$cmd" in
 		[ $MODEM_STATUS == ${MODEM_STATES[registeredID]} ]; then
 
 	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/leds.sh 3g timer
+	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -155,7 +155,7 @@ case "$cmd" in
 			WriteModemStatusFile ${MODEM_STATES[connected]}
 		    else
 			syslogger "debug" "ppp deamon didn't startup."
-			$IPC_SCRIPTS_DIR/leds.sh 3g off
+			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
 			rc_code=1
 		    fi
 		else
@@ -164,7 +164,7 @@ case "$cmd" in
 		fi
 	    else
 		syslogger "error" "Could not initialize datacard (timeout)"
-		$IPC_SCRIPTS_DIR/leds.sh 3g off
+		$IPC_SCRIPTS_DIR/set_fp_leds 3g off
 		$UMTS_FS
 		syslogger "info" "reported fieldstrength is $?."
 		rc_code=1
