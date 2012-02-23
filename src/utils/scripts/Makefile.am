@@ -13,7 +13,7 @@ nobase_dist_pkgdata_DATA = \
 	dip-umts.chat \
 	ppp-umts.chat
 
-nobase_dist_pkgdata_EXEC = \
+nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
 	ipc-monitor.sh \
 	connection-eth.sh \
