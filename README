@@ -4,3 +4,79 @@ ipcsystools
 
 Collection of scripts and utilities for MCB2 or mIPC platform
 firmware.
+
+
+Useful build commands
+=======================
+git archive --format tar.gz master --prefix webmin-1.580.0/ -9  > ../webmin_1.580.0.orig.tar.gz
+git branch
+git branch master
+git-buildpackage --git-verbose --git-ignore-new --git-no-pristine-tar -tc -us -uc
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-no-pristine-tar
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-pristine-tar
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --no-pristine-tar
+git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --verbose
+git-buildpackage --git-verbose --git-tag --git-retag -tc
+git-buildpackage --git-verbose --git-tag --git-retag -tc --git-no-pristine-tar
+git checkout master
+git citool
+git clean -df
+git-dch
+git-dch -a
+git-dch --git-author
+git-dch --git-author -a
+git-dch --git-author -a -R
+git-dch --git-author -av -S
+git-dch --git-author --help
+git-dch --git-author -i
+git-dch --git-author -N
+git-dch --git-author -N 1.580.0-1
+git-dch --git-author -N 1.580.0-2
+git-dch --git-author -N 2012.02.23-1
+git-dch --git-author -N 2012.02.23-1 -S
+git-dch --git-author -R
+git-dch --git-author -S
+git-dch --help
+git-dch -R
+git-dch -R -a
+git fetch kplanas
+git gui &
+git-import-orig
+#git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
+git-import-orig --pristine-tar ../webmin_1.580.orig.tar.gz
+git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
+gitk --all
+gitk --all &
+git log
+git log 0..master
+git log > CHANGELOG
+git log   > CHANGELOG
+git log --cumulative
+git log --dense
+git log ..master
+git log --tags  > CHANGELOG
+git merge master
+git mv webmin.docs webmin-kp.docs
+git mv webmin-kp-extras.docs webmin-kp-ncu.docs
+git mv webmin-ncu.postinst webmin-kp-ncu.postinst
+git push kplanas master debian upstream pristine-tar
+git push kplanas --tags
+git rebase
+git rebase -?
+git rebase --help
+git rebase -i upstream master
+git rebase -i wip debian
+git rebase upstream
+git rebase upstream/1.570.0
+git remote -a
+git remote add
+git remote add -t debian -t upstream kplanas ssh://gitadmin@kplanas01/gitroot/webmin-debian.git
+git remote -v
+git rm debian/install-webmin-kp-extras-pkg.sh
+git rm src/etc/mcbctl.conf
+git status
+git tag -d debian/1.580.0-1
+git tag -D debian/1.580.0-1
+git tag -f upstream/1.580.0

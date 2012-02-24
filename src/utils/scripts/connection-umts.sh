@@ -13,6 +13,7 @@ UMTS_DEV=`getipcoption connection.umts.dev`
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
+#-----------------------------------------------------------------------
 function IsPPPDAlive ()
 {
     local pids
@@ -20,7 +21,7 @@ function IsPPPDAlive ()
 
     pids="`pidof pppd`"; rc=$?
 
-    syslogger "debug" "status - pppd: $pids (rc=$rc)"		
+    syslogger "debug" "status - pppd: $pids (rc=$rc)"
     return $rc
 }
 
@@ -36,17 +37,17 @@ function StartPPPD ()
 function StopPPPD ()
 {
     if IsPPPDAlive; then
-	local pids=`pidof pppd`
-	syslogger "info" "Stopping pppd ($pids)"
-	if [ -z "$pids" ]; then
-		syslogger "info" "No pppd is running."
-		return 0
-	fi
+		local pids=`pidof pppd`
+		syslogger "info" "Stopping pppd ($pids)"
+		if [ -z "$pids" ]; then
+			syslogger "info" "No pppd is running."
+			return 0
+		fi
 
-	kill -TERM $pids > /dev/null
-	if [ "$?" != "0" ]; then
-	    rm -f /var/run/ppp*.pid > /dev/null
-	fi
+		kill -TERM $pids > /dev/null
+		if [ "$?" != "0" ]; then
+			rm -f /var/run/ppp*.pid > /dev/null
+		fi
     fi
 }
 
@@ -60,7 +61,7 @@ function StartAndWaitForPPPD ()
     local count_timeout_max=12
     local sleeptime=5
     local reached_timeout=0
-    
+
     syslogger "info" "$UMTS_DEV startet, wait for interface"
     StartPPPD
     sleep $sleeptime
@@ -77,7 +78,7 @@ function StartAndWaitForPPPD ()
 	    break
 	fi
 
-	syslogger "debug" "Waiting $UMTS_DEV coming up"		
+	syslogger "debug" "Waiting $UMTS_DEV coming up"
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -95,7 +96,7 @@ function WaitForModemBookedIntoNetwork ()
     local count_timeout_max=12
     local sleeptime=5
     local reached_timeout=0
-      
+
     SetSIMPIN
     #TODO: Set operator selection
 
@@ -106,7 +107,7 @@ function WaitForModemBookedIntoNetwork ()
 	syslogger "debug" "Waiting for UMTS network registration ($count_timeout/$ni_state)"
 
 	# Increase number of tries, when 'limited service' is reported
-	# (ni_state==2) 
+	# (ni_state==2)
 	if [ $ni_state -eq 2 ]; then
 	    count_timeout_max=18
 	fi
@@ -128,13 +129,14 @@ function WaitForModemBookedIntoNetwork ()
 
 
 #-----------------------------------------------------------------------
-
+# Main
+#-----------------------------------------------------------------------
 rc_code=0
 obtainlock $UMTS_CONNECTION_PID_FILE
 
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
-    start)
+start)
 	syslogger "info" "starting connection..."
 	ReadModemStatusFile
 	if 	[ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] ||
@@ -146,40 +148,40 @@ case "$cmd" in
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
-		sleep 1
-		WriteConnectionFieldStrengthFile
-		WriteConnectionNetworkModeFile
+			sleep 1
+			WriteConnectionFieldStrengthFile
+			WriteConnectionNetworkModeFile
 
-		if ! IsPPPDAlive; then			
-		    if StartAndWaitForPPPD; then		
-			WriteModemStatusFile ${MODEM_STATES[connected]}
-		    else
-			syslogger "debug" "ppp deamon didn't startup."
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-			rc_code=1
-		    fi
-		else
-		    WriteModemStatusFile ${MODEM_STATES[connected]}
-		    syslogger "debug" "ppp deamon is already running."
-		fi
+			if ! IsPPPDAlive; then
+				if StartAndWaitForPPPD; then
+				WriteModemStatusFile ${MODEM_STATES[connected]}
+				else
+				syslogger "debug" "ppp deamon didn't startup."
+				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+				rc_code=1
+				fi
+			else
+				WriteModemStatusFile ${MODEM_STATES[connected]}
+				syslogger "debug" "ppp deamon is already running."
+			fi
 	    else
-		syslogger "error" "Could not initialize datacard (timeout)"
-		$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-		$UMTS_FS
-		syslogger "info" "reported fieldstrength is $?."
-		rc_code=1
+			syslogger "error" "Could not initialize datacard (timeout)"
+			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+			$UMTS_FS
+			syslogger "info" "reported fieldstrength is $?."
+			rc_code=1
 	    fi
 	else
 	    syslogger "debug" "modem in status $MODEM_STATUS, won't start again"
 	fi
     ;;
-    stop)
+stop)
 	syslogger "info" "stopping connection..."
 	StopPPPD
 	InitializeModem
 	CheckNIState
     ;;
-    check)
+check)
 	if IsPPPDAlive; then
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
@@ -201,7 +203,7 @@ case "$cmd" in
 	    rc_code=2;
 	fi
 	;;
-    status)
+status)
 	if IsPPPDAlive; then
 	    echo "Interface $UMTS_DEV is active"
 	else
