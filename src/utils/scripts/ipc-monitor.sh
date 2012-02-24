@@ -168,13 +168,13 @@ function check_connection_maxlost () {
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
-obtainlock $IPC_MONITOR_PID_FILE
-syslogger "info" "Started monitor (`date`)"
-
 if [ -e /etc/ipcsystools.disable ] ; do
     syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi
+
+obtainlock $IPC_MONITOR_PID_FILE
+syslogger "info" "Started monitor (`date`)"
 
 # Refresh current MODEM_STATUS
 ReadModemStatusFile

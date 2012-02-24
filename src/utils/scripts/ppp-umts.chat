@@ -1,4 +1,11 @@
+REPORT CONNECT
+ABORT BUSY
+ABORT ERROR
+TIMEOUT 120
+SAY "Resetting modem\n"
 ''      ATZ
+SAY "Setting APN name for profile 1\n"
 OK      AT+CGDCONT=1,"IP","web.vodafone.de"
+SAY "Dialout to provider APN/ppp service, 120 second timeout\n"
 OK      ATDT*99***1#
 CONNECT ''

@@ -53,7 +53,7 @@ function StopETH ()
 {
 	syslogger "info" "Stopping $ETH_DEV"
 	if [ $ETH_KEEPUP != "1" ] && IsNotNFSRoot; then
-		syslogger "info" "yyyStopping $ETH_DEV"
+		syslogger "info" "Stopping $ETH_DEV"
     		ifdown $ETH_DEV -fv
 	fi
 }

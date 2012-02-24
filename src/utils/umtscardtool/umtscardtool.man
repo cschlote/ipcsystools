@@ -1,0 +1,13 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-shutdown \- Shutdown the ipcsystools
+.SH SYNOPSIS
+.B ipc-shutdown 
+.SH DESCRIPTION
+.B ipc-shutdown 
+will shutdown any operation of ipcsystools. This script should be called
+before a system reboot.
+.SH AUTHOR
+Carsten Schlote
+
