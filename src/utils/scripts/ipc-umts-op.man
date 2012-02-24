@@ -1,0 +1,13 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-umts-op \- get the networkoperators from umts modem
+.SH SYNOPSIS
+.B ipc-umts-op
+.SH DESCRIPTION
+.B ipc-umts-op
+return the network operators from the connected GPRS/UMTS modem and outputs
+the value to stdout.
+.SH AUTHOR
+Carsten Schlote
+

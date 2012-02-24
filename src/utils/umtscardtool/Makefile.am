@@ -27,3 +27,4 @@ umtscardtool_LDFLAGS = -L$(top_srcdir)/src/commonlib -lipctoolset
 install-data-hook :
 	chmod +s $(DESTDIR)$(bindir)/umtscardtool
 
+man1_MANS = umtscardtool.man

@@ -25,3 +25,6 @@ nobase_pkgdata_SCRIPTS = \
 #	ipsec-monitor.sh \
 #	msvpn_updown
 
+man1_MANS = \
+	ipc-umts-fs.man ipc-umts-op.man ipc-umts-ni.man \
+	ipc-startup.man ipc-shutdown.man
