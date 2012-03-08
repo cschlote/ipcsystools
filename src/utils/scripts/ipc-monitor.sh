@@ -168,7 +168,7 @@ function check_connection_maxlost () {
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
-if [ -e /etc/ipcsystools.disable ] ; do
+if [ -e /etc/ipcsystools.disable ] ; then
     syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi

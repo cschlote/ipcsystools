@@ -158,7 +158,7 @@ extern int   optopt;
 
 static void ShowVersion(void)
 {
-	printf("%s, version %s (svn:%s)\n\n", UMTS_APPNAME, UMTS_VERSION, PKGBLDREV);
+	printf("%s, version %s (%s)\n\n", UMTS_APPNAME, UMTS_VERSION, PKGBLDREV);
 }
 
 static void ShowHelp(void)

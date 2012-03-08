@@ -2,7 +2,7 @@
 
 START_OVPN_ENABLED=`cat /etc/ipcsystools.conf | grep ^ovpn.start_enabled | cut -d"=" -f2`
 if [ $START_OVPN_ENABLED -eq 1 ] ; then
-	invoke-rc.d openvpn stop client & 2> /dev/null
+	invoke-rc.d openvpn stop client &
 fi
 
 exit 0
