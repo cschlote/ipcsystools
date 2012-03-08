@@ -13,7 +13,7 @@ fi
 InitializeModem
 
 # Startup WAN connection	
-if [ ! -e /etc/ipcsystools.disable ] ; do
+if [ ! -e /etc/ipcsystools.disable ] ; then
 	startup_wan_connection
 else
 	echo -n "(ipcsystools disabled) "
