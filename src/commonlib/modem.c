@@ -64,7 +64,7 @@ void SetupDevice(int nSerFD)
 };
 
 // Liste bis OK oder ERROR
-bool ReadHasFinished(char* strResult, int nResultSize, bool* pOk, bool* pError)
+bool ReadHasFinished(char* strResult, unsigned int nResultSize, bool* pOk, bool* pError)
 {
 	bool bRet = false;
 
@@ -101,7 +101,7 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	int nRes;
 	bool bRes = false;
 	char strCmd [ nCommandSize+4 ];
-	fd_set readfs;
+	fd_set readfs, writefs;
 	struct timeval tv;
 	int i;
 
@@ -117,19 +117,44 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 	}
 	strncat(strCmd, strCommand, nCommandSize);
 	strcat(strCmd, "\r");
-	for (i = 0; i < strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
+	for (i = 0; i < (int)strlen(strCmd); i++) strCmd [i] = toupper(strCmd [i]);
 
 	/* Send AT command */
-	nRes = write(nSerFD, strCmd, strlen(strCmd));
+	nRes = 0;
+	while (nRes < (int)strlen(strCmd))
+	{
+		FD_ZERO(&writefs);
+		FD_SET(nSerFD, &writefs);
+		tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
+		i = select( nSerFD+1, NULL, &writefs, NULL, &tv );
+		if (i<0) {
+			syslog(LOG_DEBUG,"modem-tx: %s (%d %d) - error %m!\n", strCmd, nRes,i );
+			return false;
+		} else if (i > 0) {
+			if (FD_ISSET(nSerFD, &writefs)) {
+				i = write(nSerFD, &strCmd[nRes], strlen(strCmd) - nRes);
+				if (i >= 0)
+					nRes += i;
+			} else {
+				syslog(LOG_DEBUG,"modem-tx: %s (%d %d) - rc>0 but FD_ISSET is false\n", strCmd, nRes,i );
+				return false;
+			}
+		} else {
+			syslog(LOG_DEBUG,"modem-tx: %s (%d %d) - timeout!\n", strCmd, nRes,i );
+			return false;
+		}
 	syslog(LOG_DEBUG,"modem-tx: %s (%d %d)\n", strCmd, nRes,i );
-	if (nRes == strlen(strCmd))
+	}
+	/* Get modem answer, strip echoed command */
+	if (nRes == (int)strlen(strCmd))
 	{
 		memset(strResult, 0, nResultSize);
 
 		/* Read and skip echoed command string */
 		nRes = 0;
-		while (nRes < strlen(strCmd))
+		while (nRes < (int)strlen(strCmd))
 		{
+			FD_ZERO(&readfs);
 			FD_SET(nSerFD, &readfs);
 			tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
 			i = select( nSerFD+1, &readfs, NULL, NULL, &tv );
@@ -147,6 +172,7 @@ bool SendAT(int nSerFD, const char* strCommand, int nCommandSize, char* strResul
 		nRes = 0;
 		while (!ReadHasFinished(strResult, nRes, pOk, pError))
 		{
+			FD_ZERO(&readfs);
 			FD_SET(nSerFD, &readfs);
 			tv.tv_sec=TIMEOUTVAL; tv.tv_usec=0;
 			i = select( nSerFD+1, &readfs, NULL, NULL, &tv );

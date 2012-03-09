@@ -4,7 +4,7 @@
 #  - starting the initial connection
 echo -n "Startup IPC environment... "
 
-if which ipc-set-led; then
+if which ipc-set-led  > /dev/null ; then
 	/usr/bin/ipc-set-led all-off
 fi
 
@@ -15,11 +15,13 @@ InitializeModem
 # Startup WAN connection	
 if [ ! -e /etc/ipcsystools.disable ] ; then
 	startup_wan_connection
+	touch /var/run/ipcsystools.enabled
 else
 	echo -n "(ipcsystools disabled) "
+	rm -f /var/run/ipcsystools.enabled
 fi
 
-if which ipc-set-led; then
+if which ipc-set-led > /dev/null ; then
 	ipc-set-led ready on
 fi
 

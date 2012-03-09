@@ -1,0 +1,15 @@
+#-- Init blobsize
+init=0xfff0
+
+#-- Header -----------------------------------------------------------
+devtype@0:8=5
+version@8:8=1
+blksel@16:16=0x8000
+ident@32:64=172025000107
+length@96:16=__BLOBSIZE__
+
+#-- Msg tests
+version@:524000$="$(cat /etc/ptxdist_version)"
+truncate
+length@96:16=__BLOBSIZE__
+xor8add

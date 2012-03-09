@@ -183,6 +183,11 @@ if [ -e /etc/ipcsystools.disable ] ; then
     syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi
+if [ ! -e /var/run/ipcsystools.enabled ] ; then
+    syslogger "debug" "ipcsystools not started/initialized yet."
+	exit 0
+fi
+
 
 obtainlock $IPC_MONITOR_PID_FILE
 syslogger "info" "Started monitor (`date`)"
