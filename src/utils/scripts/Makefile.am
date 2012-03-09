@@ -18,6 +18,7 @@ nobase_pkgdata_SCRIPTS = \
 	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
+	connection-lte.sh \
 	ipc-initsystem.sh \
 	set_fp_leds
 

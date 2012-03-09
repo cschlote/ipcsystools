@@ -326,6 +326,10 @@ function check_wan_connection ()
 	fi
 	return $rc
 }
+# Call connection script for current WAN interface or if arg $1 is given
+#   for the indexed device .
+#   connection script checks device in question and return appropriate
+#   bash return value.
 function check_wan_connection_status ()
 {
 	local rc=0
