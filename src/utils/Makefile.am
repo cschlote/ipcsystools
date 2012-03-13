@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
 SUBDIRS = \
- binblob \
  scripts \
- umtscardtool
+ umtscardtool \
+ binblob
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 

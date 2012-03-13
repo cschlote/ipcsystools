@@ -6,7 +6,7 @@ bin_SCRIPTS = \
 sbin_SCRIPTS = \
  ipc-startup ipc-shutdown
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	options.umts \

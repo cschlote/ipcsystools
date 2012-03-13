@@ -11,7 +11,7 @@ AM_CFLAGS = -Wall -Werror
 AM_CXXFLAGS = -Wall -Werror
 AM_LDFLAGS = -L$(top_srcdir)/src/commonlib
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 
 ## -- Build a static/shared library for the ipcsystools binaries ------
 

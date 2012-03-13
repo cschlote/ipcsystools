@@ -16,7 +16,7 @@ AM_LDFLAGS = \
 	-Wl,-rpath-link -Wl,$(top_srcdir)/src/commonlib/.libs/ \
 	-lbstrlib -linifile -lipctoolset
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 
 ## -------------------------------------------------------------------
 
