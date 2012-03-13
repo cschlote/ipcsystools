@@ -13,8 +13,8 @@ AM_CXXFLAGS = -Wall
 
 AM_LDFLAGS = -Wl,-rpath-link -Wl,$(lib_srcdir) 
 
-MAINTAINERCLEANFILES = \
-	Makefile.in
+#MAINTAINERCLEANFILES = \
+#	Makefile.in
 
 SUBDIRS = \
  scripts

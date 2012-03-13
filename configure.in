@@ -25,6 +25,8 @@ Makefile
 src/Makefile
 src/commonlib/Makefile
 src/utils/Makefile
+src/utils/binblob/Makefile
+src/utils/binblob/scripts/Makefile
 src/utils/scripts/Makefile
 src/utils/umtscardtool/Makefile
 src/etc/Makefile
