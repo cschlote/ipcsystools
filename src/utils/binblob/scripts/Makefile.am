@@ -26,6 +26,6 @@ nobase_dist_pkgdata_DATA = \
 	mcb2msg5.script
 
 man1_MANS = \
-	$(addsuffix .man,$bin_SCRIPTS)
+	$(addsuffix .man,$(bin_SCRIPTS))
 
 #devel:	statusmsg.script 
