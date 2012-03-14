@@ -1,19 +1,19 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
-	ipc_getfirmware  \
-	ipc_getgpslatitude       \
-	ipc_getgpslongitude      \
-	ipc_getgpssatinfo        \
-	ipc_getgpstime   \
-	ipc_getgsmcellid \
-	ipc_getgsmfs     \
-	ipc_getgsmlac    \
-	ipc_getgsmmode   \
-	ipc_getgsmplmn   \
-	ipc_getgsmroaming        \
-	ipc_getipdez     \
-	ipc_gettemp      
+	ipc-getfirmware \
+	ipc-getgpslatitude \
+	ipc-getgpslongitude \
+	ipc-getgpssatinfo \
+	ipc-getgpstime \
+	ipc-getgsmcellid \
+	ipc-getgsmfs \
+	ipc-getgsmlac \
+	ipc-getgsmmode \
+	ipc-getgsmplmn \
+	ipc-getgsmroaming \
+	ipc-getipdez \
+	ipc-gettemp      
 
 DISTCLEANFILES = Makefile.in
 
@@ -24,5 +24,8 @@ nobase_dist_pkgdata_DATA = \
 	mcb2msg3.script \
 	mcb2msg4.script \
 	mcb2msg5.script
-	
+
+man1_MANS = \
+	$(addsuffix .man,$bin_SCRIPTS)
+
 #devel:	statusmsg.script 
