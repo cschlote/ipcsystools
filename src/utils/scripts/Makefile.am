@@ -6,7 +6,7 @@ bin_SCRIPTS = \
 sbin_SCRIPTS = \
  ipc-startup ipc-shutdown
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	options.umts \
@@ -18,6 +18,7 @@ nobase_pkgdata_SCRIPTS = \
 	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
+	connection-lte.sh \
 	ipc-initsystem.sh \
 	set_fp_leds
 

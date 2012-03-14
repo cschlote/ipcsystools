@@ -15,8 +15,10 @@ IPC_MONITOR_PID_FILE=/var/lock/ipc-monitor.pid
 #-----------------------------------------------------------------------
 
 # Sektion [WATCHDOG-CONNECTION]
+CHECK_CONNECTION_ENABLED=`getipcoption watchdog.wan.connection.check_enabled`
 CHECK_CONNECTION_REBOOT=`getipcoption watchdog.wan.connection.max_restarts`
 MAX_CONNECTION_LOST=`getipcoption watchdog.wan.connection.max_time`
+
 
 # Sektion [WATCHDOG-PING]
 CHECK_PING_ENABLED=`getipcoption watchdog.ping.check_ping_enabled`
@@ -53,42 +55,45 @@ reset_system=false
 
 function check_connection_maxping ()
 {
-    local rc=0
-    if [ $CHECK_PING_ENABLED -eq "1" ]; then
-	local timestamp=`date +%s`
-	local last_ping=`date +%s`
-	if [ -e $LAST_PING_FILE ]; then
-	    last_ping=`cat $LAST_PING_FILE`
+	local rc=0
+	if [ $CHECK_PING_ENABLED -eq "1" ]; then
+		local timestamp=`date +%s`
+		local last_ping=`date +%s`
+
+		if [ -e $LAST_PING_FILE ]; then
+			last_ping=`cat $LAST_PING_FILE`
+		else
+			echo $last_ping > $LAST_PING_FILE
+		fi
+
+		# Check for next time to send a ping and count fails
+		if [ $[$timestamp - $last_ping] -gt $CHECK_PING_TIME ]; then
+
+			echo `date +%s` > $LAST_PING_FILE
+
+			if ping -c 1 -W 5 -s 8 $CHECK_PING_IP > /dev/null ; then
+				syslogger "debug" "Check ping peer $CHECK_PING_IP passed"
+				PING_FAULT=0
+			else
+				syslogger "info"  "Check ping peer $CHECK_PING_IP failed $PING_FAULT time(s)"
+				PING_FAULT=$[$PING_FAULT+1]
+			fi
+			echo $PING_FAULT > $PING_FAULT_FILE
+
+			# Maximum number of pings sent?
+			if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
+				syslogger "error" "FAIL: ping peer $CHECK_PING_IP unavailable $CHECK_PING_REBOOT times"
+				reset_system=true
+				rc=1
+			fi
+		else
+			syslogger "debug" "... (next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds)"
+			syslogger "debug" "... (remote ping test failed $PING_FAULT times of $CHECK_PING_REBOOT max)"
+		fi
 	else
-	    echo $last_ping > $LAST_PING_FILE
+		syslogger "debug" "... check ping peer disabled"
 	fi
-
-	# Check for next time to send a ping and count fails
-	if [ $[$timestamp - $last_ping] -gt $CHECK_PING_TIME ]; then
-
-	    echo `date +%s` > $LAST_PING_FILE
-
-	    if ping -c 1 -W 5 -s 8 $CHECK_PING_IP > /dev/null ; then
-		syslogger "debug" "Check ping peer $CHECK_PING_IP passed"
-		PING_FAULT=0
-	    else
-		syslogger "info"  "Check ping peer $CHECK_PING_IP failed $PING_FAULT time(s)"
-		PING_FAULT=$[$PING_FAULT+1]
-	    fi
-	    echo $PING_FAULT > $PING_FAULT_FILE
-
-	    # Maximum number of pings sent?
-	    if [ $PING_FAULT -ge $CHECK_PING_REBOOT ]; then
-		syslogger "error" "FAIL: ping peer $CHECK_PING_IP unavailable $CHECK_PING_REBOOT times"
-		reset_system=true
-		rc=1
-	    fi
-	else
-	    syslogger "debug" "... (next ping to peer $CHECK_PING_IP in $[$CHECK_PING_TIME - $[$timestamp - $last_ping]] seconds)"
-	    syslogger "debug" "... (remote ping test failed $PING_FAULT times of $CHECK_PING_REBOOT max)"
-	fi
-    fi
-    return $rc
+	return $rc
 }
 
 
@@ -98,62 +103,68 @@ function check_connection_maxping ()
 # - reset box after maximum time without valid connection
 # - reset box after maximum number of faults
 
+function WriteConnectionAvailableFile () {
+	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
+}
 function ReadConnectionAvailableFile () {
 	if [ ! -e $CONNECTION_AVAILABLE_FILE ] ; then
 		WriteConnectionAvailableFile
 	fi
 	LAST_CONNECTION_AVAILABLE=`cat $CONNECTION_AVAILABLE_FILE`
 }
-function WriteConnectionAvailableFile () {
-	echo `date +%s` > $CONNECTION_AVAILABLE_FILE
-}
 
+# Test for fail condition on WAN connection
+#   $1 - reset   - reset counter
+#        count   - increment counter
+#   without arg test for fault condition
 function check_connection_fault () {
-    if [ $# -ge 1 ]; then
-	case "$1" in
-	    reset)	CONNECTION_FAULT=0    ;;
-	    count)	CONNECTION_FAULT=$[CONNECTION_FAULT+1]	;;
-	esac
-	echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
-    else
-	if [ $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ]; then
-	    syslogger "warn" "... connection status faults $CONNECTION_FAULT times (timeout)"
-	    reset_system=true
+	if [ $# -ge 1 ]; then
+		case "$1" in
+			reset)	CONNECTION_FAULT=0    ;;
+			count)	CONNECTION_FAULT=$[CONNECTION_FAULT+1]	;;
+		esac
+		echo $CONNECTION_FAULT > $CONNECTION_FAULT_FILE
 	else
-	    syslogger "debug" "... connection status faults $CONNECTION_FAULT times"
+		if [ $CONNECTION_FAULT -ge $CHECK_CONNECTION_REBOOT ]; then
+			syslogger "warn" "... connection status faults $CONNECTION_FAULT times (timeout)"
+			reset_system=true
+		else
+			syslogger "debug" "... connection status faults $CONNECTION_FAULT times"
+		fi
 	fi
-    fi
 }
 
 function check_connection_maxlost () {
-    local rc=0
-    if [ $MAX_CONNECTION_LOST -gt 0 ]; then
-	local timestamp=`date +%s`
+	local rc=0
+	if [ $MAX_CONNECTION_ENABLED -gt 0 ]; then
+		local timestamp=`date +%s`
 
-	ReadConnectionAvailableFile
-	if check_wan_connection_status; then
-	    syslogger "debug" "... connection status ok"
-	    WriteConnectionAvailableFile
-	    check_connection_fault reset
-	else
-	    syslogger "warn" "... connection status fail, restart connection"
-	    check_connection_fault count
-	    reset_wan=true
-	fi
-	    
-	# Maximum time without connection expired?
-	if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
-	    syslogger "warn" "... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
-	    reset_system=true
-	    rc=1
-	else
-	    syslogger "debug" "... connection status reported ok $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
-	fi
+		ReadConnectionAvailableFile
+		if check_wan_connection_status; then
+			syslogger "debug" "... connection status ok"
+			WriteConnectionAvailableFile
+			check_connection_fault reset
+		else
+			syslogger "warn" "... connection status fail, restart connection"
+			check_connection_fault count
+			reset_wan=true
+		fi
+			
+		# Maximum time without connection expired?
+		if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
+			syslogger "warn" "... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
+			reset_system=true
+			rc=1
+		else
+			syslogger "debug" "... connection status reported ok $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds ago"
+		fi
 
-	# Maxium number of successless restarts?
-	check_connection_fault 
-    fi
-    return $rc
+		# Maxium number of successless restarts?
+		check_connection_fault 
+	else
+		syslogger "debug" "... check connection disabled"
+	fi
+	return $rc
 }
 
 
@@ -168,10 +179,15 @@ function check_connection_maxlost () {
 # - restart system, when no connections to WAN and/or VPN can be made
 #-----------------------------------------------------------------------
 
-if [ -e /etc/ipcsystools.disable ] ; do
+if [ -e /etc/ipcsystools.disable ] ; then
     syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi
+if [ ! -e /var/run/ipcsystools.enabled ] ; then
+    syslogger "debug" "ipcsystools not started/initialized yet."
+	exit 0
+fi
+
 
 obtainlock $IPC_MONITOR_PID_FILE
 syslogger "info" "Started monitor (`date`)"
@@ -224,7 +240,7 @@ syslogger "info" "Run Remote ping test..."
 if ! check_connection_maxping; then
     syslogger "info" "... remote ping test reported failure!"
 else
-    syslogger "info" "...remote ping test ok."
+    syslogger "info" "... remote ping test ok."
 fi
 
 #--- Check for connection status and PING_FAULT==0 and trigger reboot
@@ -232,9 +248,9 @@ fi
 
 syslogger "info" "Run connection status test..."
 if ! check_connection_maxlost; then
-    syslogger "warn" "...remote connection test failt!"
+    syslogger "warn" "... remote connection test failed!"
 else
-    syslogger "info" "...remote connection test ok."
+    syslogger "info" "... remote connection test ok."
 fi
 
 #-- Restart components -------------------------------------------------

@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 aclocal $ACLOCAL_FLAGS
 
@@ -7,5 +7,5 @@ autoreconf \
 	--install \
 	--warnings=syntax \
 	--warnings=obsolete \
-	--warnings=unsupported
-						
+	--warnings=unsupported \
+	--verbose

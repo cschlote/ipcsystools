@@ -1,0 +1,52 @@
+#
+# mcbctl.conf
+#
+
+#[General]
+general.reboot.fake=0
+general.log_level=0
+general.start_mcb_monitor=1
+general.start_wan_enabled=1
+general.start_vpn_enabled=1
+
+#[WAN Monitoring]
+general.wan.fallbackmode=1
+general.wan.interfaces=eth umts    					# primary, secondary WAN connection 
+general.wan.checktargets=88.198.6.166 64.16.193.46	# 'far' ping targets
+general.wan.checkgateways=172.25.0.1 10.64.64.64 	# 'near' ping targets
+
+#[Connection Script Specifics and Arguments]
+connection.eth.dev=eth1				# which eth interface
+connection.eth.keepup=1				# do not 'ifdown' interface 
+connection.umts.dev=ppp0			# which umts interface
+
+#[WATCHDOG-Connection]
+watchdog.wan.connection.max_restarts=10
+watchdog.wan.connection.max_time=600
+
+#[WATCHDOG-PING]
+watchdog.ping.check_ping_enabled=1
+watchdog.ping.check_ping_time=300
+#w atchdog.ping.check_ping_ip=8.8.4.4
+watchdog.ping.check_ping_ip=77.244.96.170	# 'vpn' ping target
+watchdog.ping.check_ping_reboot=7
+
+#[MONITOR-VPN]
+vpn.start_backend=0
+vpn.backends=ipsec openvpn
+ovpn.monitorpeers=ifconfig
+
+#[MODEM]
+modem.connectionmode=03
+
+#[SIM CARD]
+sim.apn=web.vodafone.de
+sim.username=
+sim.passwd=
+sim.pin=
+
+#[GPS Monitoring]
+monitor.gps.fix_prec=3000
+monitor.gps.trk_prec=1000
+monitor.gps.start_backend=0
+monitor.gps.backends=none gpsd ser2net

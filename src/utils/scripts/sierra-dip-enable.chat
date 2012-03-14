@@ -1,0 +1,6 @@
+''      ATZ
+OK      AT!ENTERCND="A710"
+OK      AT!UDPID=68A3
+OK      AT!UDUSBCOMP=4
+OK      AT!RESET
+OK      ''
