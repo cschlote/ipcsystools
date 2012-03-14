@@ -15,6 +15,7 @@ if ! test "Yes" = "$a" ; then
 	exit
 fi
 echo $DEPLOYDATE > ipcsystools-release
+git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
