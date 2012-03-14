@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
-	gps-monitor.sh \
-	ipc-monitor.sh \
-	ipc-reportstatus.sh \
+	gps-monitor \
+	ipc-monitor \
+	ipc-reportstatus \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
