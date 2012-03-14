@@ -22,6 +22,7 @@ nobase_pkgdata_SCRIPTS = \
 	connection-umts.sh \
 	connection-lte.sh \
 	ipc-initsystem.sh \
+	ipc-cronjobs.sh \
 	set_fp_leds
 
 # Disabled for now
