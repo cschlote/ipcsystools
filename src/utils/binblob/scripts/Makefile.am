@@ -1,19 +1,19 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
-	getfirmware.sh  \
-	getgpslatitude.sh       \
-	getgpslongitude.sh      \
-	getgpssatinfo.sh        \
-	getgpstime.sh   \
-	getgsmcellid.sh \
-	getgsmfs.sh     \
-	getgsmlac.sh    \
-	getgsmmode.sh   \
-	getgsmplmn.sh   \
-	getgsmroaming.sh        \
-	getipdez.sh     \
-	gettemp.sh      
+	ipc_getfirmware  \
+	ipc_getgpslatitude       \
+	ipc_getgpslongitude      \
+	ipc_getgpssatinfo        \
+	ipc_getgpstime   \
+	ipc_getgsmcellid \
+	ipc_getgsmfs     \
+	ipc_getgsmlac    \
+	ipc_getgsmmode   \
+	ipc_getgsmplmn   \
+	ipc_getgsmroaming        \
+	ipc_getipdez     \
+	ipc_gettemp      
 
 DISTCLEANFILES = Makefile.in
 
