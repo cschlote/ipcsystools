@@ -40,8 +40,9 @@ ipcsystools (2012.03.14-1lucid1) UNRELEASED; urgency=low
   * [ipcsystools] Moved binblob library to private lib  directory
   * [debian] Deploy script fixes
   * Deployed ipcsystools 2012.03.14
+  * [ipcsystools] Added missing file
 
- -- Carsten Schlote <c.schlote@konzeptpark.de>  Wed, 14 Mar 2012 17:01:42 +0100
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Wed, 14 Mar 2012 17:37:15 +0100
 
 ipcsystools (2011.11.18-1lucid2~1.gbpf254b9) lucid; urgency=low
 
