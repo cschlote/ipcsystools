@@ -2,8 +2,8 @@
 #
 # DESCRIPTION: Start the different cron jobs.
 #
-/usr/bin/ipc-monitor.sh
+/usr/bin/ipc-monitor
 
-/usr/bin/ipcsystools/gps-monitor.sh monitor > /dev/null
+/usr/bin/ipcsystools/gps-monitor monitor > /dev/null
 
-/usr/bin/ipc-reportstatus.sh
+/usr/bin/ipc-reportstatus

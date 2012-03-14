@@ -6,8 +6,7 @@ ipc-getfirmware \- Get the firmware version
 .B ipc-getfirmware
 .SH DESCRIPTION
 .B ipc-getfirmware
-will check and setup available modems. It also prepares any other information
-required by the cron scripts.
+will return the current firmware version.
 .SH AUTHOR
 Carsten Schlote
 

@@ -1,13 +1,12 @@
 .\"
 .TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
 .SH NAME
-ipc-startup \- Initializes the ipcsystools for operation
+ipc-getgpstime \- Query GPS time
 .SH SYNOPSIS
-.B ipc-startup
+.B ipc-getgpstime
 .SH DESCRIPTION
-.B ipc-startup
-will check and setup available modems. It also prepares any other information
-required by the cron scripts.
+.B ipc-getgpstime
+returns timecode queried from GPS.
 .SH AUTHOR
 Carsten Schlote
 
