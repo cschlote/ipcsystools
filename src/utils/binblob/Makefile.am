@@ -23,6 +23,9 @@ SUBDIRS = \
 bin_PROGRAMS = \
 	binblob
 
+man1_MANS = \
+	$(addsuffix .man,$(bin_PROGRAMS))
+
 binblob_SOURCES = binblob.c
 binblob_LDFLAGS = -L$(top_builddir)/src/commonlib -L$(top_builddir)/src/commonlib/.libs
 binblob_LDADD = -lbinblob

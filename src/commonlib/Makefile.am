@@ -15,15 +15,16 @@ DISTCLEANFILES = Makefile.in
 
 ## -- Build a static/shared library for the ipcsystools binaries ------
 
-lib_LTLIBRARIES = \
- libbinblob.la
+#lib_LTLIBRARIES = \
+# libbinblob.la
 
 libbinblob_la_SOURCES = libbinblob.c libbinblob.h
 
 pkglib_LTLIBRARIES = \
  libipctoolset.la \
  libinifile.la \
- libbstrlib.la
+ libbstrlib.la \
+ libbinblob.la
 
 libipctoolset_la_SOURCES = \
  lockfile.c lockfile.h \
