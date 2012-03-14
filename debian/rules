@@ -11,17 +11,19 @@
 # build-arch and build-indep targets  by Bill Allombert 2001
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DH_VERBOSE=1
 
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
-
 
 %:
 	dh  $@
 
 #override_dh_auto_configure:
-#	-dh  $@
+#	./autogen.sh
+#	./configure --prefix=/usr 
 
+#override_dh_auto_build:
+#	$(MAKE) 
 
-#override_dh_auto_install: $(MAKE) install PREFIX=$(CURDIR)/debian/mcbsystools/usr
+#override_dh_auto_install: $(MAKE) install PREFIX=$(CURDIR)/debian/ipcsystools/usr
