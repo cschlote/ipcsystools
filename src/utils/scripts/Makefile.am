@@ -7,7 +7,7 @@ bin_SCRIPTS = \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
- ipc-startup ipc-shutdown
+	ipc-startup ipc-shutdown
 
 DISTCLEANFILES = Makefile.in
 
@@ -25,9 +25,9 @@ nobase_pkgdata_SCRIPTS = \
 	set_fp_leds
 
 # Disabled for now
-#	ipsec-monitor.sh \
+#	ipsec-monitor \
 #	msvpn_updown
 
 man1_MANS = \
-	ipc-umts-fs.man ipc-umts-op.man ipc-umts-ni.man \
-	ipc-startup.man ipc-shutdown.man
+	$(addsuffix .man,$(bin_SCRIPTS)) \
+	$(addsuffix .man,$(sbin_SCRIPTS))

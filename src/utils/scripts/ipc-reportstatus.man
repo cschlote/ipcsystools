@@ -1,0 +1,14 @@
+.\"
+.TH ipc-reportstatus 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-reportstatus \- Sent status messages to a target system
+.SH SYNOPSIS
+.B ipc-reportstatus
+.SH DESCRIPTION
+.B ipc-reportstatus
+sends information to some remote target using the 
+.B binblob
+program.
+.SH AUTHOR
+Carsten Schlote
+

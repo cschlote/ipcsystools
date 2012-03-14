@@ -1,0 +1,13 @@
+.\"
+.TH gps-monitor 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+gps-monitor \- Monitors GPS information on suitable UMTS/GPS modules
+.SH SYNOPSIS
+.B gps-monitor
+.SH DESCRIPTION
+.B gps-monitor
+enables and queries the GPS information available with some modems. The 
+information is stored at /var/run/.
+.SH AUTHOR
+Carsten Schlote
+
