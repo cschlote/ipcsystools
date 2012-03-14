@@ -14,8 +14,11 @@ if ! test "Yes" = "$a" ; then
 	echo "aborted."
 	exit
 fi
+git checkout master
+git clean -df
 echo $DEPLOYDATE > ipcsystools-release
-git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release
+./autogen.sh
+git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release configure
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
