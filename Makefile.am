@@ -14,8 +14,6 @@ EXTRA_DIST = \
 	autogen.sh
 
 DISTCLEANFILES = \
-	configure \
-	aclocal.m4 \
 	Makefile.in
 
 MAINTAINERCLEANFILES = \
