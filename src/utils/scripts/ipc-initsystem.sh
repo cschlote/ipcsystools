@@ -1,4 +1,5 @@
 #! /bin/bash
+# TODO: Obsolete file! Fix ppp options issue dynamically
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
