@@ -2,7 +2,7 @@ Source: ipcsystools
 Section: restricted/admin
 Priority: extra
 Maintainer: Carsten Schlote <c.schlote@konzeptpark.de>
-Build-Depends: debhelper (>= 7), autotools-dev
+Build-Depends: debhelper (>= 7.0.50), autotools-dev
 Standards-Version: 3.8.4
 Homepage: http://www.konzeptpark.de
 

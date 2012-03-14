@@ -19,9 +19,9 @@ export DH_OPTIONS
 %:
 	dh  $@
 
-#override_dh_auto_configure:
-#	./autogen.sh
-#	./configure --prefix=/usr 
+override_dh_auto_configure:
+	./autogen.sh
+	./configure --prefix=/usr 
 
 #override_dh_auto_build:
 #	$(MAKE) 
