@@ -14,6 +14,7 @@ if ! test "Yes" = "$a" ; then
 	echo "aborted."
 	exit
 fi
+echo $DEPLOYDATE > ipcsystools-release
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
