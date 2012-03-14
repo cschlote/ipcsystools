@@ -1,7 +1,10 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
- ipc-umts-fs ipc-umts-op ipc-umts-ni
+	gps-monitor.sh \
+	ipc-monitor.sh \
+	ipc-reportstatus.sh \
+	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
  ipc-startup ipc-shutdown
@@ -15,7 +18,6 @@ nobase_dist_pkgdata_DATA = \
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
-	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
 	connection-lte.sh \

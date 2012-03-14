@@ -13,8 +13,8 @@ Settings File
 general.log_level=<0|1|2> :
     0=off  1=syslog without debug msgs, 2=syslog with debug msgs
 
-general.start_mcb_monitor=<0|1> :
-    Install crontab entry for MCB-Monitor.
+general.start_ipc_monitor=<0|1> :
+    Install crontab entry for IPC-Monitor.
 
 general.start_wan_enabled=<0|1> :
     Start and monitor configured connections
@@ -161,7 +161,6 @@ git remote add
 git remote add -t debian -t upstream kplanas ssh://gitadmin@kplanas01/gitroot/webmin-debian.git
 git remote -v
 git rm debian/install-webmin-kp-extras-pkg.sh
-git rm src/etc/mcbctl.conf
 git status
 git tag -d debian/1.580.0-1
 git tag -D debian/1.580.0-1
