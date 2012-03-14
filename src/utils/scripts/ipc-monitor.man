@@ -1,0 +1,13 @@
+.\"
+.TH ipc-monitor 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-monitor \- Monitor and control the network interfaces
+.SH SYNOPSIS
+.B ipc-monitor
+.SH DESCRIPTION
+.B ipc-monitor
+starts and monitors LAN and WWAN connections. Watchdogs can be used
+to restart network interfaces or reboot the system as desired.
+.SH AUTHOR
+Carsten Schlote
+
