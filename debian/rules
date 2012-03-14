@@ -20,4 +20,8 @@ export DH_OPTIONS
 %:
 	dh  $@
 
+#override_dh_auto_configure:
+#	-dh  $@
+
+
 #override_dh_auto_install: $(MAKE) install PREFIX=$(CURDIR)/debian/mcbsystools/usr
