@@ -3,11 +3,11 @@
 #
 
 #[General]
-general.reboot.fake=0
 general.log_level=2
 general.start_ipc_monitor=1
 general.start_wan_enabled=1
 general.start_vpn_enabled=1
+general.reboot.fake=0
 
 #[WAN Monitoring]
 general.wan.fallbackmode=1
