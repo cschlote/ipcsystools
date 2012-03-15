@@ -58,7 +58,7 @@ CONNECTION_AVAILABLE_FILE=$IPC_STATUSFILE_DIR/connection_available
 # Configuration file
 #-----------------------------------------------------------------------
 function getipcoption () {
-	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2`
+	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2 | cut -d"#" -f1`
 }
 
 # Read GENERAL parameters from ipcsystools.conf

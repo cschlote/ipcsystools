@@ -22,6 +22,7 @@ obtainlock $IPC_REPORTER_PID_FILE
 syslogger "debug" "Started ipc report (`date`)"
 
 #-- Start of script ------------------------------------------------------
+
 if [ "$REPORT_ENABLED" -eq "1" ]; then
 	cd $IPC_SCRIPTS_DIR
 
@@ -44,7 +45,11 @@ if [ "$REPORT_ENABLED" -eq "1" ]; then
 	else
 		syslogger "debug" "Reporting next ipc status in $tdiff seconds"
 	fi
+else
+    syslogger "debug" "ipc-reportstatus disabled"
 fi
+
 #-- End of script ------------------------------------------------------
+
 syslogger "debug" "Finished ipc report (`date`)"
 releaselock
