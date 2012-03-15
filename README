@@ -5,6 +5,18 @@ ipcsystools
 Collection of scripts and utilities for MCB2 or mIPC platform
 firmware.
 
+Control files
+=============
+
+/etc/ipcsystools.disable :
+    Create file to disable execution of ipc-monitor script 
+    (debugging aid, not for regular use)
+
+/var/run/ipcsystools.enabled :
+    Created by ipc-startup and removed by ipc-shutdown. Controls the 
+    execution of ipc-monitor. Ensures that modem and other interface
+    hardware is setup and ready
+
 Settings File
 =============
 
@@ -13,14 +25,8 @@ Settings File
 general.log_level=<0|1|2> :
     0=off  1=syslog without debug msgs, 2=syslog with debug msgs
 
-general.start_ipc_monitor=<0|1> :
-    Install crontab entry for IPC-Monitor.
-
 general.start_wan_enabled=<0|1> :
     Start and monitor configured connections
-
-general.start_vpn_enabled=<0|1> :
-    Start and monitor configured vpn tunnels
 
 general.reboot.fake=<0|1> :
     Disable reboot function for debugging purposes.
@@ -58,6 +64,10 @@ connection.umts.dev=ppp0
     Name of interface to use for connection-umts.sh
 
 ------ WATCHDOG-CONNECTION --------------------------------------------
+
+watchdog.wan.connection.check_enabled=<0|1> :
+    The check_enable variable can be used to enable/disable this test
+
 watchdog.wan.connection.max_restarts=<n> :
 watchdog.wan.connection.max_time=<secs> :
     Monitors WAN connection status and reboots system after <n> restarts
@@ -79,17 +89,34 @@ watchdog.ping.check_ping_time=<secs> :
     Target address, the number of allowed fails and a maximum time allowed
     without connection to target network.
 
-#[MONITOR-VPN]
-ovpn.monitorpeers=ifconfig
+------ MONITOR-VPN ----------------------------------------------------
 
-#[MODEM]
-modem.connectionmode=03
+ovpn.start_enabled=<0|1> :
+ovpn.monitorpeers=ifconfig :
+    Enable startup of OpenVPN connection and defines test method for
+    connection.
 
-#[SIM CARD]
-sim.apn=web.vodafone.de
-sim.username=
-sim.passwd=
-sim.pin=
+ipsec.start_enabled=<0|1> :
+ipsec.monitorpeers= :
+    Enable startup of IPSec connection and defines test method for
+    connection.
+
+------ MODEM ----------------------------------------------------------
+
+modem.connectionmode=<00|01|02|03|04>
+    Set the radio technologies for UMTS/LTE
+
+------ SIM CARD -------------------------------------------------------
+
+sim.auth=<0|1> :
+	Enable SIM pin/user authentication.
+sim.apn=<string> :
+	AccessPointName, e.g. web.vodafone.de
+sim.username=<string> :
+sim.passwd=<string> :
+	Optional username and password for APN access (Radius)
+sim.pin=<decimalstring> :
+	Optional SIM pin number or empty for PIN-free SIM cards
 
 
 Useful build commands
@@ -97,48 +124,31 @@ Useful build commands
 git archive --format tar.gz master --prefix webmin-1.580.0/ -9  > ../webmin_1.580.0.orig.tar.gz
 git branch
 git branch master
-git-buildpackage --git-verbose --git-ignore-new --git-no-pristine-tar -tc -us -uc
 git-buildpackage --git-verbose --git-ignore-new -tc -us -uc
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-no-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --no-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --verbose
+git-buildpackage --git-verbose --git-ignore-new --git-no-pristine-tar -tc -us -uc
+git-buildpackage --git-verbose --git-ignore-new --git-pristine-tar -tc -us -uc
 git-buildpackage --git-verbose --git-tag --git-retag -tc
 git-buildpackage --git-verbose --git-tag --git-retag -tc --git-no-pristine-tar
 git checkout master
 git citool
 git clean -df
-git-dch
-git-dch -a
-git-dch --git-author
 git-dch --git-author -a
 git-dch --git-author -a -R
 git-dch --git-author -av -S
-git-dch --git-author --help
 git-dch --git-author -i
-git-dch --git-author -N
 git-dch --git-author -N 1.580.0-1
 git-dch --git-author -N 1.580.0-2
 git-dch --git-author -N 2012.02.23-1
 git-dch --git-author -N 2012.02.23-1 -S
 git-dch --git-author -R
 git-dch --git-author -S
-git-dch --help
-git-dch -R
-git-dch -R -a
 git fetch kplanas
 git gui &
-git-import-orig
-#git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
-git-import-orig --pristine-tar ../webmin_1.580.orig.tar.gz
-git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
-gitk --all
 gitk --all &
+git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
 git log
 git log 0..master
 git log > CHANGELOG
-git log   > CHANGELOG
 git log --cumulative
 git log --dense
 git log ..master
