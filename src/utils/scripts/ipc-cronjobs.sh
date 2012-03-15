@@ -4,6 +4,6 @@
 #
 /usr/bin/ipc-monitor
 
-/usr/bin/ipcsystools/gps-monitor monitor > /dev/null
+/usr/bin/gps-monitor monitor
 
 /usr/bin/ipc-reportstatus
