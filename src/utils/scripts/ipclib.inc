@@ -62,6 +62,7 @@ function getipcoption () {
 }
 
 # Read GENERAL parameters from ipcsystools.conf
+START_WAN_ENABLED=`getipcoption general.start_wan_enabled`
 LOG_LEVEL=`getipcoption general.log_level`
 
 WAN_FALLBACKMODE=`getipcoption general.wan.fallbackmode`
@@ -135,6 +136,8 @@ function WriteConnectionFieldStrengthFile ()
 	field_strength=$?
 
 	echo $field_strength > $CONNECTION_FS_FILE
+	ipc-set-led gsmfs $field_strength || 
+		syslogger "warn" "ipc-set-led gsmfs return error"
 }
 
 function ResetModem ()
@@ -224,8 +227,8 @@ function SetSIMPIN ()
 
 	#  1: PIN angegeben, musste aber nicht gesetzt werden
 	#  2: SIM Karte wurde nicht erkannt
-	#  3: Der PIN wird ben�tigt, wurde aber nicht angegeben
-	#  4: PUK oder SuperPIN ben�tigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+	#  3: Der PIN wird benötigt, wurde aber nicht angegeben
+	#  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
 	#  5: Die eingegebene PIN war falsch.
 	#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
 	case $pin_state in
@@ -293,36 +296,40 @@ function set_wan_connection_current ()
 }
 function shutdown_wan_connection ()
 {
-	local wan_curr=`cat $WAN_STATE_FILE`
-	local wan_if=${WAN_INTERFACES[$wan_curr]}
-	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
-	syslogger "debug" "Shutdown WAN connection $wan_if"
-	$IPC_SCRIPTS_DIR/connection-$wan_if.sh stop
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		syslogger "debug" "Shutdown WAN connection $wan_if"
+		$IPC_SCRIPTS_DIR/connection-$wan_if.sh stop
+	fi
 }
 function startup_wan_connection ()
 {
-
-	local wan_curr=`cat $WAN_STATE_FILE`
-	local wan_if=${WAN_INTERFACES[$wan_curr]}
-	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
-	syslogger "debug" "Starting WAN connection $wan_if"
-	$IPC_SCRIPTS_DIR/connection-$wan_if.sh start
-
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		syslogger "debug" "Starting WAN connection $wan_if"
+		$IPC_SCRIPTS_DIR/connection-$wan_if.sh start
+	fi
 }
 function check_wan_connection ()
 {
 	local rc=0
-	local wan_curr=`cat $WAN_STATE_FILE`
-	if [ $# -ge 1 ]; then
-		wan_curr=$1
-	fi
-	local wan_if=${WAN_INTERFACES[$wan_curr]}
-	local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
-	local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
-	$IPC_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
-	if [ $? != 0 ]; then
-		syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
-		rc=1;
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
+		local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
+		$IPC_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
+		if [ $? != 0 ]; then
+			syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
+			rc=1;
+		fi
 	fi
 	return $rc
 }
@@ -333,15 +340,17 @@ function check_wan_connection ()
 function check_wan_connection_status ()
 {
 	local rc=0
-	local wan_curr=`cat $WAN_STATE_FILE`
-	if [ $# -ge 1 ]; then
-		wan_curr=$1
-	fi
-	local wan_if=${WAN_INTERFACES[$wan_curr]}
-	$IPC_SCRIPTS_DIR/connection-$wan_if.sh status
-	if [ $? != 0 ]; then
-		syslogger "error" "WAN interface $wan_if has broken status"
-		rc=1;
+	if [ $START_WAN_ENABLED -eq 1 ]; then
+		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
+		local wan_if=${WAN_INTERFACES[$wan_curr]}
+		$IPC_SCRIPTS_DIR/connection-$wan_if.sh status
+		if [ $? != 0 ]; then
+			syslogger "error" "WAN interface $wan_if has broken status"
+			rc=1;
+		fi
 	fi
 	return $rc
 }
