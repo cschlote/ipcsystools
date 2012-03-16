@@ -69,7 +69,7 @@ watchdog.wan.connection.check_enabled=<0|1> :
     The check_enable variable can be used to enable/disable this test
 
 watchdog.wan.connection.max_restarts=<n> :
-watchdog.wan.connection.max_time=<secs> :
+watchdog.wan.connection.max_fail_time=<secs> :
     Monitors WAN connection status and reboots system after <n> restarts
     of connection or maximum <secs> with out valid connection status.
 
