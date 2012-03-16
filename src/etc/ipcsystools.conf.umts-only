@@ -22,7 +22,7 @@ connection.lte.dev=wwan0			# which directip interface
 #[WATCHDOG-Connection]
 watchdog.wan.connection.check_enabled=1
 watchdog.wan.connection.max_restarts=10
-watchdog.wan.connection.max_time=600
+watchdog.wan.connection.max_fail_time=600
 
 #[WATCHDOG-PING]
 watchdog.ping.check_ping_enabled=1

@@ -17,7 +17,7 @@ IPC_MONITOR_PID_FILE=/var/lock/ipc-monitor.pid
 # Sektion [WATCHDOG-CONNECTION]
 CHECK_CONNECTION_ENABLED=`getipcoption watchdog.wan.connection.check_enabled`
 CHECK_CONNECTION_REBOOT=`getipcoption watchdog.wan.connection.max_restarts`
-MAX_CONNECTION_LOST=`getipcoption watchdog.wan.connection.max_time`
+CHECK_CONNECTION_MAX_FAIL_TIME=`getipcoption watchdog.wan.connection.max_fail_time`
 
 
 # Sektion [WATCHDOG-PING]
@@ -136,7 +136,7 @@ function check_connection_fault () {
 
 function check_connection_maxlost () {
 	local rc=0
-	if [ $MAX_CONNECTION_ENABLED -gt 0 ]; then
+	if [ $CHECK_CONNECTION_ENABLED -gt "0" ] ; then
 		local timestamp=`date +%s`
 
 		ReadConnectionAvailableFile
@@ -151,7 +151,7 @@ function check_connection_maxlost () {
 		fi
 			
 		# Maximum time without connection expired?
-		if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $MAX_CONNECTION_LOST ]; then
+		if [ $[$timestamp - $LAST_CONNECTION_AVAILABLE] -gt $CHECK_CONNECTION_MAX_FAIL_TIME ]; then
 			syslogger "warn" "... connection status failed for $[$timestamp - $LAST_CONNECTION_AVAILABLE] seconds, reboot"
 			reset_system=true
 			rc=1
@@ -206,28 +206,28 @@ fi
 
 # Automatically start configured WAN connections
 if [ $WAN_FALLBACKMODE -eq 1 ]; then
-    syslogger "debug" "Checking active WAN connection"
-    check_wan_connection
-    if [ $? != 0 ]; then
-	syslogger "error" "Current WAN connection failed, trying next"
-	shutdown_wan_connection
-	set_wan_connection_current next
-	reset_wan=true
-    else
-    	# Fallbackmodus
-	get_wan_connect_current
-	if [ $WAN_CURRENT -ne 0 ]  ; then
-	    syslogger "debug" "Checking fallback WAN connection"
-	    if ! check_wan_connection 0; then
-		syslogger "debug" "Primary WAN connection still failing"
-	    else
-		syslogger "debug" "Primary WAN connection available again"
+	syslogger "debug" "Checking active WAN connection"
+	check_wan_connection
+	if [ $? != 0 ]; then
+		syslogger "error" "Current WAN connection failed, trying next"
 		shutdown_wan_connection
-		set_wan_connection_current reset
+		set_wan_connection_current next
 		reset_wan=true
-	    fi
+	else
+		# Fallbackmodus
+		get_wan_connect_current
+		if [ $WAN_CURRENT -ne 0 ]  ; then
+			syslogger "debug" "Checking fallback WAN connection"
+			if ! check_wan_connection 0; then
+			syslogger "debug" "Primary WAN connection still failing"
+			else
+			syslogger "debug" "Primary WAN connection available again"
+			shutdown_wan_connection
+			set_wan_connection_current reset
+			reset_wan=true
+			fi
+		fi
 	fi
-    fi
 fi
 
 #-- Monitor VPN Status -------------------------------------------------
