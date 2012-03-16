@@ -1,3 +1,10 @@
+ipcsystools (2012.03.14-1lucid3) lucid; urgency=low
+
+  * UNRELEASED
+  * Beta Test Version of updated ipcsystools
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Fri, 16 Mar 2012 11:21:54 +0100
+
 ipcsystools (2012.03.14-1lucid2) lucid; urgency=low
 
   * [debian] Added release name
