@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 # TODO: Obsolete file! Fix ppp options issue dynamically
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
@@ -7,7 +7,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 #. /usr/share/ipcsystools/ipclib.inc
 
 # Create link for Sierra Wireless Modem
-( ! test -h /etc/ppp/options.ttyUSB4 ) && ln -s /usr/share/ipcsystools/options.umts /etc/ppp/options.ttyUSB4
+( ! test -h $DESTDIR/etc/ppp/options.ttyUSB4 ) && ln -s $DESTDIR/usr/share/ipcsystools/options.umts $DESTDIR/etc/ppp/options.ttyUSB4
 
 # change crontab (obsolete - using cron.d)
 #entry=`crontab -l 2>/dev/null | grep ipc-monitor.sh | wc -l` > /dev/null
@@ -19,3 +19,4 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 #	rm -f /tmp/crontab.dump
 #fi
 
+exit 0
