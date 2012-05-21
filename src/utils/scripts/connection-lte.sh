@@ -133,9 +133,9 @@ case "$cmd" in
 start)
 	syslogger "info" "starting connection..."
 	ReadModemStatusFile
-	if 	[ $MODEM_STATUS == ${MODEM_STATES[detectedID]} ] ||
-		[ $MODEM_STATUS == ${MODEM_STATES[readyID]} ] ||
-		[ $MODEM_STATUS == ${MODEM_STATES[registeredID]} ]; then
+	if 	[ "$MODEM_STATUS" = "${MODEM_STATES[detectedID]}" ] ||
+		[ "$MODEM_STATUS" = "${MODEM_STATES[readyID]}" ] ||
+		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
 
 	    # LED 3g Timer blinken
 	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
