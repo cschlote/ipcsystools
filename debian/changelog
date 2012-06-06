@@ -1,3 +1,21 @@
+ipcsystools (2012.06.06-1lucid1) lucid; urgency=low
+
+  * [ipcsystools] Fixed version tag
+  * [ipcsystools] Tweaked search path for ptxdist cross build
+  * [ipcsystools] Tweaked script return value
+  * [ipcsystools] Crossplatform fixes
+  * [gps-monitor] Fixed minor typos and output
+  * [ipcsystools] Reworked connection script for DirectIP/LTE, general
+    fixes
+  * [ipcsystools] Updated config with real IP targets for tests
+  * [ipcsystools] Added call to ipc-initsystem on MCB2
+  * [ipcsystools] Changed deploy script for git archive without gz
+    support
+  * [ipcsystools] Updated deploy script
+  * Deployed ipcsystools 2012.06.06
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Wed, 06 Jun 2012 16:19:52 +0200
+
 ipcsystools (2012.03.14-1lucid3) lucid; urgency=low
 
   * UNRELEASED
