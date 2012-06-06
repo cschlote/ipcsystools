@@ -8,6 +8,10 @@ if which ipc-set-led  > /dev/null ; then
 	/usr/bin/ipc-set-led all-off
 fi
 
+if [ -e /etc/ptxdist-version ] ; then
+	/usr/share/ipcsystools/ipc-initsystem.sh
+fi
+
 # Initialize modem (apn, sim, ...)
 . /usr/share/ipcsystools/ipclib.inc
 InitializeModem
