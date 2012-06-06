@@ -15,6 +15,15 @@ if ! test "Yes" = "$a" ; then
 	exit
 fi
 
+if ! which pristine-tar ; then
+	echo "This script requires pristine-tar installed!"
+	sudo apt-get install pristine-tar
+fi
+if ! which git-dch ; then
+	echo "This script requires git-buildpackage installed!"
+	sudo apt-get install git-buildpackage
+fi
+
 echo "Switching to upstream branch, merge master"
 git checkout upstream
 git merge master
@@ -23,7 +32,8 @@ echo "Tag upstream release"
 git tag -a -m "Upstream release $DEPLOYDATE" upstream/$DEPLOYDATE
 
 echo "Export orig tarball"
-git archive --format tar.gz -9 upstream > ../ipcsystools_$DEPLOYDATE.orig.tar.gz
+git archive --format tar upstream > ../ipcsystools_$DEPLOYDATE.orig.tar
+gzip -9 ../ipcsystools_$DEPLOYDATE.orig.tar
 
 echo "Memorize orig pristine tarball"
 pristine-tar commit ../ipcsystools_$DEPLOYDATE.orig.tar.gz
