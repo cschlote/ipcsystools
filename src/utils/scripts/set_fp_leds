@@ -20,6 +20,9 @@ case "$1" in
 				;;
 		esac
 	;;
+	"gsmfs"|"gpsfs")
+		$LED_TOOL $1 $2
+	;;
 	"all-off")
 		$LED_TOOL all-off
 		;;
