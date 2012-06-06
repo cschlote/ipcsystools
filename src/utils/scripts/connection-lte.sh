@@ -14,34 +14,41 @@ LTE_DEV=`getipcoption connection.lte.dev`
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
 #-----------------------------------------------------------------------
+# Query 'ip addr $LTE_DEV', check for UP and IPV4 address attributes
 function IsInterfaceAlive ()
 {
-	local pids
-	local rc
-	pids="`ip link show $LTE_DEV`"
-	echo $pids | grep -q ",UP"
-	rc=$?
-	syslogger "debug" "status - wwan if: rc=$rc"
-	return $rc
+    local ifstatus
+    local rc
+    ifstatus="`ip addr show $LTE_DEV`"
+    echo $ifstatus | grep -q " UP "; rc=$?
+    syslogger "debug" "status - wwan if: $LTE_DEV  UP? (rc=$rc)"
+    if [ $rc = 0 ]; then
+	echo $ifstatus | grep -q "inet "; rc=$?
+	syslogger "debug" "status - wwan if: $LTE_DEV  INET? (rc=$rc)"
+    fi
+    return $rc
 }
 
-function StartWWANInterface ()
+#-----------------------------------------------------------------------
+# Start and Stop LTE_DEV WAN interface
+#-----------------------------------------------------------------------
+# - Requires entry in /etc/network/interfaces for configuration!!!!
+function StartWANInterface ()
 {
-	if ! IsInterfaceAlive; then
-		RefreshModemDevices
-		local device=$COMMAND_DEVICE
-		syslogger "info" "Starting wwan0 on modem device $device"
-		/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-umts.chat <$device >$device
-		ifconfig $LTE_DEV up
-	fi
+    if ! IsInterfaceAlive; then
+	RefreshModemDevices
+	local device=$COMMAND_DEVICE
+	syslogger "info" "Starting $LTE_DEV (AT Commands on $device)"
+	ifup -f $LTE_DEV
+	sleep 3
+    fi
 }
 function StopWANInterface ()
 {
     if IsInterfaceAlive; then
-		syslogger "info" "Stopping wwan0"
-		ifconfig wwan0 down
-		umtscardtool -s 'at!greset'
-		sleep 5
+	syslogger "info" "Stopping $LTE_DEV"
+	ifdown -f $LTE_DEV
+	sleep 3
     fi
 }
 
@@ -56,13 +63,14 @@ function StartAndWaitForWANInterface ()
     local sleeptime=5
     local reached_timeout=0
 
-    syslogger "info" "$LTE_DEV startet, wait for interface"
-    StartWWANInterface
+    syslogger "info" "$LTE_DEV started, wait for interface"
+    StopWANInterface
+    StartWANInterface
     sleep $sleeptime
 
     while [ true ] ; do
 	#TODO: ip-up.d run-parts zur Signalisierung nutzen?
-	if ifconfig | grep -q $LTE_DEV; then
+	if IsInterfaceAlive; then
 	    syslogger "info" "$LTE_DEV available"
 	    break
 	fi
@@ -199,15 +207,32 @@ check)
 	;;
 status)
 	if IsInterfaceAlive; then
+	    syslogger "debug"  "Interface $LTE_DEV is active"
 	    echo "Interface $LTE_DEV is active"
 	else
+	    syslogger "error"  "Interface $LTE_DEV isn't configured"
 	    echo "Interface $LTE_DEV isn't configured"
 	    DetectModemCard
 	    rc_code=1
 	fi
 	;;
+config)
+	if ! IsInterfaceAlive; then
+	    echo "Configuring modem for interface $LTE_DEV for DirectIP."	    
+	    RefreshModemDevices
+	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-umts.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+	    sleep 2
+	    echo "Reseting modem for interface $LTE_DEV."	    
+	    umtscardtool -s 'at!greset'
+	    sleep 2
+	    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
+	    echo "$LTE_DEV to startup interface."
+	else
+	    echo "Interface $LTE_DEV is active. Won't reconfigure active modem."	    
+	fi
+	;;
 *)	
-	echo "Usage: $0 start|stop|check <ip> <gw>|status"
+	echo "Usage: $0 start|stop|check <ip> <gw>|status|config"
 	exit 1
     ;;
 esac
