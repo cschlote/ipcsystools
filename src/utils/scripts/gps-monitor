@@ -520,7 +520,7 @@ function gps_monitor ()
 	query_gpsloc
 	query_gpssatinfo
     else
-	syslogger "debug" "GPS monitoring diabled"
+	syslogger "debug" "GPS monitoring disabled"
     fi
 }
 
@@ -558,7 +558,7 @@ if gps_checkmodem_feature; then
 
     case "$1" in
 	"start")	gps_start ;;
-	"stop")	gps_stop ;;
+	"stop")		gps_stop ;;
 	"monitor")	gps_monitor ;;
     esac
 
