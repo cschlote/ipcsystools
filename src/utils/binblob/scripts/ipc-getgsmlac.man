@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-getgsmlac \- Query GSM LAC
+.SH SYNOPSIS
+.B ipc-getgsmlac
+.SH DESCRIPTION
+.B ipc-getgsmlac
+returns GSM LAC info.
+.SH AUTHOR
+Carsten Schlote
+

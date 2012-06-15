@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-getgsmfs \- Query GSM fieldstrength
+.SH SYNOPSIS
+.B ipc-getgsmfs
+.SH DESCRIPTION
+.B ipc-getgsmfs
+returns GSM fieldstrength info.
+.SH AUTHOR
+Carsten Schlote
+

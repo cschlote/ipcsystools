@@ -1,12 +1,15 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
- ipc-umts-fs ipc-umts-op ipc-umts-ni
+	gps-monitor \
+	ipc-monitor \
+	ipc-reportstatus \
+	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
- ipc-startup ipc-shutdown
+	ipc-startup ipc-shutdown
 
-#DISTCLEANFILES = Makefile.in
+DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	options.umts \
@@ -15,16 +18,17 @@ nobase_dist_pkgdata_DATA = \
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
-	ipc-monitor.sh \
 	connection-eth.sh \
 	connection-umts.sh \
+	connection-lte.sh \
 	ipc-initsystem.sh \
+	ipc-cronjobs.sh \
 	set_fp_leds
 
 # Disabled for now
-#	ipsec-monitor.sh \
+#	ipsec-monitor \
 #	msvpn_updown
 
 man1_MANS = \
-	ipc-umts-fs.man ipc-umts-op.man ipc-umts-ni.man \
-	ipc-startup.man ipc-shutdown.man
+	$(addsuffix .man,$(bin_SCRIPTS)) \
+	$(addsuffix .man,$(sbin_SCRIPTS))

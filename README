@@ -5,54 +5,150 @@ ipcsystools
 Collection of scripts and utilities for MCB2 or mIPC platform
 firmware.
 
+Control files
+=============
+
+/etc/ipcsystools.disable :
+    Create file to disable execution of ipc-monitor script 
+    (debugging aid, not for regular use)
+
+/var/run/ipcsystools.enabled :
+    Created by ipc-startup and removed by ipc-shutdown. Controls the 
+    execution of ipc-monitor. Ensures that modem and other interface
+    hardware is setup and ready
+
+Settings File
+=============
+
+------ General --------------------------------------------------------
+
+general.log_level=<0|1|2> :
+    0=off  1=syslog without debug msgs, 2=syslog with debug msgs
+
+general.start_wan_enabled=<0|1> :
+    Start and monitor configured connections
+
+general.reboot.fake=<0|1> :
+    Disable reboot function for debugging purposes.
+
+
+------ WAN Monitoring -------------------------------------------------
+
+general.wan.fallbackmode=<0|1>
+    Check primary connection and switch back, when available.
+
+general.wan.interfaces=eth umts
+    List of connections to monitor. First given interface is primary
+    interface for fallback mode
+
+general.wan.checktargets=88.198.6.166 64.16.193.46
+    Ping targets to check connection. The ping address should be located
+    on the connections provider side. This ping only check connectivity
+    to your provider!
+
+general.wan.checkgateways=172.25.0.1 10.64.64.64
+    This is a list of gateway addresses to use as host routes to the
+    connections ping address
+
+
+------ Connection Script Specifics and Arguments ----------------------
+
+connection.eth.dev=eth1
+    Name of interface to use for connection-eth.sh
+
+connection.eth.keepup=1
+    Do not 'ifdown' the given interface. Useful with DHCP setup and
+    a local router (DSL, Cablemodem, ...)
+
+connection.umts.dev=ppp0
+    Name of interface to use for connection-umts.sh
+
+------ WATCHDOG-CONNECTION --------------------------------------------
+
+watchdog.wan.connection.check_enabled=<0|1> :
+    The check_enable variable can be used to enable/disable this test
+
+watchdog.wan.connection.max_restarts=<n> :
+watchdog.wan.connection.max_fail_time=<secs> :
+    Monitors WAN connection status and reboots system after <n> restarts
+    of connection or maximum <secs> with out valid connection status.
+
+    These provide an timeout for all connections in general.wan.interfaces
+    after which the system is rebooted.
+
+------ WATCHDOG-PING --------------------------------------------------
+
+watchdog.ping.check_ping_enabled=<0|1> :
+    Enable ping to target near target network of the router. It checks
+    that the routing over the default route is up and running. It doesn't
+    check the connection to your local provider.
+
+watchdog.ping.check_ping_ip=<ip> :
+watchdog.ping.check_ping_reboot=<n> :
+watchdog.ping.check_ping_time=<secs> :
+    Target address, the number of allowed fails and a maximum time allowed
+    without connection to target network.
+
+------ MONITOR-VPN ----------------------------------------------------
+
+ovpn.start_enabled=<0|1> :
+ovpn.monitorpeers=ifconfig :
+    Enable startup of OpenVPN connection and defines test method for
+    connection.
+
+ipsec.start_enabled=<0|1> :
+ipsec.monitorpeers= :
+    Enable startup of IPSec connection and defines test method for
+    connection.
+
+------ MODEM ----------------------------------------------------------
+
+modem.connectionmode=<00|01|02|03|04>
+    Set the radio technologies for UMTS/LTE
+
+------ SIM CARD -------------------------------------------------------
+
+sim.auth=<0|1> :
+	Enable SIM pin/user authentication.
+sim.apn=<string> :
+	AccessPointName, e.g. web.vodafone.de
+sim.username=<string> :
+sim.passwd=<string> :
+	Optional username and password for APN access (Radius)
+sim.pin=<decimalstring> :
+	Optional SIM pin number or empty for PIN-free SIM cards
+
 
 Useful build commands
 =======================
 git archive --format tar.gz master --prefix webmin-1.580.0/ -9  > ../webmin_1.580.0.orig.tar.gz
 git branch
 git branch master
-git-buildpackage --git-verbose --git-ignore-new --git-no-pristine-tar -tc -us -uc
 git-buildpackage --git-verbose --git-ignore-new -tc -us -uc
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-no-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --git-verbose --git-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --no-pristine-tar
-git-buildpackage --git-verbose --git-ignore-new -tc -us -uc --verbose
+git-buildpackage --git-verbose --git-ignore-new --git-no-pristine-tar -tc -us -uc
+git-buildpackage --git-verbose --git-ignore-new --git-pristine-tar -tc -us -uc
 git-buildpackage --git-verbose --git-tag --git-retag -tc
 git-buildpackage --git-verbose --git-tag --git-retag -tc --git-no-pristine-tar
 git checkout master
 git citool
 git clean -df
-git-dch
-git-dch -a
-git-dch --git-author
 git-dch --git-author -a
 git-dch --git-author -a -R
 git-dch --git-author -av -S
-git-dch --git-author --help
 git-dch --git-author -i
-git-dch --git-author -N
 git-dch --git-author -N 1.580.0-1
 git-dch --git-author -N 1.580.0-2
 git-dch --git-author -N 2012.02.23-1
 git-dch --git-author -N 2012.02.23-1 -S
 git-dch --git-author -R
 git-dch --git-author -S
-git-dch --help
-git-dch -R
-git-dch -R -a
 git fetch kplanas
 git gui &
-git-import-orig
-#git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
-git-import-orig --pristine-tar ../webmin_1.580.orig.tar.gz
-git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
-gitk --all
 gitk --all &
+git-import-orig --pristine-tar ../webmin-1.580.orig.tar.gz
 git log
 git log 0..master
 git log > CHANGELOG
-git log   > CHANGELOG
 git log --cumulative
 git log --dense
 git log ..master
@@ -75,7 +171,6 @@ git remote add
 git remote add -t debian -t upstream kplanas ssh://gitadmin@kplanas01/gitroot/webmin-debian.git
 git remote -v
 git rm debian/install-webmin-kp-extras-pkg.sh
-git rm src/etc/mcbctl.conf
 git status
 git tag -d debian/1.580.0-1
 git tag -D debian/1.580.0-1

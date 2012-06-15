@@ -8,4 +8,6 @@ SAY "Setting APN name for profile 1\n"
 OK      AT+CGDCONT=1,"IP","web.vodafone.de"
 SAY "Activating profile 1 for APN connection"
 OK      AT!SCACT=1,1
+SAY "Setup autoconnect for profile 1"
+OK      AT!SCPROF=1,"vodaphone",1,0,0,0
 OK      ''

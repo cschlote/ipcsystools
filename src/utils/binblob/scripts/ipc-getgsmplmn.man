@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-getgsmplmn \- Query GSM PLMN info
+.SH SYNOPSIS
+.B ipc-getgsmplmn
+.SH DESCRIPTION
+.B ipc-getgsmplmn
+returns GSM PLMN info.
+.SH AUTHOR
+Carsten Schlote
+

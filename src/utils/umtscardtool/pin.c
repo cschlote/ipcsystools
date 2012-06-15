@@ -51,12 +51,6 @@
 static const char* COMMAND_GET = "+CPIN?";
 static const char* COMMAND_SET = "+CPIN=";
 
-
-//static int ProcessResult(char *strResult)
-//{
-	//return 0;
-//}
-
 int SetPin(void)
 {
 	char strResult [ UMTS_MAX_FILEDLENGTH ];

@@ -20,5 +20,5 @@
 #define KP_WEB_VERSION "2.0"
 #define KP_WEB_ABOUT \
   "This file is part of the konzeptpark kp_web paket.\n" \
-  "Copyright 2004-2007 by konzeptpark GmbH, Lahnau, Germany\n" \
+  "Copyright 2004-2012 by konzeptpark GmbH, Lahnau, Germany\n" \
   PKGBLDDATE "\n"

@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-gettemp \- Returns the system temperature
+.SH SYNOPSIS
+.B ipc-gettemp
+.SH DESCRIPTION
+.B ipc-gettemp
+returns system temperature as a decimal
+.SH AUTHOR
+Carsten Schlote
+

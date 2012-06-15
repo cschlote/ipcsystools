@@ -2,11 +2,20 @@
 # Shutdown ipcsystools and terminate umts connection
 echo -n "Shutdown ipc environment... "
 
-# Terminate running PPP daemon
+rm -f /var/run/ipcsystools.enabled
+
+# Terminate possibly running PPP daemon
 PPP_PIDS=`pidof pppd`
 kill -TERM $PPP_PIDS 2> /dev/null
 
-if which ipc-set-led; then
+# Software Hardreset for modem
+. /usr/share/ipcsystools/ipclib.inc
+DetectModemCard
+if [ $? -eq 0 ]; then
+	umtscardtool -s 'at!greset' > /dev/null && sleep 10
+fi
+
+if which ipc-set-led > /dev/null; then
 	ipc-set-led all-off
 fi
 

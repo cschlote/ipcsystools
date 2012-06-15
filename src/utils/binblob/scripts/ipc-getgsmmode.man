@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-getgsmmode \- Query GSM operation mode
+.SH SYNOPSIS
+.B ipc-getgsmmode
+.SH DESCRIPTION
+.B ipc-getgsmmode
+returns GSM operation mode info.
+.SH AUTHOR
+Carsten Schlote
+

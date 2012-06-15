@@ -1,0 +1,12 @@
+.\"
+.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipc-getgsmroaming \- Query GSM roaming info
+.SH SYNOPSIS
+.B ipc-getgsmroaming
+.SH DESCRIPTION
+.B ipc-getgsmroaming
+returns GSM roaming info.
+.SH AUTHOR
+Carsten Schlote
+

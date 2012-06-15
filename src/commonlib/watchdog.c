@@ -66,11 +66,11 @@ int DisableWatchdog(int nWatchdog)
 	if (nWatchdog >= 0)
 	{
 		bRet = 1 /* ( swtd_disable ( nWatchdog ) == 0 ) */;
+	}
 		if (bRet)
 			syslog(LOG_DEBUG, "Watchdog disabled");
 		else
 			syslog(LOG_ERR, "Could not disable watchdog (%s)", strerror(errno));
-	};
 
 	return bRet;
 };
@@ -78,7 +78,11 @@ int DisableWatchdog(int nWatchdog)
 
 int CloseWatchdog(int nWatchdog)
 {
-	const int bRet = 1 /* ( swtd_close ( nWatchdog ) == 0 ) */;
+	int bRet = 0;
+	if (nWatchdog >= 0)
+	{
+	    bRet = 1 /* ( swtd_close ( nWatchdog ) == 0 ) */;
+	}
 	if (bRet)
 		syslog(LOG_DEBUG, "Watchdog closed");
 	else

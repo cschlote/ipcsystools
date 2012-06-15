@@ -1,0 +1,5 @@
+''      ATZ
+OK      AT!ENTERCND="A710"
+OK      AT!UDPID=683C
+OK      AT!RESET
+OK      ''
