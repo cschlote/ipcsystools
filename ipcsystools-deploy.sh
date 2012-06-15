@@ -53,12 +53,15 @@ pristine-tar commit ../ipcsystools_$DEPLOYDATE.orig.tar.gz
 echo "Switching to debian branch, merge upstream master"
 git checkout debian
 git merge master
+git tag -f -a -m "Debian release $DEPLOYDATE" debian/$DEPLOYDATE-1lucid1
 git-dch --git-author --verbose -N $DEPLOYDATE-1lucid1
+
+joe debian/changelog
 
 echo "Fixup change log for new base version, commit and built packages with"
 echo "$ git-buildpackage --git-verbose --git-tag --git-retag -tc -sa "
 
 echo "When package built properly, upload package to debian package repository"
-echo " on kplanas!"
+echo " on kplanas using aptadmin@kplanas01:>dput local <changes-file>"
 
 exit 0
