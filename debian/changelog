@@ -1,3 +1,11 @@
+ipcsystools (2012.06.15-1lucid1) lucid; urgency=low
+
+  * [ipcsystools] Updated deploy script
+  * [ipcsystools] Added missing parameter for openvpn rc script
+  * Deployed ipcsystools 2012.06.15
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Fri, 15 Jun 2012 17:43:03 +0200
+
 ipcsystools (2012.06.06-1lucid1) lucid; urgency=low
 
   * [ipcsystools] Fixed version tag
