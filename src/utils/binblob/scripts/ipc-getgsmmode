@@ -4,6 +4,8 @@ rc=0
 if [ -e /var/run/connection_mode ]; then
 	value=`cat /var/run/connection_mode`
 	case $value in
+	LTE*)  rc=4;;
+	HS*)   rc=3;;
 	UMTS*) rc=2;;
 	GPRS*) rc=1;;
 	esac
