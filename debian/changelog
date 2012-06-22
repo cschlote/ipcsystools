@@ -1,3 +1,9 @@
+ipcsystools (2012.06.15-1lucid2) lucid; urgency=low
+
+  * [ipcsystools/binblob] Additions for HSPA and LTE modes
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Fri, 22 Jun 2012 09:39:05 +0200
+
 ipcsystools (2012.06.15-1lucid1) lucid; urgency=low
 
   * [ipcsystools] Updated deploy script
