@@ -39,7 +39,7 @@ function StartWANInterface ()
 	RefreshModemDevices
 	local device=$COMMAND_DEVICE
 	syslogger "info" "Starting $LTE_DEV (AT Commands on $device)"
-	ifup -f $LTE_DEV
+	ifup $LTE_DEV 
 	sleep 3
     fi
 }
@@ -47,7 +47,7 @@ function StopWANInterface ()
 {
     if IsInterfaceAlive; then
 	syslogger "info" "Stopping $LTE_DEV"
-	ifdown -f $LTE_DEV
+	ifdown $LTE_DEV || true
 	sleep 3
     fi
 }
@@ -69,7 +69,6 @@ function StartAndWaitForWANInterface ()
     sleep $sleeptime
 
     while [ true ] ; do
-	#TODO: ip-up.d run-parts zur Signalisierung nutzen?
 	if IsInterfaceAlive; then
 	    syslogger "info" "$LTE_DEV available"
 	    break
