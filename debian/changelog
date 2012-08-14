@@ -1,3 +1,9 @@
+ipcsystools (2012.06.15-1lucid3) lucid; urgency=low
+
+  * [ipcsystools] Removed -f flag from ipup/updown
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Tue, 14 Aug 2012 17:18:52 +0200
+
 ipcsystools (2012.06.15-1lucid2) lucid; urgency=low
 
   * [ipcsystools/binblob] Additions for HSPA and LTE modes
