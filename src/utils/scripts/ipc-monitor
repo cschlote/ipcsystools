@@ -172,7 +172,7 @@ function check_connection_maxlost () {
 # IPC Connection Monitor
 #
 # - obtains runtime lock to prevent multiple instances run
-# - check connection to WAN (either eth or umts)
+# - check connection to WAN (either ETH, PPP or DIP)
 # - provide fallback, when eth link is down
 # - check connection to remote VPN network
 # - restart VPN network, when stalled
