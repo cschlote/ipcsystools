@@ -1,61 +1,60 @@
 #!/bin/bash
-# DESCRIPTION: Script starts the LTE Connection
+# DESCRIPTION: Script starts the PPP Connection
 #       USAGE: $0 start | stop | check <ip> <gw> | status
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/ipcsystools/ipclib.inc
 
-DESC="connection-lte[$$]"
+DESC="connection-ppp[$$]"
 
-LTE_CONNECTION_PID_FILE=/var/run/lte_connection.pid
+PPP_CONNECTION_PID_FILE=/var/run/ppp_connection.pid
 
-LTE_DEV=`getipcoption connection.lte.dev`
+PPP_DEV=`getipcoption connection.ppp.dev`
 
 #-----------------------------------------------------------------------
-# Check for functional wwan0 interface
+# Check for functional pppd and pppx interface
 #-----------------------------------------------------------------------
-# Query 'ip addr $LTE_DEV', check for UP and IPV4 address attributes
-function IsInterfaceAlive ()
+function IsPPPDAlive ()
 {
-    local ifstatus
+    local pids
     local rc
-    ifstatus="`ip addr show $LTE_DEV`"
-    echo $ifstatus | grep -q " UP "; rc=$?
-    syslogger "debug" "status - wwan if: $LTE_DEV  UP? (rc=$rc)"
-    if [ $rc = 0 ]; then
-	echo $ifstatus | grep -q "inet "; rc=$?
-	syslogger "debug" "status - wwan if: $LTE_DEV  INET? (rc=$rc)"
-    fi
+
+    pids="`pidof pppd`"; rc=$?
+
+    syslogger "debug" "status - pppd: $pids (rc=$rc)"
     return $rc
 }
 
-#-----------------------------------------------------------------------
-# Start and Stop LTE_DEV WAN interface
-#-----------------------------------------------------------------------
-# - Requires entry in /etc/network/interfaces for configuration!!!!
-function StartWANInterface ()
+function StartPPPD ()
 {
-    if ! IsInterfaceAlive; then
+    if ! IsPPPDAlive; then
 	RefreshModemDevices
-	local device=$COMMAND_DEVICE
-	syslogger "info" "Starting $LTE_DEV (AT Commands on $device)"
-	ifup $LTE_DEV 
-	sleep 3
+	local device=$CONNECTION_DEVICE
+	syslogger "info" "Starting pppd on modem device $device"
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-umts.chat" &
     fi
 }
-function StopWANInterface ()
+function StopPPPD ()
 {
-    if IsInterfaceAlive; then
-	syslogger "info" "Stopping $LTE_DEV"
-	ifdown $LTE_DEV || true
-	sleep 3
+    if IsPPPDAlive; then
+		local pids=`pidof pppd`
+		syslogger "info" "Stopping pppd ($pids)"
+		if [ -z "$pids" ]; then
+			syslogger "info" "No pppd is running."
+			return 0
+		fi
+
+		kill -TERM $pids > /dev/null
+		if [ "$?" != "0" ]; then
+			rm -f /var/run/ppp*.pid > /dev/null
+		fi
     fi
 }
 
 #
-# Start the wwan0 connection and retry if it fails
+# Start the PPPD connection and retry if it fails
 #
-function StartAndWaitForWANInterface ()
+function StartAndWaitForPPPD ()
 {
     # Loop Counters
     local count_timeout=0
@@ -63,14 +62,14 @@ function StartAndWaitForWANInterface ()
     local sleeptime=5
     local reached_timeout=0
 
-    syslogger "info" "$LTE_DEV started, wait for interface"
-    StopWANInterface
-    StartWANInterface
+    syslogger "info" "$PPP_DEV startet, wait for interface"
+    StartPPPD
     sleep $sleeptime
 
     while [ true ] ; do
-	if IsInterfaceAlive; then
-	    syslogger "info" "$LTE_DEV available"
+	#TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
+	if systool -c net | grep -q $PPP_DEV; then
+	    syslogger "info" "$PPP_DEV available"
 	    break
 	fi
 
@@ -79,7 +78,7 @@ function StartAndWaitForWANInterface ()
 	    break
 	fi
 
-	syslogger "debug" "Waiting $LTE_DEV coming up"
+	syslogger "debug" "Waiting $PPP_DEV coming up"
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -105,7 +104,7 @@ function WaitForModemBookedIntoNetwork ()
     CheckNIState
     local ni_state=$?
     while [ $ni_state -ne 0 ]; do
-	syslogger "debug" "Waiting for LTE network registration ($count_timeout/$ni_state)"
+	syslogger "debug" "Waiting for mobile network registration ($count_timeout/$ni_state)"
 
 	# Increase number of tries, when 'limited service' is reported
 	# (ni_state==2)
@@ -133,7 +132,7 @@ function WaitForModemBookedIntoNetwork ()
 # Main
 #-----------------------------------------------------------------------
 rc_code=0
-obtainlock $LTE_CONNECTION_PID_FILE
+obtainlock $PPP_CONNECTION_PID_FILE
 
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
@@ -153,17 +152,17 @@ start)
 			WriteConnectionFieldStrengthFile
 			WriteConnectionNetworkModeFile
 
-			if ! IsInterfaceAlive; then
-				if StartAndWaitForWANInterface; then
-					WriteModemStatusFile ${MODEM_STATES[connected]}
+			if ! IsPPPDAlive; then
+				if StartAndWaitForPPPD; then
+				WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
-					syslogger "debug" "wwan interface didn't startup."
-					$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-					rc_code=1
+				syslogger "debug" "ppp deamon didn't startup."
+				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+				rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
-				syslogger "debug" "wwan interface is already running."
+				syslogger "debug" "ppp deamon is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
@@ -178,21 +177,21 @@ start)
     ;;
 stop)
 	syslogger "info" "stopping connection..."
-	StopWANInterface
+	StopPPPD
 	InitializeModem
 	CheckNIState
     ;;
 check)
-	if IsInterfaceAlive; then
+	if IsPPPDAlive; then
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
 		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
 
-		if ping_target $wan_ct $wan_gw $LTE_DEV; then
-		    syslogger "debug" "Ping to $wan_ct on WAN interface $LTE_DEV successful"
+		if ping_target $wan_ct $wan_gw $PPP_DEV; then
+		    syslogger "debug" "Ping to $wan_ct on WAN interface $PPP_DEV successful"
 		else
-		    syslogger "error" "Ping to $wan_ct on WAN interface $LTE_DEV failed"
+		    syslogger "error" "Ping to $wan_ct on WAN interface $PPP_DEV failed"
 		    rc_code=1;
 		fi
 	    else
@@ -200,38 +199,20 @@ check)
 		rc_code=1;
 	    fi
 	else
-	    syslogger "error" "PPPD isn't running, no LTE connection"
+	    syslogger "error" "PPPD isn't running, no mobile connection"
 	    rc_code=2;
 	fi
 	;;
 status)
-	if IsInterfaceAlive; then
-	    syslogger "debug"  "Interface $LTE_DEV is active"
-	    echo "Interface $LTE_DEV is active"
+	if IsPPPDAlive; then
+	    echo "Interface $PPP_DEV is active"
 	else
-	    syslogger "error"  "Interface $LTE_DEV isn't configured"
-	    echo "Interface $LTE_DEV isn't configured"
+	    echo "Interface $PPP_DEV isn't configured"
 	    DetectModemCard
 	    rc_code=1
 	fi
 	;;
-config)
-	if ! IsInterfaceAlive; then
-	    echo "Configuring modem for interface $LTE_DEV for DirectIP."	    
-	    RefreshModemDevices
-	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-umts.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
-	    sleep 2
-	    echo "Reseting modem for interface $LTE_DEV."	    
-	    umtscardtool -s 'at!greset'
-	    sleep 2
-	    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
-	    echo "$LTE_DEV to startup interface."
-	else
-	    echo "Interface $LTE_DEV is active. Won't reconfigure active modem."	    
-	fi
-	;;
-*)	
-	echo "Usage: $0 start|stop|check <ip> <gw>|status|config"
+    *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
 	exit 1
     ;;
 esac

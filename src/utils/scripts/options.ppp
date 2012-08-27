@@ -1,5 +1,5 @@
 ####################################
-# Optionen für die UMTS Verbindung #
+# Optionen für die PPP Verbindung #
 ####################################
 noipdefault
 defaultroute

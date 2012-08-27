@@ -7,7 +7,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 #. /usr/share/ipcsystools/ipclib.inc
 
 # Create link for Sierra Wireless Modem
-( ! test -h $DESTDIR/etc/ppp/options.ttyUSB4 ) && ln -s $DESTDIR/usr/share/ipcsystools/options.umts $DESTDIR/etc/ppp/options.ttyUSB4
+( ! test -h $DESTDIR/etc/ppp/options.ttyUSB4 ) && ln -s $DESTDIR/usr/share/ipcsystools/optione.ppp $DESTDIR/etc/ppp/options.ttyUSB4
 
 # change crontab (using cron.d only works with vixie cron not busybox)
 if uname -a | grep MCB2 2>&1 >/dev/null; then

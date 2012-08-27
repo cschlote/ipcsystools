@@ -12,15 +12,15 @@ sbin_SCRIPTS = \
 DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	options.umts \
+	optione.ppp \
 	dip-umts.chat \
 	ppp-umts.chat
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
 	connection-eth.sh \
-	connection-umts.sh \
-	connection-lte.sh \
+	connection-ppp.sh \
+	connection-dip.sh \
 	ipc-initsystem.sh \
 	ipc-cronjobs.sh \
 	set_fp_leds
