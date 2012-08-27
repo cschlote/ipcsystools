@@ -12,7 +12,7 @@ sbin_SCRIPTS = \
 DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	optione.ppp \
+	options.ppp \
 	dip-mode.chat \
 	ppp-mode.chat
 
