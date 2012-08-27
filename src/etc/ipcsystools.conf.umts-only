@@ -9,8 +9,8 @@ general.reboot.fake=0
 
 #[WAN Monitoring]
 general.wan.fallbackmode=0
-general.wan.interfaces=umts				# primary WAN connection 
-general.wan.checktargets=88.198.6.166	# 'far' ping targets
+general.wan.interfaces=umts			# primary WAN connection 
+general.wan.checktargets=88.198.6.166		# 'far' ping targets
 general.wan.checkgateways=default		# 'near' ping targets
 
 #[Connection Script Specifics and Arguments]
@@ -37,6 +37,7 @@ ipsec.start_enabled=0
 ipsec.monitorpeers=
 
 #[MODEM]
+modem.newselratmodes=0
 modem.connectionmode=03
 
 #[SIM CARD]

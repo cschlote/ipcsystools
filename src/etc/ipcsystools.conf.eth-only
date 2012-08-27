@@ -9,9 +9,9 @@ general.reboot.fake=0
 
 #[WAN Monitoring]
 general.wan.fallbackmode=0
-general.wan.interfaces=eth				# primary WAN connection 
-general.wan.checktargets=88.198.6.166	# 'far' ping targets
-general.wan.checkgateways=172.25.0.1	# 'near' ping targets
+general.wan.interfaces=eth			# primary WAN connection 
+general.wan.checktargets=88.198.6.166		# 'far' ping targets
+general.wan.checkgateways=172.25.0.1		# 'near' ping targets
 
 #[Connection Script Specifics and Arguments]
 connection.eth.dev=eth0				# which eth interface
@@ -27,7 +27,7 @@ watchdog.wan.connection.max_fail_time=600
 #[WATCHDOG-PING]
 watchdog.ping.check_ping_enabled=1
 watchdog.ping.check_ping_time=300
-watchdog.ping.check_ping_ip=8.8.4.4	# 'vpn' ping target
+watchdog.ping.check_ping_ip=8.8.4.4		# 'vpn' ping target
 watchdog.ping.check_ping_reboot=7
 
 #[MONITOR-VPN]
@@ -37,6 +37,7 @@ ipsec.start_enabled=0
 ipsec.monitorpeers=
 
 #[MODEM]
+modem.newselratmodes=0
 modem.connectionmode=03
 
 #[SIM CARD]
