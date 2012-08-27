@@ -63,6 +63,10 @@ connection.eth.keepup=1
 connection.ppp.dev=ppp0
     Name of interface to use for connection-ppp.sh
 
+connection.dip.dev=wwan0
+    Name of interface to use for connection-dip.sh
+
+
 ------ WATCHDOG-CONNECTION --------------------------------------------
 
 watchdog.wan.connection.check_enabled=<0|1> :
