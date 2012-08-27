@@ -1,5 +1,5 @@
 .\"
-.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.TH ipc-getgsmlac 1 "Feb. 2012" "Ubuntu"
 .SH NAME
 ipc-getgsmlac \- Query GSM LAC
 .SH SYNOPSIS

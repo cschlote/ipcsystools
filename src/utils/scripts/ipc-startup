@@ -1,6 +1,6 @@
 #!/bin/bash
 # Initialize ipcsystools for operation
-#  - detecting the umts modem
+#  - detecting the UMTS/LTE modem
 #  - starting the initial connection
 echo -n "Startup IPC environment... "
 

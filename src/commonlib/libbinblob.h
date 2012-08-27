@@ -2,7 +2,7 @@
  * Library to get and set binary bitfield within an array of bit.
  *
  * Main purpose of this library is to produce compact binary blobs
- * for status reporting over expensive GSM/UMTS uplinks, but might
+ * for status reporting over expensive GSM/UMTS/LTE uplinks, but might
  * be useful for other purposes as well.
  *
  * Copyright 2010, konzeptpark GmbH

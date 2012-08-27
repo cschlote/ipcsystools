@@ -6,7 +6,7 @@ ipc-umts-fs \- get the fieldstrength value from umts modem
 .B ipc-umts-fs
 .SH DESCRIPTION
 .B ipc-umts-fs
-return the fieldstrengh from the connected GPRS/UMTS modem and outputs
+return the fieldstrengh from the connected GPRS/UMTS/LTE modem and outputs
 the value to stdout.
 .SH AUTHOR
 Carsten Schlote

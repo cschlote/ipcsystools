@@ -3,7 +3,7 @@
 # DESCRIPTION: Include file for bash scripts
 #
 
-# Base directory of UMTS tools
+# Base directory of ipc tools
 IPC_TOOLS_DIR=/usr/bin
 
 # Base directory of IPC-Systools scripts
@@ -18,7 +18,7 @@ IPC_STATUSFILE_DIR=/var/run
 # Programm zur Netzidentifizierung
 UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
 
-# Programm f�r das Messen der Feldst�rke UMTS
+# Programm für das Messen der Feldstärke
 UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe

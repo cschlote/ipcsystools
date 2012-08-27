@@ -1,5 +1,5 @@
 .\"
-.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.TH ipc-getgsmroaming 1 "Feb. 2012" "Ubuntu"
 .SH NAME
 ipc-getgsmroaming \- Query GSM roaming info
 .SH SYNOPSIS
