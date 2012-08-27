@@ -1,5 +1,5 @@
 .\"
-.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.TH ipc-getgsmfs 1 "Feb. 2012" "Ubuntu"
 .SH NAME
 ipc-getgsmfs \- Query GSM fieldstrength
 .SH SYNOPSIS

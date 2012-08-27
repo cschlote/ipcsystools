@@ -1,5 +1,5 @@
 .\"
-.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.TH ipc-gettemp 1 "Feb. 2012" "Ubuntu"
 .SH NAME
 ipc-gettemp \- Returns the system temperature
 .SH SYNOPSIS

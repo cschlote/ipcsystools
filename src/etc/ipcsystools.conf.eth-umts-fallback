@@ -9,15 +9,15 @@ general.reboot.fake=0
 
 #[WAN Monitoring]
 general.wan.fallbackmode=1
-general.wan.interfaces=eth umts    					# primary, secondary WAN connection 
+general.wan.interfaces=eth ppp				# primary, secondary WAN connection 
 general.wan.checktargets=88.198.6.166 64.16.193.46	# 'far' ping targets
 general.wan.checkgateways=172.25.0.1 10.64.64.64 	# 'near' ping targets
 
 #[Connection Script Specifics and Arguments]
 connection.eth.dev=eth0				# which eth interface
 connection.eth.keepup=1				# do not 'ifdown' interface 
-connection.umts.dev=ppp0			# which umts/ppp interface
-connection.lte.dev=wwan0			# which directip interface
+connection.ppp.dev=ppp0				# which ppp interface
+connection.dip.dev=wwan0			# which directip interface
 
 #[WATCHDOG-Connection]
 watchdog.wan.connection.check_enabled=1
@@ -37,6 +37,7 @@ ipsec.start_enabled=0
 ipsec.monitorpeers=
 
 #[MODEM]
+modem.newselratmodes=0
 modem.connectionmode=03
 
 #[SIM CARD]
