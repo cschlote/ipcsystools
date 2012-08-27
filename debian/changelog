@@ -1,3 +1,13 @@
+ipcsystools (2012.06.15-1lucid4~beta1) UNRELEASED; urgency=low
+
+  * [ipcsystools] Added selection flag for new RAT modes on LTE modem
+  * [ipcsystools] Renamed file to better match purpose
+  * [ipcsystools] Corrections for man pages and comments
+  * [ipcsystools] Renamed files to reduce confusions
+  * [ipcsystools] Corrections for comments and sample configs
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Mon, 27 Aug 2012 13:53:43 +0200
+
 ipcsystools (2012.06.15-1lucid3) lucid; urgency=low
 
   * [ipcsystools] Removed -f flag from ipup/updown
