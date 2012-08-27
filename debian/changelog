@@ -5,8 +5,11 @@ ipcsystools (2012.06.15-1lucid4~beta1) UNRELEASED; urgency=low
   * [ipcsystools] Corrections for man pages and comments
   * [ipcsystools] Renamed files to reduce confusions
   * [ipcsystools] Corrections for comments and sample configs
+  * [ipcsystools] Fixed typo in makefile
+  * [ipcsystools] Modified example config
+  * [ipcsystools] Updated README
 
- -- Carsten Schlote <c.schlote@konzeptpark.de>  Mon, 27 Aug 2012 13:53:43 +0200
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Mon, 27 Aug 2012 14:30:21 +0200
 
 ipcsystools (2012.06.15-1lucid3) lucid; urgency=low
 
