@@ -13,8 +13,8 @@ DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
 	optione.ppp \
-	dip-umts.chat \
-	ppp-umts.chat
+	dip-mode.chat \
+	ppp-mode.chat
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \

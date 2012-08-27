@@ -31,7 +31,7 @@ function StartPPPD ()
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-umts.chat" &
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat" &
     fi
 }
 function StopPPPD ()

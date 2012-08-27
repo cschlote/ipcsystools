@@ -219,7 +219,7 @@ config)
 	if ! IsInterfaceAlive; then
 	    echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
 	    RefreshModemDevices
-	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-umts.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
 	    sleep 2
 	    echo "Reseting modem for interface $DIP_DEV."	    
 	    umtscardtool -s 'at!greset'
