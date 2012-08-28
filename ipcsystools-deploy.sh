@@ -14,11 +14,6 @@ if ! test "Yes" = "$a" ; then
 	echo "aborted."
 	exit
 fi
-git checkout master
-git clean -df
-echo $DEPLOYDATE > ipcsystools-release
-./autogen.sh
-git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release configure
 
 if ! which pristine-tar ; then
 	echo "This script requires pristine-tar installed!"
@@ -30,17 +25,19 @@ if ! which git-dch ; then
 fi
 
 #-- Checkout master and update release tags
+echo "Checkout master and update release tag"
 git checkout master
 git clean -df
 echo $DEPLOYDATE > ipcsystools-release
 ./autogen.sh
 git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release configure
+git citool
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
 git merge master
 
-echo "Tag upstream release"
+echo "Tag new upstream release"
 git tag -f -a -m "Upstream release $DEPLOYDATE" upstream/$DEPLOYDATE
 
 echo "Export orig tarball"
@@ -50,7 +47,7 @@ gzip -9 ../ipcsystools_$DEPLOYDATE.orig.tar
 echo "Memorize orig pristine tarball"
 pristine-tar commit ../ipcsystools_$DEPLOYDATE.orig.tar.gz
 
-echo "Switching to debian branch, merge upstream master"
+echo "Switching back to debian branch, merge upstream master"
 git checkout debian
 git merge master
 git tag -f -a -m "Debian release $DEPLOYDATE" debian/$DEPLOYDATE-1lucid1
@@ -58,7 +55,7 @@ git-dch --git-author --verbose -N $DEPLOYDATE-1lucid1
 
 joe debian/changelog
 
-echo "Fixup change log for new base version, commit and built packages with"
+echo "Change and commit changelog for new base version, then built packages with"
 echo "$ git-buildpackage --git-verbose --git-tag --git-retag -tc -sa "
 
 echo "When package built properly, upload package to debian package repository"
