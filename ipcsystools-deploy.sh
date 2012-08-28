@@ -1,4 +1,5 @@
 #!/bin/bash
+# Script should be maintained on master branch and merged to debian or upstream as needed!
 
 set -e
 
@@ -31,7 +32,7 @@ git clean -df
 echo $DEPLOYDATE > ipcsystools-release
 ./autogen.sh
 git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release configure
-git citool
+git citool || true
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
