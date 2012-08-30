@@ -39,8 +39,10 @@ function StartWANInterface ()
 	RefreshModemDevices
 	local device=$COMMAND_DEVICE
 	syslogger "info" "Starting $DIP_DEV (AT Commands on $device)"
-	ifup $DIP_DEV 
+	ifdown $DIP_DEV || true
 	sleep 3
+	ifup $DIP_DEV 
+	sleep 1
     fi
 }
 function StopWANInterface ()
