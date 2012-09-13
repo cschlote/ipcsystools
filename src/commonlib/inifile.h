@@ -42,6 +42,10 @@ typedef const char cchr;
 #define __must_check __attribute__((warn_unused_result))
 #endif
 
+#ifndef __not_used
+#define __not_used __attribute__((unused))
+#endif
+
 struct ENTRY
 {
 	char   Type;
