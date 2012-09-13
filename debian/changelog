@@ -1,9 +1,8 @@
 ipcsystools (2012.08.28-1precise1) precise; urgency=low
 
-  [ buildmaster ]
   * [debian] Added debian branch for precise
 
- -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 12 Sep 2012 16:13:39 +0200
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 13 Sep 2012 10:29:29 +0200
 
 ipcsystools (2012.08.28-1lucid3) lucid; urgency=low
 
