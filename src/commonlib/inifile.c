@@ -253,7 +253,7 @@ WriteString(IniFileHandle_p handle, cchr * Section, cchr * pKey, cchr * Value)
 			rc = AddSectionAndpKey(handle, Section, pKey, Value);
 		}
 	}
-	return true;
+	return rc;
 }
 
 /**-----------------------------------------------------------------------------
@@ -618,10 +618,8 @@ AddItem(IniFileHandle_p handle, char Type, cchr * Text)
  @return bool
 */
 bool
-AddItemAt(IniFileHandle_p handle, struct ENTRY * EntryAt, char Mode, cchr * Text)
+AddItemAt(IniFileHandle_p handle __not_used, struct ENTRY * EntryAt, char Mode, cchr * Text)
 {
-	handle = NULL; // unused
-	
 	struct ENTRY *pNewEntry;
 	if (EntryAt == NULL)
 	{
