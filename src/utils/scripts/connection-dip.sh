@@ -1,60 +1,63 @@
 #!/bin/bash
-# DESCRIPTION: Script starts the UMTS Connection
+# DESCRIPTION: Script starts the DIP Connection
 #       USAGE: $0 start | stop | check <ip> <gw> | status
 
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/ipcsystools/ipclib.inc
 
-DESC="connection-umts[$$]"
+DESC="connection-dip[$$]"
 
-UMTS_CONNECTION_PID_FILE=/var/run/umts_connection.pid
+DIP_CONNECTION_PID_FILE=/var/run/dip_connection.pid
 
-UMTS_DEV=`getipcoption connection.umts.dev`
+DIP_DEV=`getipcoption connection.dip.dev`
 
 #-----------------------------------------------------------------------
-# Check for functional pppd and pppx interface
+# Check for functional wwan0 interface
 #-----------------------------------------------------------------------
-function IsPPPDAlive ()
+# Query 'ip addr $DIP_DEV', check for UP and IPV4 address attributes
+function IsInterfaceAlive ()
 {
-    local pids
+    local ifstatus
     local rc
-
-    pids="`pidof pppd`"; rc=$?
-
-    syslogger "debug" "status - pppd: $pids (rc=$rc)"
+    ifstatus="`ip addr show $DIP_DEV`"
+    echo $ifstatus | grep -q " UP "; rc=$?
+    syslogger "debug" "status - wwan if: $DIP_DEV  UP? (rc=$rc)"
+    if [ $rc = 0 ]; then
+	echo $ifstatus | grep -q "inet "; rc=$?
+	syslogger "debug" "status - wwan if: $DIP_DEV  INET? (rc=$rc)"
+    fi
     return $rc
 }
 
-function StartPPPD ()
+#-----------------------------------------------------------------------
+# Start and Stop DIP_DEV WAN interface
+#-----------------------------------------------------------------------
+# - Requires entry in /etc/network/interfaces for configuration!!!!
+function StartWANInterface ()
 {
-    if ! IsPPPDAlive; then
+    if ! IsInterfaceAlive; then
 	RefreshModemDevices
-	local device=$CONNECTION_DEVICE
-	syslogger "info" "Starting pppd on modem device $device"
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-umts.chat" &
+	local device=$COMMAND_DEVICE
+	syslogger "info" "Starting $DIP_DEV (AT Commands on $device)"
+	ifdown $DIP_DEV || true
+	sleep 3
+	ifup $DIP_DEV 
+	sleep 1
     fi
 }
-function StopPPPD ()
+function StopWANInterface ()
 {
-    if IsPPPDAlive; then
-		local pids=`pidof pppd`
-		syslogger "info" "Stopping pppd ($pids)"
-		if [ -z "$pids" ]; then
-			syslogger "info" "No pppd is running."
-			return 0
-		fi
-
-		kill -TERM $pids > /dev/null
-		if [ "$?" != "0" ]; then
-			rm -f /var/run/ppp*.pid > /dev/null
-		fi
+    if IsInterfaceAlive; then
+	syslogger "info" "Stopping $DIP_DEV"
+	ifdown $DIP_DEV || true
+	sleep 3
     fi
 }
 
 #
-# Start the PPPD connection and retry if it fails
+# Start the wwan0 connection and retry if it fails
 #
-function StartAndWaitForPPPD ()
+function StartAndWaitForWANInterface ()
 {
     # Loop Counters
     local count_timeout=0
@@ -62,14 +65,14 @@ function StartAndWaitForPPPD ()
     local sleeptime=5
     local reached_timeout=0
 
-    syslogger "info" "$UMTS_DEV startet, wait for interface"
-    StartPPPD
+    syslogger "info" "$DIP_DEV started, wait for interface"
+    StopWANInterface
+    StartWANInterface
     sleep $sleeptime
 
     while [ true ] ; do
-	#TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
-	if systool -c net | grep -q $UMTS_DEV; then
-	    syslogger "info" "$UMTS_DEV available"
+	if IsInterfaceAlive; then
+	    syslogger "info" "$DIP_DEV available"
 	    break
 	fi
 
@@ -78,7 +81,7 @@ function StartAndWaitForPPPD ()
 	    break
 	fi
 
-	syslogger "debug" "Waiting $UMTS_DEV coming up"
+	syslogger "debug" "Waiting $DIP_DEV coming up"
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -104,7 +107,7 @@ function WaitForModemBookedIntoNetwork ()
     CheckNIState
     local ni_state=$?
     while [ $ni_state -ne 0 ]; do
-	syslogger "debug" "Waiting for UMTS network registration ($count_timeout/$ni_state)"
+	syslogger "debug" "Waiting for mobile network registration ($count_timeout/$ni_state)"
 
 	# Increase number of tries, when 'limited service' is reported
 	# (ni_state==2)
@@ -132,7 +135,7 @@ function WaitForModemBookedIntoNetwork ()
 # Main
 #-----------------------------------------------------------------------
 rc_code=0
-obtainlock $UMTS_CONNECTION_PID_FILE
+obtainlock $DIP_CONNECTION_PID_FILE
 
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
@@ -152,17 +155,17 @@ start)
 			WriteConnectionFieldStrengthFile
 			WriteConnectionNetworkModeFile
 
-			if ! IsPPPDAlive; then
-				if StartAndWaitForPPPD; then
-				WriteModemStatusFile ${MODEM_STATES[connected]}
+			if ! IsInterfaceAlive; then
+				if StartAndWaitForWANInterface; then
+					WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
-				syslogger "debug" "ppp deamon didn't startup."
-				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-				rc_code=1
+					syslogger "debug" "wwan interface didn't startup."
+					$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+					rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
-				syslogger "debug" "ppp deamon is already running."
+				syslogger "debug" "wwan interface is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
@@ -177,21 +180,21 @@ start)
     ;;
 stop)
 	syslogger "info" "stopping connection..."
-	StopPPPD
+	StopWANInterface
 	InitializeModem
 	CheckNIState
     ;;
 check)
-	if IsPPPDAlive; then
+	if IsInterfaceAlive; then
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
 		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
 
-		if ping_target $wan_ct $wan_gw $UMTS_DEV; then
-		    syslogger "debug" "Ping to $wan_ct on WAN interface $UMTS_DEV successful"
+		if ping_target $wan_ct $wan_gw $DIP_DEV; then
+		    syslogger "debug" "Ping to $wan_ct on WAN interface $DIP_DEV successful"
 		else
-		    syslogger "error" "Ping to $wan_ct on WAN interface $UMTS_DEV failed"
+		    syslogger "error" "Ping to $wan_ct on WAN interface $DIP_DEV failed"
 		    rc_code=1;
 		fi
 	    else
@@ -199,20 +202,38 @@ check)
 		rc_code=1;
 	    fi
 	else
-	    syslogger "error" "PPPD isn't running, no UMTS connection"
+	    syslogger "error" "DIP isn't running, no mobile connection"
 	    rc_code=2;
 	fi
 	;;
 status)
-	if IsPPPDAlive; then
-	    echo "Interface $UMTS_DEV is active"
+	if IsInterfaceAlive; then
+	    syslogger "debug"  "Interface $DIP_DEV is active"
+	    echo "Interface $DIP_DEV is active"
 	else
-	    echo "Interface $UMTS_DEV isn't configured"
+	    syslogger "error"  "Interface $DIP_DEV isn't configured"
+	    echo "Interface $DIP_DEV isn't configured"
 	    DetectModemCard
 	    rc_code=1
 	fi
 	;;
-    *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
+config)
+	if ! IsInterfaceAlive; then
+	    echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
+	    RefreshModemDevices
+	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+	    sleep 2
+	    echo "Reseting modem for interface $DIP_DEV."	    
+	    umtscardtool -s 'at!greset'
+	    sleep 2
+	    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
+	    echo "$DIP_DEV to startup interface."
+	else
+	    echo "Interface $DIP_DEV is active. Won't reconfigure active modem."	    
+	fi
+	;;
+*)	
+	echo "Usage: $0 start|stop|check <ip> <gw>|status|config"
 	exit 1
     ;;
 esac

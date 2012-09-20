@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shutdown ipcsystools and terminate umts connection
+# Shutdown ipcsystools and terminate mobile connection
 echo -n "Shutdown ipc environment... "
 
 rm -f /var/run/ipcsystools.enabled

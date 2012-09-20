@@ -1,5 +1,5 @@
 .\"
-.TH ipc-umts-fs 1 "Feb. 2012" "Ubuntu"
+.TH ipc-getipdez 1 "Feb. 2012" "Ubuntu"
 .SH NAME
 ipc-getipdez \- Return IP of interface eth0 as decimal
 .SH SYNOPSIS

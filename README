@@ -37,7 +37,7 @@ general.reboot.fake=<0|1> :
 general.wan.fallbackmode=<0|1>
     Check primary connection and switch back, when available.
 
-general.wan.interfaces=eth umts
+general.wan.interfaces=eth ppp dip
     List of connections to monitor. First given interface is primary
     interface for fallback mode
 
@@ -60,8 +60,12 @@ connection.eth.keepup=1
     Do not 'ifdown' the given interface. Useful with DHCP setup and
     a local router (DSL, Cablemodem, ...)
 
-connection.umts.dev=ppp0
-    Name of interface to use for connection-umts.sh
+connection.ppp.dev=ppp0
+    Name of interface to use for connection-ppp.sh
+
+connection.dip.dev=wwan0
+    Name of interface to use for connection-dip.sh
+
 
 ------ WATCHDOG-CONNECTION --------------------------------------------
 
@@ -102,6 +106,8 @@ ipsec.monitorpeers= :
     connection.
 
 ------ MODEM ----------------------------------------------------------
+modem.newselratmodes=0|1
+    Enable LTE RAT modes for LTE modems (not yet autodetected)
 
 modem.connectionmode=<00|01|02|03|04>
     Set the radio technologies for UMTS/LTE

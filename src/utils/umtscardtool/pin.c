@@ -18,7 +18,7 @@
  */
 
 /*
- * Prueft, ob eine PIN eingegeben werden muss und bergibt diese ggf. ber den USB-Port 2 an die UMTS/GPRS Karte.
+ * Prueft, ob eine PIN eingegeben werden muss und bergibt diese ggf. ber den USB-Port 2 an die UMTS/GPRS/LTE Karte.
  * Bei Misserfolg wird ein (negativer) Fehlercode zurueckgegeben: 
  *  0:  Alles ok
  * -1:  Serieller Port konnte nicht geöffnet werden
