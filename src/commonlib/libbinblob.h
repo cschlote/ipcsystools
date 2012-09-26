@@ -8,6 +8,10 @@
  * Copyright 2010, konzeptpark GmbH
  *
  */
+#ifndef __not_used
+#define __not_used __attribute__((unused))
+#endif
+
 struct BinaryBlob {
 	unsigned char * blob_ptr;
 	int blob_size;
