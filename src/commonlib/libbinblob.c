@@ -52,14 +52,14 @@ static int blob_GetBit(BinaryBlob_p bptr, int offset)
 	return (bptr->blob_ptr[idx] & mask) ? 1 : 0;
 }
 
-static int blob_SetBitfield(BinaryBlob_p bptr, int offset, int bits, unsigned long long val, int issigned)
+static int blob_SetBitfield(BinaryBlob_p bptr, int offset, int bits, unsigned long long val, int issigned __not_used)
 {
 	int rc = 0, i;
-	unsigned long long work;
+//	unsigned long long work;
 	if (offset == -1) offset = bptr->currentOffset;
 	if ( blob_CheckLimits(bptr, offset, bits) && (bits <= (int)(sizeof(unsigned long long) * BITSPERBYTE)) )
 	{
-		work = (issigned && blob_GetBit(bptr,offset)) ? ~0ULL : 0ULL;
+//		work = (issigned && blob_GetBit(bptr,offset)) ? ~0ULL : 0ULL;
 		for (i=1; i<=bits; i++)
 		{
 			blob_SetBit(bptr,offset+bits-i, val & 1);
