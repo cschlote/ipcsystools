@@ -50,11 +50,12 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 		// Too bad, lockfile already exists
 		// Test whether the creating process still exists
 		const int nOldLockFD = open(strLockfile, O_RDONLY);
+		int tmp __not_used;
 		if (nOldLockFD)
 		{
 			char strPid [ 128 ];
 			memset(strPid, '\0', sizeof(strPid));
-			read(nOldLockFD, strPid, sizeof(strPid));
+			tmp = read(nOldLockFD, strPid, sizeof(strPid));
 			close(nOldLockFD);
 
 			const int nPid = atoi(strPid);
@@ -77,7 +78,7 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 					{
 						char strPid [ 12 ];
 						sprintf(strPid, "%10d\n", getpid());
-						write(nLockFD, strPid, strlen(strPid));
+						tmp = write(nLockFD, strPid, strlen(strPid));
 						close(nLockFD);
 						bRet = 1;
 					}
