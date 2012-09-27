@@ -1,3 +1,20 @@
+ipcsystools (2012.08.28-2lucid1) lucid; urgency=low
+
+  [ buildmaster ]
+  * [ipcsystools] Silence several compile warnings breaking the build
+
+  [ Carsten Schlote ]
+  * [ipcsystools] Added missing install argument for ipc-initsystem.sh
+  * [ipcsystools] Fixes for MCB2 startup
+  * [ipcsystools] Added extra logging, bigfix for UUCP dev locks
+  * [ipcsystools] Added extra logging
+  * [ipcsystools] Removed comments from config args
+
+  [ Buildmaster ]
+  * [ipcsystools] Fixed compiler problem with -Werror
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 27 Sep 2012 14:04:37 +0200
+
 ipcsystools (2012.08.28-1lucid3) lucid; urgency=low
 
   * RELEASED
