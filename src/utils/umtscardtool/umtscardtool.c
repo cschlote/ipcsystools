@@ -293,7 +293,7 @@ int main(int argc, char* argv [])
 			{
 				if (CreateLockfile(LockFileName, ModemFileName))
 				{					
-					//printf("Using device '%s', lock '%s'\n", CommandDevice, DeviceLockFile);
+					syslog(LOG_DEBUG, "Using device '%s', lock '%s'\n", CommandDevice, DeviceLockFile);
 										
 					nSerFD = open(ModemFileName, O_RDWR);
 					if (nSerFD >= 0)
