@@ -70,7 +70,7 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 				// Check for process entry in /proc
 				sprintf(strCommand, "/proc/%d/cmdline", nPid);
 				nProcFD = open(strCommand, O_RDONLY);
-				if (nProcFD > 0) close(nProcFD);
+				if (nProcFD >= 0) close(nProcFD);
 				else bProcessAlreadyKilled = 1;
 				syslog(LOG_DEBUG,"Probing PROC file: %s : %d %d",strCommand, nProcFD, bProcessAlreadyKilled);
 
