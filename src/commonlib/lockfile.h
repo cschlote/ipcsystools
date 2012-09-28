@@ -16,6 +16,9 @@
  *
  ***********************************************************************
  */
+#ifndef __not_used
+#define __not_used __attribute__((unused))
+#endif
 
 /* lockfile management */
 int CreateLockfile(const char* strLockfile, const char* strDevice);
