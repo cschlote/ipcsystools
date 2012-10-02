@@ -3,6 +3,7 @@
 bin_SCRIPTS = \
 	gps-monitor \
 	ipc-monitor \
+	ipsec-monitor \
 	ipc-reportstatus \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
@@ -26,7 +27,6 @@ nobase_pkgdata_SCRIPTS = \
 	set_fp_leds
 
 # Disabled for now
-#	ipsec-monitor \
 #	msvpn_updown
 
 man1_MANS = \

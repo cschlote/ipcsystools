@@ -437,27 +437,29 @@ function check_openvpn_status ()
     return 0
 }
 
-function check_vpn_status ()
+function check_vpn_connections ()
 {
+	local rc=0
 	# Check OpenVPN status
 	if [ $START_OVPN_ENABLED -eq 1 ]; then
-		check_openvpn_status
+		rc = check_openvpn_status
 	fi
 	# Check ipsec status
 	if [ $START_IPSEC_ENABLED -eq 1 ]; then
-		check_ipsec_status
-	fi	
+		rc = check_ipsec_status
+	fi
+	return rc;
 }
 
-function restart_vpn_connection ()
+function restart_vpn_connections ()
 {
 	# restart OpenVPN status
-	if [ $START_OVPN_ENABLED -eq 1 ]; then
+	if [ $START_OVPN_ENABLED -eq 1  && ! check_openvpn_status]; then
 		syslogger "debug" "Restarting OpenVPN connection" 
 		/etc/init.d/openvpn restart client &	
 	fi
 	# Restart ipsec
-	if [ $START_IPSEC_ENABLED -eq 1 ]; then
+	if [ $START_IPSEC_ENABLED -eq 1 && ! check_ipsec_status]; then
 		syslogger "debug" "Restarting IPSec connection"
 		/usr/sbin/ipsec restart &
 	fi

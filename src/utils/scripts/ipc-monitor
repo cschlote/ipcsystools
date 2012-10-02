@@ -45,7 +45,7 @@ LAST_PING_FILE=$IPC_STATUSFILE_DIR/last_ping_time
 
 reset_wan=false
 reset_system=false
-
+reset=vpns=false
 
 #-----------------------------------------------------------------------
 # Ping some connection with timeinterval and max fail count
@@ -232,7 +232,9 @@ fi
 
 #-- Monitor VPN Status -------------------------------------------------
 
-check_vpn_status
+if ! check_vpn_connections; then
+	reset_vpns=true
+fi
 
 #--- Ping a remote target and count faults eventually rebooting
 
@@ -255,7 +257,7 @@ fi
 
 #-- Restart components -------------------------------------------------
 
-syslogger "debug" "Variables - reset_wan: $reset_wan, reset_system: $reset_system"
+syslogger "debug" "Variables - reset_wan: $reset_wan, reset_vpns: $reset_vpns reset_system: $reset_system"
 
 if [ $reset_system = "true" ]; then
     syslogger "warn" "Restarting IPC..."
@@ -264,6 +266,11 @@ else
     if [ $reset_wan = "true" ]; then
     	syslogger "warn" "Restarting WAN connection..."
 		startup_wan_connection
+		reset_vpns=true;
+	fi
+	if [ $reset_vpns = "true" ]; then
+    	syslogger "warn" "Restarting VPN connections..."
+		restart_vpn_connections
 	fi
 fi
 
