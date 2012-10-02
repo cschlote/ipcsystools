@@ -131,6 +131,22 @@ function WaitForModemBookedIntoNetwork ()
 }
 
 
+#
+# Wait until modem is booked into service provider network
+#
+function ConfigureDIPMode ()
+{
+    echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
+    RefreshModemDevices
+    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+    sleep 2
+    echo "Reseting modem for interface $DIP_DEV."	    
+    umtscardtool -s 'at!greset'
+    sleep 2
+    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
+    echo "$DIP_DEV to startup interface."
+}
+    
 #-----------------------------------------------------------------------
 # Main
 #-----------------------------------------------------------------------
@@ -218,19 +234,10 @@ status)
 	fi
 	;;
 config)
-	if ! IsInterfaceAlive; then
-	    echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
-	    RefreshModemDevices
-	    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
-	    sleep 2
-	    echo "Reseting modem for interface $DIP_DEV."	    
-	    umtscardtool -s 'at!greset'
-	    sleep 2
-	    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
-	    echo "$DIP_DEV to startup interface."
-	else
-	    echo "Interface $DIP_DEV is active. Won't reconfigure active modem."	    
+	if IsInterfaceAlive; then
+	    StopWANInterface
 	fi
+	ConfigureDIPMode 
 	;;
 *)	
 	echo "Usage: $0 start|stop|check <ip> <gw>|status|config"
