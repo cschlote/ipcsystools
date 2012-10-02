@@ -1,3 +1,21 @@
+ipcsystools (2012.10.02-1lucid1) lucid; urgency=low
+
+  [ buildmaster ]
+  * [ipcsystools] Silence several compile warnings breaking the build
+
+  [ Carsten Schlote ]
+  * [ipcsystools/umtscardtool] More fixes to broken lock code
+  * [ipcsystools/umtscardtool] Added lock polling to umtscardtools
+  * [ipcsystools/umtscardtool] Increased timeout for SendAT() to 300secs
+  * [ipcsystools] Bugfix
+  * [ipcsystools] Of by 1 bugfix
+  * [ipcsystools] Added mechanism for modem configuration on demand
+  * [ipcsystools] Changed to relative path (works on NFS and normal
+    filesystem
+  * Deployed ipcsystools 2012.10.02
+
+ -- Carsten Schlote <c.schlote@konzeptpark.de>  Tue, 02 Oct 2012 12:05:53 +0200
+
 ipcsystools (2012.08.28-2lucid1) lucid; urgency=low
 
   [ buildmaster ]
