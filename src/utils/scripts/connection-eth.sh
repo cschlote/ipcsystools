@@ -105,6 +105,13 @@ case "$cmd" in
 	    rc_code=1
 	fi
 	;;
+    config)
+	if ! IsETHAlive; then
+	    echo "Interface $ETH_DEV is not active. Nothing to config anyway."	 
+	else
+	    echo "Interface $ETH_DEV is active. Won't reconfigure active modem."	    
+	fi
+	;;
     *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
 	rc_code=1;
 	;;

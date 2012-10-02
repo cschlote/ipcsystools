@@ -355,6 +355,23 @@ function check_wan_connection_status ()
 	return $rc
 }
 
+# Call each configured backend with config options
+# FIXME: Do not configure dip and ppp in parallel, won't work'
+function config_wan_connections ()
+{
+	if [ -e /etc/ipcsystools.configmodem ] ; then
+		syslogger "warn" "Found reconfigure trigger"
+		for wan_if in `getipcoption general.wan.interfaces`; do
+			syslogger "warn" "Configure WAN connection $wan_if"
+			$IPC_SCRIPTS_DIR/connection-$wan_if.sh config
+		done
+		syslogger "warn" "Cleared reconfigure trigger"
+		rm /etc/ipcsystools.configmodem
+		return 0
+	fi
+	return 1
+}
+
 #-------------------------------------------------------------------------------
 # VPN related functions
 #-------------------------------------------------------------------------------
