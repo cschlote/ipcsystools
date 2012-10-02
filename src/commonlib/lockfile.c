@@ -38,7 +38,7 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 	{
 		// Lockfile does not exist
 		char strPid [ 12 ];
-		sprintf(strPid, "%10d\n", getpid());
+		sprintf(strPid, "%d\n", getpid());
 		bRet = write(nLockFD, strPid, strlen(strPid));
 		close(nLockFD);
 		bRet = 1;
@@ -59,12 +59,20 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 			close(nOldLockFD);
 
 			const int nPid = atoi(strPid);
+			syslog(LOG_DEBUG, "Found lock file for process %d (%s)",nPid, strPid);
 			if (nPid > 0)
 			{
 				char strCommand [ 256 ];
-				sprintf(strCommand, "ps | grep \" %10d \" | grep -v grep > /dev/null", nPid);
-				const int bProcessAlreadyKilled = (WEXITSTATUS(system(strCommand)) == 1);
-				
+				int nProcFD;
+				int bProcessAlreadyKilled = 0;
+
+				// Check for process entry in /proc
+				sprintf(strCommand, "/proc/%d/cmdline", nPid);
+				nProcFD = open(strCommand, O_RDONLY);
+				if (nProcFD >= 0) close(nProcFD);
+				else bProcessAlreadyKilled = 1;
+				syslog(LOG_DEBUG,"Probing PROC file: %s : %d %d",strCommand, nProcFD, bProcessAlreadyKilled);
+
 				if (bProcessAlreadyKilled)
 				{
 					syslog(LOG_WARNING, "Stale lockfile (pid %d) found for serial device '%s'. Override.", nPid, strDevice);
@@ -77,16 +85,18 @@ int CreateLockfile(const char* strLockfile, const char* strDevice)
 					if (nLockFD >= 0)
 					{
 						char strPid [ 12 ];
-						sprintf(strPid, "%10d\n", getpid());
+						sprintf(strPid, "%d\n", getpid());
 						tmp = write(nLockFD, strPid, strlen(strPid));
 						close(nLockFD);
 						bRet = 1;
 					}
 					else
 						syslog(LOG_ERR, "Serial device '%s' lock file '%s' can't be created", strDevice, strLockfile);
+						fprintf(stderr, "Serial device '%s' lock file '%s' can't be created\n", strDevice, strLockfile);
 				}
 				else
 					syslog(LOG_ERR, "Serial device '%s' is already locked by running process %d", strDevice, nPid);
+					fprintf(stderr, "Serial device '%s' is already locked by running process %d\n", strDevice, nPid);
 			}
 		}
 #else
