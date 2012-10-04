@@ -45,7 +45,7 @@ LAST_PING_FILE=$IPC_STATUSFILE_DIR/last_ping_time
 
 reset_wan=false
 reset_system=false
-reset=vpns=false
+reset_vpns=false
 
 #-----------------------------------------------------------------------
 # Ping some connection with timeinterval and max fail count
