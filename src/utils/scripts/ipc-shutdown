@@ -13,6 +13,7 @@ kill -TERM $PPP_PIDS 2> /dev/null
 . /usr/share/ipcsystools/ipclib.inc
 DetectModemCard
 if [ $? -eq 0 ]; then
+	shutdown_wan_connection
 	# Check for config trigger and call backends, or do nothing
 	config_wan_connections
 	if [ $? -ne 0 ]; then
