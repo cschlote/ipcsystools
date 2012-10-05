@@ -23,7 +23,7 @@ syslogger "debug" "Started ipc report (`date`)"
 
 #-- Start of script ------------------------------------------------------
 
-if [ "$REPORT_ENABLED" -eq "1" ]; then
+if [ "$REPORT_ENABLED" = "1" ]; then
 	cd $IPC_SCRIPTS_DIR
 
 	if [ ! -e $IPC_REPORTER_STATUS ]; then
