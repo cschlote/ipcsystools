@@ -1,0 +1,13 @@
+.\"
+.TH ipsec-monitor 1 "Feb. 2012" "Ubuntu"
+.SH NAME
+ipsec-monitor \- Monitor and control the network interfaces
+.SH SYNOPSIS
+.B ipsec-monitor
+.SH DESCRIPTION
+.B ipsec-monitor
+starts and monitors ipsec connections. Watchdogs can be used
+to restart network interfaces or reboot the system as desired.
+.SH AUTHOR
+Carsten Schlote
+
