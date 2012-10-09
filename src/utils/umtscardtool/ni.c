@@ -68,6 +68,7 @@ static bool WriteResultFile(const unsigned char* strResult)
 static bool WriteStatusFile(const unsigned char* strStatus)
 {
 	bool bRet = false;
+	if (!strStatus) strStatus = "unknown";
 
 	FILE* pFile = fopen(UMTS_NI_PROVIDER_FILE, "w");
 	if (pFile)

@@ -45,6 +45,8 @@ char*	LockFileName;                 //!< Name of associated lockfile
 int  nWatchDog;                     //!< Watchdog File Handle
 int  nSerFD;                        //!< Serial File Handle
 
+int  bNoWaitForLock = 0;			//!< Do not wait for lock
+
 // Verfügbare Kommandos
 enum CardCommand
 {
@@ -174,6 +176,7 @@ static void ShowHelp(void)
 		"\t-d   Set the modem device\n"
 		"\t-s   Send a custom AT command\n"
 		"\t-l   Set Loglevel (0..7)\n"
+		"\t-n   Do not wait for lock file, fail immediatly\n"
 		"\t-v   Show version\n"
 		"\t-h   Show this help\n"
 		"\n"
@@ -187,7 +190,7 @@ bool GetOptions(int argc, char* argv [])
 	bool rc = false;
 	int nOpt;
 
-	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:s:vh")) != -1)
+	while ((nOpt = getopt(argc, argv, "oOm:ifpl:d:s:vhn")) != -1)
 	{
 		switch (nOpt)
 		{
@@ -225,6 +228,8 @@ bool GetOptions(int argc, char* argv [])
 			case 'v' : ShowVersion(); rc=true; break;
 
 			case 'h':  break;
+
+			case 'n': bNoWaitForLock = 1;
 		
 			default :  printf("*** Unknown option '%c'\n", nOpt); break;
 		}
@@ -264,9 +269,13 @@ bool GetOptions(int argc, char* argv [])
  @param argv - Standard C main() Argument, pointers to arguments
  @callgraph
 */
+#define MAXLOCKRETRY 60
+#define LOCKRETRYDELAY 10
+
 int main(int argc, char* argv [])
 {
 	int rc = UMTS_RESULT_OK;
+	int cnt = 0;
 	char *env_loglevel = getenv("LOGLEVEL");
 	
 	CommandDevice[0] = '\0';
@@ -291,9 +300,18 @@ int main(int argc, char* argv [])
 		{
 			if ( GetDeviceAndLockfile() )
 			{
-				if (CreateLockfile(LockFileName, ModemFileName))
+				cnt=0; do {
+					rc = CreateLockfile(LockFileName, ModemFileName);
+					if (!bNoWaitForLock && !rc) {
+						syslog(LOG_WARNING,"Attempted lockfile %s (%d of %d), delay %d", LockFileName, cnt, MAXLOCKRETRY, LOCKRETRYDELAY * cnt);
+						sleep (LOCKRETRYDELAY); // << cnt);
+					}
+				}
+				while ( !bNoWaitForLock && !rc && (cnt++<MAXLOCKRETRY));
+				
+				if (rc)
 				{					
-					syslog(LOG_DEBUG, "Using device '%s', lock '%s'\n", CommandDevice, DeviceLockFile);
+					syslog(LOG_DEBUG, "Locked device '%s', lock '%s'\n", CommandDevice, DeviceLockFile);
 										
 					nSerFD = open(ModemFileName, O_RDWR);
 					if (nSerFD >= 0)

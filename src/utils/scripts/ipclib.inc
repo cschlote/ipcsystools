@@ -355,6 +355,23 @@ function check_wan_connection_status ()
 	return $rc
 }
 
+# Call each configured backend with config options
+# FIXME: Do not configure dip and ppp in parallel, won't work'
+function config_wan_connections ()
+{
+	if [ -e /etc/ipcsystools.configmodem ] ; then
+		syslogger "warn" "Found reconfigure trigger"
+		for wan_if in `getipcoption general.wan.interfaces`; do
+			syslogger "warn" "Configure WAN connection $wan_if"
+			$IPC_SCRIPTS_DIR/connection-$wan_if.sh config
+		done
+		syslogger "warn" "Cleared reconfigure trigger"
+		rm /etc/ipcsystools.configmodem
+		return 0
+	fi
+	return 1
+}
+
 #-------------------------------------------------------------------------------
 # VPN related functions
 #-------------------------------------------------------------------------------
@@ -420,27 +437,31 @@ function check_openvpn_status ()
     return 0
 }
 
-function check_vpn_status ()
+function check_vpn_connections ()
 {
+	local rc=0
 	# Check OpenVPN status
 	if [ $START_OVPN_ENABLED -eq 1 ]; then
 		check_openvpn_status
+		rc=$?
 	fi
 	# Check ipsec status
 	if [ $START_IPSEC_ENABLED -eq 1 ]; then
 		check_ipsec_status
+		rc=$?
 	fi	
+	return $rc;
 }
 
-function restart_vpn_connection ()
+function restart_vpn_connections ()
 {
 	# restart OpenVPN status
-	if [ $START_OVPN_ENABLED -eq 1 ]; then
+	if [ $START_OVPN_ENABLED -eq 1 ]  && ! check_openvpn_status ; then
 		syslogger "debug" "Restarting OpenVPN connection" 
 		/etc/init.d/openvpn restart client &	
 	fi
 	# Restart ipsec
-	if [ $START_IPSEC_ENABLED -eq 1 ]; then
+	if [ $START_IPSEC_ENABLED -eq 1 ] && ! check_ipsec_status ; then
 		syslogger "debug" "Restarting IPSec connection"
 		/usr/sbin/ipsec restart &
 	fi

@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 #
@@ -506,7 +507,7 @@ function gps_stop ()
 
 function gps_monitor ()
 {
-    if [ "$GPS_ENABLE" -eq "1" ]; then
+    if [ "$GPS_ENABLE" = "1" ]; then
 	if [ ! -e $GPS_MONITOR_STATUS ]; then
 	    syslogger "debug" "Starting GPS receiver"
 	    gps_start

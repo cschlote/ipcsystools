@@ -6,6 +6,7 @@ SAY "Resetting modem\n"
 ''      ATZ
 SAY "Setting APN name for profile 1\n"
 OK      AT+CGDCONT=1,"IP","web.vodafone.de"
+OK      AT$QCPDPP=1,0
 SAY "Activating profile 1 for APN connection"
 OK      AT!SCACT=1,1
 SAY "Setup autoconnect for profile 1"
