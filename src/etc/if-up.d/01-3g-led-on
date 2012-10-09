@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Basis Bibliothek für die IPCs
+. /usr/share/ipcsystools/ipclib.inc
+
+#set -x
+
+wan_ifs="`getipcoption general.wan.interfaces`"
+hit=false
+for wan_if in $wan_ifs; do
+	if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+		hit=true; break
+	fi
+done
+
+if [ $hit = true ] ; then 
+	syslogger "debug" "interface $IFACE : 3G led on"
+	/usr/bin/ipc-set-led 3g on
+else
+	syslogger "debug" "interface $IFACE : no action"
+fi
+
+exit 0

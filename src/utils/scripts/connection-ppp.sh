@@ -127,6 +127,22 @@ function WaitForModemBookedIntoNetwork ()
     return $reached_timeout
 }
 
+#
+# Wait until modem is booked into service provider network
+#
+function ConfigurePPPMode ()
+{
+    echo "Configuring modem for interface $PPP_DEV for DirectIP."	    
+    RefreshModemDevices
+    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+    sleep 2
+    echo "Reseting modem for interface $PPP_DEV."	    
+    umtscardtool -s 'at!greset'
+    sleep 2
+    echo "Modem is now configured for ppp-deamon- Use pon/poff for "
+    echo "$PPP_DEV to startup interface."
+}
+    
 
 #-----------------------------------------------------------------------
 # Main
@@ -211,6 +227,12 @@ status)
 	    DetectModemCard
 	    rc_code=1
 	fi
+	;;
+config)
+	if IsInterfaceAlive; then
+	    StopPPPD
+	fi
+	ConfigurePPPMode 
 	;;
     *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
 	exit 1

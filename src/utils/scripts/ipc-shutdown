@@ -8,11 +8,17 @@ rm -f /var/run/ipcsystools.enabled
 PPP_PIDS=`pidof pppd`
 kill -TERM $PPP_PIDS 2> /dev/null
 
+
 # Software Hardreset for modem
 . /usr/share/ipcsystools/ipclib.inc
 DetectModemCard
 if [ $? -eq 0 ]; then
-	umtscardtool -s 'at!greset' > /dev/null && sleep 10
+	shutdown_wan_connection
+	# Check for config trigger and call backends, or do nothing
+	config_wan_connections
+	if [ $? -ne 0 ]; then
+		umtscardtool -s 'at!greset' > /dev/null && sleep 10
+	fi
 fi
 
 if which ipc-set-led > /dev/null; then

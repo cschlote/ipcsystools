@@ -1,4 +1,0 @@
-#!/bin/bash
-
-/usr/bin/ipc-set-led 3g on
-
