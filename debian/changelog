@@ -1,3 +1,20 @@
+ipcsystools (2012.10.02-2lucid1) lucid; urgency=low
+
+  [ Carsten Schlote ]
+  * [Release] Released 2012.10.02 for Ubuntu 10.04 lucid
+  * [deploy-script] Added line to set DEPLOYDATE from file
+  * [ipcsystools] Readded ipsec-monitor script
+  * [ipcsystools] Added restart of VPN connections
+  * [ipcsystools] Updated scripts for if-up/down scripts
+  * [ipcsystools] Updated if up/down scripts
+  * [ipcsystools] Shutdown current connection on wwan shutdown
+  * [ipcsystools] Fixed bash problem
+  * [ipcsystools] Bugfixes
+  * [ipcsystools] Fixed umtscardtool -i
+  * [ipcsystools] Changed compare from integer to string
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Mon, 08 Oct 2012 15:27:24 +0200
+
 ipcsystools (2012.10.02-1lucid1) lucid; urgency=low
 
   [ buildmaster ]
