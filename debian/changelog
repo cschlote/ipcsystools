@@ -1,3 +1,33 @@
+ipcsystools (2012.10.02-1precise1) precise; urgency=low
+
+  [ buildmaster ]
+  * [ipcsystools] Silence several compile warnings breaking the build
+
+  [ Carsten Schlote ]
+  * [ipcsystools/umtscardtool] More fixes to broken lock code
+  * [ipcsystools/umtscardtool] Added lock polling to umtscardtools
+  * [ipcsystools/umtscardtool] Increased timeout for SendAT() to 300secs
+  * [ipcsystools] Bugfix
+  * [ipcsystools] Of by 1 bugfix
+  * [ipcsystools] Added mechanism for modem configuration on demand
+  * [ipcsystools] Changed to relative path (works on NFS and normal filesystem
+  * Deployed ipcsystools 2012.10.02
+  * [deploy-script] Added line to set DEPLOYDATE from file
+  * [ipcsystools] Readded ipsec-monitor script
+  * [ipcsystools] Added restart of VPN connections
+  * [ipcsystools] Updated scripts for if-up/down scripts
+  * [ipcsystools] Updated if up/down scripts
+  * [ipcsystools] Shutdown current connection on wwan shutdown
+  * [ipcsystools] Fixed bash problem
+  * [ipcsystools] Bugfixes
+  * [ipcsystools] Fixed umtscardtool -i
+  * [ipcsystools] Changed compare from integer to string
+
+  [ Buildmaster ]
+  * [master-precise] Updated autoconf files for precise
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Tue, 09 Oct 2012 11:58:35 +0200
+
 ipcsystools (2012.08.28-2precise1) precise; urgency=low
 
   [ Carsten Schlote ]
