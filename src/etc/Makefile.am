@@ -9,10 +9,6 @@ install-data-local:
 #	# Install default config
 	$(mkinstalldirs) $(DESTDIR)/etc/
 	$(INSTALL_DATA)  $(srcdir)/ipcsystools.conf $(DESTDIR)/etc/ipcsystools.conf
-#	# Add upstart fragments to init system
-	$(mkinstalldirs) $(DESTDIR)/etc/init/
-	$(INSTALL_DATA)  $(srcdir)/init/ipc-startup.conf $(DESTDIR)/etc/init/ipc-startup.conf
-	$(INSTALL_DATA)  $(srcdir)/init/ipc-shutdown.conf $(DESTDIR)/etc/init/ipc-shutdown.conf
 #	# Add startup scripts for ppp daemon
 	$(mkinstalldirs) $(DESTDIR)/etc/ppp/ip-up.d/
 	$(INSTALL_PROGRAM) $(srcdir)/if-up.d/01-3g-led-on $(DESTDIR)/etc/ppp/ip-up.d/01-3g-led-on
