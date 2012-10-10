@@ -33,8 +33,6 @@ case "${1}" in
     ;;
 ("stop")
     log_begin_msg "Stopping IPC Systools services..."
-	# WWAN LED off (FIXME)
-	echo 0 > /sys/class/gpio/gpio174/value 2> /dev/null
     ${IPC_DOWN}
     log_end_msg $?
     exit $?
