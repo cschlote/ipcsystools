@@ -18,9 +18,23 @@ set -e
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+# Finish removal of a no-longer used conffile
+finish_rm_conffile()
+{
+    CONFFILE="$1"
+
+    if [ -e "$CONFFILE".dpkg-bak ]; then
+        rm -f "$CONFFILE".dpkg-bak
+    fi
+}
+
 
 case "$1" in
-    purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    purge)
+	    finish_rm_conffile /etc/ipcsystools.conf
+	;;
+
+	remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 
     *)
