@@ -20,9 +20,9 @@ IPC_UP=/usr/sbin/ipc-startup
 test -f /lib/lsb/init-functions || exit 1
 . /lib/lsb/init-functions
 
-if [ "$VERBOSE" = "no" ]; then
-	echo "Huhuhuhuu" $1 $2
-fi
+#if [ "$VERBOSE" = "no" ]; then
+#	echo "Huhuhuhuu" $1 $2
+#fi
 
 case "${1}" in
 ("start")
