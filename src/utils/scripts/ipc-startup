@@ -13,18 +13,26 @@ if [ -e /etc/ptxdist_version ] ; then
 	/usr/share/ipcsystools/ipc-initsystem.sh install
 fi
 
+function start_services
+{
+	InitializeModem
+
+	# Startup WAN connection	
+	if [ ! -e /etc/ipcsystools.disable ] ; then
+		echo -n "(cron enabled) "
+		(startup_wan_connection &)
+		touch /var/run/ipcsystools.enabled
+	else
+		echo -n "(cron disabled) "
+		rm -f /var/run/ipcsystools.enabled
+	fi
+}
+
 # Initialize modem (apn, sim, ...)
 . /usr/share/ipcsystools/ipclib.inc
-InitializeModem
-
-# Startup WAN connection	
-if [ ! -e /etc/ipcsystools.disable ] ; then
-	echo -n "(cron enabled) "
-	startup_wan_connection
-	touch /var/run/ipcsystools.enabled
-else
-	echo -n "(cron disabled) "
-	rm -f /var/run/ipcsystools.enabled
+DetectModemCard
+if [ $? -eq 0 ]; then
+	start_services
 fi
 
 if which ipc-set-led > /dev/null ; then
