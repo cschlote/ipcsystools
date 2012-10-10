@@ -1,3 +1,13 @@
+ipcsystools (2012.10.02-2precise1) precise; urgency=low
+
+  [ Carsten Schlote ]
+  * [debian] Added regular system5 init for Ubuntu/Debian builds
+  * [ipcsystools] Readded traditional rc scripts
+
+  [ Buildmaster ]
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 10 Oct 2012 15:06:07 +0200
+
 ipcsystools (2012.10.02-1precise1) precise; urgency=low
 
   [ buildmaster ]
