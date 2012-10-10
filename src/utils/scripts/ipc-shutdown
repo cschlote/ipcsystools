@@ -13,11 +13,13 @@ kill -TERM $PPP_PIDS 2> /dev/null
 . /usr/share/ipcsystools/ipclib.inc
 DetectModemCard
 if [ $? -eq 0 ]; then
+	ipc-set-led ready on
 	shutdown_wan_connection
+	ipc-set-led 3g off
 	# Check for config trigger and call backends, or do nothing
 	config_wan_connections
 	if [ $? -ne 0 ]; then
-		umtscardtool -s 'at!greset' > /dev/null && sleep 10
+		umtscardtool -s 'at!greset' > /dev/null && sleep 1
 	fi
 fi
 
