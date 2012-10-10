@@ -5,8 +5,11 @@ ipcsystools (2012.10.02-2precise1) precise; urgency=low
   * [ipcsystools] Readded traditional rc scripts
 
   [ Buildmaster ]
+  * [debian-precise] Moved ipc-set-led to ipc-shutdown script
+  * [ipcsystools] ipc-shutdown
+  * [ipcsystools] Reworked ipc-startup to connect to WWAN async
 
- -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 10 Oct 2012 15:06:07 +0200
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 10 Oct 2012 15:40:56 +0200
 
 ipcsystools (2012.10.02-1precise1) precise; urgency=low
 
