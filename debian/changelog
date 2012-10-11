@@ -1,4 +1,4 @@
-ipcsystools (2012.10.02-2precise2) lucid; urgency=low
+ipcsystools (2012.10.02-2precise3) precise; urgency=low
 
   [ Carsten Schlote ]
   * [ipcsystools] interface up/down scripts reworked
