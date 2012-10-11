@@ -521,3 +521,28 @@ function ping_target ()
 	return $rc
 }
 
+#
+# Check for matching mobile connection interface, and return 0 or 1
+#   Support code for if-up and if-down scripts
+#   Uses Env: $IFACE $PPP_IFACE
+#
+function check_ifupdown_on_mobile_connection
+{
+	local hit=1
+
+	# PPP uses different environment variables, copy as needed
+	if [ -z "$IFACE" -a -n "$PPP_IFACE" ] ; then
+		IFACE=$PPP_IFACE
+	fi
+
+	# Check if current interface matches IPC mobile connection
+	wan_ifs="`getipcoption general.wan.interfaces`"
+	for wan_if in $wan_ifs; do
+		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+			hit=0; break
+		fi
+	done
+
+	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if"
+	return $hit
+}
