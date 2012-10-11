@@ -1,3 +1,14 @@
+ipcsystools (2012.10.02-2precise2) lucid; urgency=low
+
+  [ Carsten Schlote ]
+  * [ipcsystools] interface up/down scripts reworked
+  * [ipcsystools] Fixed optional link for PPP daemon
+
+  [ Buildmaster ]
+  * [ipcsystools] Install symbolic links for ppp ports
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 11 Oct 2012 18:03:35 +0200
+
 ipcsystools (2012.10.02-2precise1) precise; urgency=low
 
   [ Carsten Schlote ]
