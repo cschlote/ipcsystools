@@ -5,6 +5,8 @@ AM_CXXFLAGS = -Wall
 
 DISTCLEANFILES = Makefile.in
 
+INSTALL_LINK = ln -s
+
 install-data-local:
 #	# Install default config
 	$(mkinstalldirs) $(DESTDIR)/etc/
@@ -18,6 +20,8 @@ install-data-local:
 	$(INSTALL_PROGRAM) $(srcdir)/if-down.d/01-3g-led-off $(DESTDIR)/etc/ppp/ip-down.d/01-3g-led-off
 	$(INSTALL_PROGRAM) $(srcdir)/if-down.d/50_openvpn-down $(DESTDIR)/etc/ppp/ip-down.d/50_openvpn-down
 	$(INSTALL_PROGRAM) $(srcdir)/if-down.d/50_ipsec-down $(DESTDIR)/etc/ppp/ip-down.d/50_ipsec-down
+	$(INSTALL_LINK) ../../usr/share/ipcsystools/options.ppp $(DESTDIR)/etc/ppp/options.ttyUSB4
+	$(INSTALL_LINK) ../../usr/share/ipcsystools/options.ppp $(DESTDIR)/etc/ppp/options.usbmodem-data
 #	# Add startup scripts for ifconfig if-up/down.d
 	$(mkinstalldirs) $(DESTDIR)/etc/network/if-pre-up.d/
 	$(INSTALL_PROGRAM) $(srcdir)/if-pre-up.d/01-3g-led-blink $(DESTDIR)/etc/network/if-pre-up.d/01-3g-led-blink
