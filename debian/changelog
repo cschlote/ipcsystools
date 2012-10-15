@@ -1,3 +1,9 @@
+ipcsystools (2012.10.02-2lucid4) lucid; urgency=low
+
+  * [debian] Added delay of 5 seconds to init
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Mon, 15 Oct 2012 10:57:26 +0200
+
 ipcsystools (2012.10.02-2lucid3) lucid; urgency=low
 
   [ Carsten Schlote ]
