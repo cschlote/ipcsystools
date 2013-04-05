@@ -13,7 +13,7 @@ IPC_SCRIPTS_DIR=/usr/share/ipcsystools
 IPCCTL_CONFIG=/etc/ipcsystools.conf
 
 # Base directory for status files
-IPC_STATUSFILE_DIR=/var/run
+IPC_STATUSFILE_DIR=/var/run/ipcsystools
 
 # Programm zur Netzidentifizierung
 UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"

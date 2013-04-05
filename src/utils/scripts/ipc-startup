@@ -26,6 +26,11 @@ function start_services
 	fi
 }
 
+# Create path to status files
+if ! [ -e $IPC_STATUSFILE_DIR ]; then
+	mkdir -p $IPC_STATUSFILE_DIR
+fi
+
 # Initialize modem (apn, sim, ...)
 . /usr/share/ipcsystools/ipclib.inc
 InitializeModem
