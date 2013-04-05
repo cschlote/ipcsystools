@@ -19,9 +19,10 @@ nobase_dist_pkgdata_DATA = \
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
+	connection-dip.sh \
 	connection-eth.sh \
 	connection-ppp.sh \
-	connection-dip.sh \
+	connection-pppoe.sh \
 	ipc-initsystem.sh \
 	ipc-cronjobs.sh \
 	set_fp_leds
