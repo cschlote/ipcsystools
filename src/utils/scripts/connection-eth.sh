@@ -68,8 +68,7 @@ case "$cmd" in
     start)
 	syslogger "debug" "starting connection..."
 	StartETH
-	# Restart IPSec
-    	restart_vpn_connection    
+    	restart_vpn_connections
 	;;
     stop)
 	syslogger "debug" "stopping connection..."
