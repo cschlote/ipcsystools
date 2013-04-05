@@ -5,49 +5,57 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 . /usr/share/ipcsystools/ipclib.inc
 
-DESC="connection-ppp[$$]"
+DESC="connection-pppoe[$$]"
 
-PPP_CONNECTION_PID_FILE=/var/run/ppp_connection.pid
+PPPOE_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/pppoe_connection.pid
 
-PPP_DEV=`getipcoption connection.ppp.dev`
+PPPOE_DEV=`getipcoption connection.pppoe.dev`
+PPPOE_CFG=`getipcoption connection.pppoe.cfg`
+PPPOE_IF=`getipcoption connection.pppoe.if`
+PPPOE_IF=${PPPOE_IF:=ppp0}
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
 #-----------------------------------------------------------------------
-function IsPPPDAlive ()
+function IsPPPoEAlive ()
 {
-    local pids
-    local rc
+    if ! ip addr show dev $PPPOE_DEV | grep -q "inet " ; then
+	syslogger "error" "status - interface $PPPOE_DEV has no ipv4 addr"
+	return 1;
+    fi
+    if ! ifconfig $PPPOE_DEV | grep -q UP ; then
+	syslogger "warn" "status - interface $PPPOE_DEV is not up"
+	return 1;
+    fi
+    syslogger "debug" "status - interface $PPPOE_DEV is up and running"
 
-    pids="`pidof pppd`"; rc=$?
+    if ! ps ax | grep -q "pppd.*$PPPOE_CFG" ; then
+	syslogger "warn" "status - pppd for config $PPPOE_CFG is not up"
+	return 1;
+    fi
 
-    syslogger "debug" "status - pppd: $pids (rc=$rc)"
-    return $rc
+    # TODO: Find out the real name of ppp interface for connection
+    if ! ifconfig | grep -q $PPPOE_IF ; then
+	syslogger "warn" "status - no $PPPOE_IF interface found"
+	return 1;
+    fi
+    syslogger "debug" "status - pppoe connection ready"
+    return 0;
 }
 
 function StartPPPD ()
 {
-    if ! IsPPPDAlive; then
-	RefreshModemDevices
-	local device=$CONNECTION_DEVICE
-	syslogger "info" "Starting pppd on modem device $device"
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat" &
+    if ! IsPPPoEAlive; then
+	syslogger "info" "Starting pppoe profile $PPPOE_CFG"
+	ifup br0
+	pon $PPPOE_CFG
     fi
 }
 function StopPPPD ()
 {
-    if IsPPPDAlive; then
-		local pids=`pidof pppd`
-		syslogger "info" "Stopping pppd ($pids)"
-		if [ -z "$pids" ]; then
-			syslogger "info" "No pppd is running."
-			return 0
-		fi
-
-		kill -TERM $pids > /dev/null
-		if [ "$?" != "0" ]; then
-			rm -f /var/run/ppp*.pid > /dev/null
-		fi
+    if IsPPPoEAlive; then
+	syslogger "info" "Stopping pppoe profile $PPPOE_CFG"
+	poff $PPPOE_CFG
     fi
 }
 
@@ -62,14 +70,14 @@ function StartAndWaitForPPPD ()
     local sleeptime=5
     local reached_timeout=0
 
-    syslogger "info" "$PPP_DEV startet, wait for interface"
+    syslogger "info" "$PPPOE_DEV startet, wait for interface"
     StartPPPD
     sleep $sleeptime
 
     while [ true ] ; do
 	#TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
-	if systool -c net | grep -q $PPP_DEV; then
-	    syslogger "info" "$PPP_DEV available"
+	if IsPPPoEAlive; then
+	    syslogger "info" "PPPoE seems to be available"
 	    break
 	fi
 
@@ -78,7 +86,7 @@ function StartAndWaitForPPPD ()
 	    break
 	fi
 
-	syslogger "debug" "Waiting $PPP_DEV coming up"
+	syslogger "debug" "Waiting PPPoE coming up"
 	sleep $sleeptime
 	count_timeout=$[count_timeout+1]
     done
@@ -86,128 +94,61 @@ function StartAndWaitForPPPD ()
     return $reached_timeout
 }
 
-#
-# Wait until modem is booked into service provider network
-#
-function WaitForModemBookedIntoNetwork ()
-{
-    # Loop Counters
-    local count_timeout=0
-    local count_timeout_max=12
-    local sleeptime=5
-    local reached_timeout=0
-
-    SetSIMPIN
-    #TODO: Set operator selection
-
-    # Check for modem booked into network
-    CheckNIState
-    local ni_state=$?
-    while [ $ni_state -ne 0 ]; do
-	syslogger "debug" "Waiting for mobile network registration ($count_timeout/$ni_state)"
-
-	# Increase number of tries, when 'limited service' is reported
-	# (ni_state==2)
-	if [ $ni_state -eq 2 ]; then
-	    count_timeout_max=18
-	fi
-
-	# Check for timeout reached
-	if [ $count_timeout -ge $count_timeout_max ]; then
-	    reached_timeout=1
-	    break
-	fi
-
-	# Sleep and retry
-	sleep $sleeptime
-	CheckNIState
-	ni_state=$?
-	count_timeout=$[count_timeout+1]
-    done
-    return $reached_timeout
-}
 
 #
 # Wait until modem is booked into service provider network
 #
-function ConfigurePPPMode ()
+function ConfigurePPPoE ()
 {
-    echo "Configuring modem for interface $PPP_DEV for DirectIP."	    
-    RefreshModemDevices
-    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
-    sleep 2
-    echo "Reseting modem for interface $PPP_DEV."	    
-    umtscardtool -s 'at!greset'
-    sleep 2
-    echo "Modem is now configured for ppp-deamon- Use pon/poff for "
-    echo "$PPP_DEV to startup interface."
+    echo "Configuring PPPoE profile $PPPOE_CFG for interface $PPPOE_DEV."
+    pppoeconf
+    echo "PPPoE subsystem is now configured- Use pon/poff $PPPOE_CFG"
+    echo "to control interface."
 }
-    
+
 
 #-----------------------------------------------------------------------
 # Main
 #-----------------------------------------------------------------------
 rc_code=0
-obtainlock $PPP_CONNECTION_PID_FILE
+obtainlock $PPPOE_CONNECTION_PID_FILE
 
 if [ $# = 0 ]; then cmd= ; else cmd="$1"; fi
 case "$cmd" in
-start)
+    start)
 	syslogger "info" "starting connection..."
-	ReadModemStatusFile
-	if 	[ "$MODEM_STATUS" = "${MODEM_STATES[detectedID]}" ] ||
-		[ "$MODEM_STATUS" = "${MODEM_STATES[readyID]}" ] ||
-		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
+	# LED 3g Timer blinken
+	$IPC_SCRIPTS_DIR/set_fp_leds 3g timer
 
-	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
-
-	    # Check for modem booked into network
-	    if WaitForModemBookedIntoNetwork; then
-			sleep 1
-			WriteConnectionFieldStrengthFile
-			WriteConnectionNetworkModeFile
-
-			if ! IsPPPDAlive; then
-				if StartAndWaitForPPPD; then
-				WriteModemStatusFile ${MODEM_STATES[connected]}
-				else
-				syslogger "debug" "ppp deamon didn't startup."
-				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-				rc_code=1
-				fi
-			else
-				WriteModemStatusFile ${MODEM_STATES[connected]}
-				syslogger "debug" "ppp deamon is already running."
-			fi
+	if ! IsPPPoEAlive; then
+	    if StartAndWaitForPPPD; then
+   		syslogger "debug" "pppoe connection did startup."
 	    else
-			syslogger "error" "Could not initialize datacard (timeout)"
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
-			$UMTS_FS
-			syslogger "info" "reported fieldstrength is $?."
-			rc_code=1
+		syslogger "debug" "pppoe connection didn't startup."
+		$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+		rc_code=1
 	    fi
 	else
-	    syslogger "debug" "modem in status $MODEM_STATUS, won't start again"
+	    $IPC_SCRIPTS_DIR/set_fp_leds 3g on
+	    syslogger "debug" "pppoe connection is already running."
 	fi
-    ;;
-stop)
+	;;
+    stop)
 	syslogger "info" "stopping connection..."
 	StopPPPD
-	InitializeModem
-	CheckNIState
-    ;;
-check)
-	if IsPPPDAlive; then
+	$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+	;;
+    check)
+	if IsPPPoEAlive; then
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
 		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
 
-		if ping_target $wan_ct $wan_gw $PPP_DEV; then
-		    syslogger "debug" "Ping to $wan_ct on WAN interface $PPP_DEV successful"
+		if ping_target $wan_ct $wan_gw $PPPOE_IF; then
+		    syslogger "debug" "Ping to $wan_ct on PPPoE interface $PPPOE_IF successful"
 		else
-		    syslogger "error" "Ping to $wan_ct on WAN interface $PPP_DEV failed"
+		    syslogger "error" "Ping to $wan_ct on PPPoE interface $PPPOE_IF failed"
 		    rc_code=1;
 		fi
 	    else
@@ -215,16 +156,15 @@ check)
 		rc_code=1;
 	    fi
 	else
-	    syslogger "error" "PPPD isn't running, no mobile connection"
+	    syslogger "error" "PPPoE isn't running, no connection"
 	    rc_code=2;
 	fi
 	;;
 status)
-	if IsPPPDAlive; then
-	    echo "Interface $PPP_DEV is active"
+	if IsPPPoEAlive; then
+	    echo "PPPoE Interface $PPPOE_IF is active"
 	else
-	    echo "Interface $PPP_DEV isn't configured"
-	    DetectModemCard
+	    echo "PPPoE Interface $PPPOE_IF isn't configured"
 	    rc_code=1
 	fi
 	;;
@@ -232,7 +172,7 @@ config)
 	if IsInterfaceAlive; then
 	    StopPPPD
 	fi
-	ConfigurePPPMode 
+	ConfigurePPPoE
 	;;
     *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"
 	exit 1

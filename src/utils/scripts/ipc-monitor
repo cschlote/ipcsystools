@@ -8,7 +8,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="ipc-monitor[$$]"
 
-IPC_MONITOR_PID_FILE=/var/lock/ipc-monitor.pid
+IPC_MONITOR_PID_FILE=$IPC_STATUSFILE_DIR/ipc-monitor.pid
 
 #-----------------------------------------------------------------------
 # Read variables from config file
@@ -183,7 +183,7 @@ if [ -e /etc/ipcsystools.disable ] ; then
     syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi
-if [ ! -e /var/run/ipcsystools.enabled ] ; then
+if [ ! -e $IPC_STATUSFILE_DIR/ipcsystools.enabled ] ; then
     syslogger "debug" "ipcsystools not started/initialized yet."
 	exit 0
 fi

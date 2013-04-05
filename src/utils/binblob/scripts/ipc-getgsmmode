@@ -1,8 +1,8 @@
 #!/bin/bash
 #set -x
 rc=0
-if [ -e /var/run/connection_mode ]; then
-	value=`cat /var/run/connection_mode`
+if [ -e /var/run/ipcsystools/connection_mode ]; then
+	value=`cat /var/run/ipcsystools/connection_mode`
 	case $value in
 	LTE*)  rc=4;;
 	HS*)   rc=3;;

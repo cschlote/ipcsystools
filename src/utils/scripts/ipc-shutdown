@@ -1,16 +1,16 @@
 #!/bin/bash
 # Shutdown ipcsystools and terminate mobile connection
 echo -n "Shutdown ipc environment... "
+# Initialize modem (apn, sim, ...)
+. /usr/share/ipcsystools/ipclib.inc
 
-rm -f /var/run/ipcsystools.enabled
+rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
 
 # Terminate possibly running PPP daemon
 PPP_PIDS=`pidof pppd`
 kill -TERM $PPP_PIDS 2> /dev/null
 
 
-# Software Hardreset for modem
-. /usr/share/ipcsystools/ipclib.inc
 DetectModemCard
 if [ $? -eq 0 ]; then
 	ipc-set-led ready on

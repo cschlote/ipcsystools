@@ -15,6 +15,9 @@ IPCCTL_CONFIG=/etc/ipcsystools.conf
 # Base directory for status files
 IPC_STATUSFILE_DIR=/var/run/ipcsystools
 
+# Base directory for lock files
+IPC_LOCKFILE_DIR=/var/lock/
+
 # Programm zur Netzidentifizierung
 UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
 
@@ -23,6 +26,11 @@ UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
 UMTS_PIN="$IPC_TOOLS_DIR/umtscardtool -p"
+
+# Create path to status files
+if ! [ -e $IPC_STATUSFILE_DIR ]; then
+	mkdir -p $IPC_STATUSFILE_DIR
+fi
 
 #TODO Programm zum Setzen des Operators (Manuelle Netzwahl)
 

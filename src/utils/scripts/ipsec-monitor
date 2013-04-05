@@ -29,7 +29,7 @@
 #***********************************************************************************
 
 DESC=ipsec-monitor[$$]
-STATUSFILE_DIR=/var/run
+STATUSFILE_DIR=/var/run/ipcsystools
 VPN_STATE_FILE=$STATUSFILE_DIR/vpn_status
 RESTART_COUNT=4
 CHECK_STATE_TIME=60
