@@ -50,7 +50,7 @@ function StopWANInterface ()
     if IsInterfaceAlive; then
 	syslogger "info" "Stopping $DIP_DEV"
 	ifdown $DIP_DEV || true
-	sleep 3
+	sleep 6
     fi
 }
 

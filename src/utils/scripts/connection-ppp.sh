@@ -229,7 +229,7 @@ status)
 	fi
 	;;
 config)
-	if IsInterfaceAlive; then
+	if IsPPPDAlive; then
 	    StopPPPD
 	fi
 	ConfigurePPPMode 

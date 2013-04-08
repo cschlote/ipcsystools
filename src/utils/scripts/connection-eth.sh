@@ -93,7 +93,7 @@ case "$cmd" in
 	    fi
 	else
 	    syslogger "error" "interface $ETH_DEV not ready"
-	    rc_code=1
+	    rc_code=2
 	fi
 	;;
     status)

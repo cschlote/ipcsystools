@@ -312,16 +312,27 @@ function shutdown_wan_connection ()
 		$IPC_SCRIPTS_DIR/connection-$wan_if.sh stop
 	fi
 }
+
+# Startup a connection
+#   Pass connection index from config for specifix connection
 function startup_wan_connection ()
 {
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		syslogger "debug" "Starting WAN connection $wan_if"
 		$IPC_SCRIPTS_DIR/connection-$wan_if.sh start
 	fi
 }
+
+# This function tries to ping a target via the current interface
+#   Returns 1 for unavailable error
+#   Return 2 to signal restart request for interface
+
 function check_wan_connection ()
 {
 	local rc=0
@@ -334,9 +345,9 @@ function check_wan_connection ()
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		local wan_gw=${WAN_CHECKGATEWAYS[$wan_curr]}
 		$IPC_SCRIPTS_DIR/connection-$wan_if.sh check $wan_ct $wan_gw
-		if [ $? != 0 ]; then
-			syslogger "error" "WAN interface $wan_if or ping to $wan_ct failed"
-			rc=1;
+		rc=$?
+		if [ $rc -ne 0 ]; then
+			syslogger "error" "check_wan_connection: WAN interface $wan_if or ping to $wan_ct failed"
 		fi
 	fi
 	return $rc

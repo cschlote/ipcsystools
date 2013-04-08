@@ -12,32 +12,36 @@ PPPOE_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/pppoe_connection.pid
 PPPOE_DEV=`getipcoption connection.pppoe.dev`
 PPPOE_CFG=`getipcoption connection.pppoe.cfg`
 PPPOE_IF=`getipcoption connection.pppoe.if`
-PPPOE_IF=${PPPOE_IF:=ppp0}
+PPPOE_DEV=${PPPOE_DEV:=ppp0}
+PPPOE_IF=${PPPOE_IF:=eth1}
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
 #-----------------------------------------------------------------------
 function IsPPPoEAlive ()
 {
+    # Check for physical PPPoE ethernet interface 
+    if ! ifconfig $PPPOE_IF | grep -q UP ; then
+	syslogger "warn" "status - interface $PPPOE_IF is not up"
+	return 1;
+    fi
+    syslogger "debug" "status - physical interface $PPPOE_IF is up and running"
+
+    # Check for running PPPD with given config as started by pon/poff
+    if ! ps ax | grep -q "pppd.*$PPPOE_CFG" ; then
+	syslogger "warn" "status - PPPD for config $PPPOE_CFG is not up"
+	return 1;
+    fi
+
+    # Test for existing ppp0 interdace - FIXME hardwired code!!!!
+    # TODO: Find out the real name of ppp interface for connection
+    if ! ifconfig | grep -q $PPPOE_DEV ; then
+	syslogger "warn" "status - no $PPPOE_DEV interface found"
+	return 2;
+    fi
     if ! ip addr show dev $PPPOE_DEV | grep -q "inet " ; then
 	syslogger "error" "status - interface $PPPOE_DEV has no ipv4 addr"
-	return 1;
-    fi
-    if ! ifconfig $PPPOE_DEV | grep -q UP ; then
-	syslogger "warn" "status - interface $PPPOE_DEV is not up"
-	return 1;
-    fi
-    syslogger "debug" "status - interface $PPPOE_DEV is up and running"
-
-    if ! ps ax | grep -q "pppd.*$PPPOE_CFG" ; then
-	syslogger "warn" "status - pppd for config $PPPOE_CFG is not up"
-	return 1;
-    fi
-
-    # TODO: Find out the real name of ppp interface for connection
-    if ! ifconfig | grep -q $PPPOE_IF ; then
-	syslogger "warn" "status - no $PPPOE_IF interface found"
-	return 1;
+	return 2;
     fi
     syslogger "debug" "status - pppoe connection ready"
     return 0;
@@ -48,6 +52,8 @@ function StartPPPD ()
     if ! IsPPPoEAlive; then
 	syslogger "info" "Starting pppoe profile $PPPOE_CFG"
 	ifup br0
+	poff $PPPOE_CFG
+	sleep 5
 	pon $PPPOE_CFG
     fi
 }
@@ -66,11 +72,11 @@ function StartAndWaitForPPPD ()
 {
     # Loop Counters
     local count_timeout=0
-    local count_timeout_max=12
-    local sleeptime=5
+    local count_timeout_max=6
+    local sleeptime=1
     local reached_timeout=0
 
-    syslogger "info" "$PPPOE_DEV startet, wait for interface"
+    syslogger "info" "Starting PPPoE $PPPOE_DEV on $PPPOE_IF, wait for interface"
     StartPPPD
     sleep $sleeptime
 
@@ -100,7 +106,7 @@ function StartAndWaitForPPPD ()
 #
 function ConfigurePPPoE ()
 {
-    echo "Configuring PPPoE profile $PPPOE_CFG for interface $PPPOE_DEV."
+    echo "Configuring PPPoE profile $PPPOE_CFG for interface $PPPOE_IF."
     pppoeconf
     echo "PPPoE subsystem is now configured- Use pon/poff $PPPOE_CFG"
     echo "to control interface."
@@ -145,10 +151,10 @@ case "$cmd" in
 		wan_gw=${3:=default}
 		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
 
-		if ping_target $wan_ct $wan_gw $PPPOE_IF; then
-		    syslogger "debug" "Ping to $wan_ct on PPPoE interface $PPPOE_IF successful"
+		if ping_target $wan_ct $wan_gw $PPPOE_DEV; then
+		    syslogger "debug" "Ping to $wan_ct on PPPoE interface $PPPOE_DEV successful"
 		else
-		    syslogger "error" "Ping to $wan_ct on PPPoE interface $PPPOE_IF failed"
+		    syslogger "error" "Ping to $wan_ct on PPPoE interface $PPPOE_DEV failed"
 		    rc_code=1;
 		fi
 	    else
@@ -160,16 +166,16 @@ case "$cmd" in
 	    rc_code=2;
 	fi
 	;;
-status)
+    status)
 	if IsPPPoEAlive; then
-	    echo "PPPoE Interface $PPPOE_IF is active"
+	    echo "PPPoE Interface $PPPOE_DEV is active"
 	else
-	    echo "PPPoE Interface $PPPOE_IF isn't configured"
+	    echo "PPPoE Interface $PPPOE_DEV isn't configured"
 	    rc_code=1
 	fi
 	;;
-config)
-	if IsInterfaceAlive; then
+    config)
+	if IsPPPoEAlive; then
 	    StopPPPD
 	fi
 	ConfigurePPPoE

@@ -208,7 +208,7 @@ fi
 if [ $WAN_FALLBACKMODE -eq 1 ]; then
 	syslogger "debug" "Checking active WAN connection"
 	check_wan_connection
-	if [ $? != 0 ]; then
+	if [ $? -ne 0 ]; then
 		syslogger "error" "Current WAN connection failed, trying next"
 		shutdown_wan_connection
 		set_wan_connection_current next
@@ -217,14 +217,20 @@ if [ $WAN_FALLBACKMODE -eq 1 ]; then
 		# Fallbackmodus
 		get_wan_connect_current
 		if [ $WAN_CURRENT -ne 0 ]  ; then
-			syslogger "debug" "Checking fallback WAN connection"
-			if ! check_wan_connection 0; then
-			syslogger "debug" "Primary WAN connection still failing"
+			syslogger "debug" "Checking fallback to primary WAN connection"
+			check_wan_connection 0 
+			rc=$?
+			if [ $rc -ne 0 ] ; then
+				syslogger "debug" "Primary WAN connection still failing"
+				if [ $rc -eq 2 ] ; then
+					syslogger "debug" "Primary WAN connection requested restart"
+					startup_wan_connection 0
+				fi
 			else
-			syslogger "debug" "Primary WAN connection available again"
-			shutdown_wan_connection
-			set_wan_connection_current reset
-			reset_wan=true
+				syslogger "debug" "Primary WAN connection available again"
+				shutdown_wan_connection
+				set_wan_connection_current reset
+				reset_wan=true
 			fi
 		fi
 	fi

@@ -18,9 +18,9 @@ connection.dip.dev=wwan0
 connection.eth.dev=eth0
 connection.eth.keepup=1
 connection.ppp.dev=ppp0
-connection.pppoe.dev=br0
+cconnection.pppoe.dev=ppp0
 connection.pppoe.cfg=dsl-provider
-connection.pppoe.if=ppp0
+connection.pppoe.if=br0
 
 #[WATCHDOG-Connection]
 watchdog.wan.connection.check_enabled=1
