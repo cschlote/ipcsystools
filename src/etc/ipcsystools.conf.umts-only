@@ -22,6 +22,7 @@ connection.ppp.if=/dev/usbmodem-data
 connection.pppoe.dev=ppp0
 connection.pppoe.cfg=dsl-provider
 connection.pppoe.if=br0
+connection.pppoe.keepup=1
 
 #[WATCHDOG-Connection]
 watchdog.wan.connection.check_enabled=1

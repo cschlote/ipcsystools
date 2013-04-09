@@ -14,6 +14,7 @@ PPPOE_CFG=`getipcoption connection.pppoe.cfg`
 PPPOE_IF=`getipcoption connection.pppoe.if`
 PPPOE_DEV=${PPPOE_DEV:=ppp0}
 PPPOE_IF=${PPPOE_IF:=eth1}
+PPPOE_KEEPUP=`getipcoption connection.pppoe.keepup`
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
@@ -52,16 +53,23 @@ function StartPPPD ()
     if ! IsPPPoEAlive; then
 	syslogger "info" "Starting pppoe profile $PPPOE_CFG"
 	ifup br0
-	poff $PPPOE_CFG
-	sleep 5
+	# Check for running PPPD with given config as started by pon/poff
+	if ps ax | grep -q "pppd.*$PPPOE_CFG" ; then
+	    syslogger "warn" "status - PPPD for config $PPPOE_CFG is up - terminate"
+	    poff $PPPOE_CFG
+	fi
 	pon $PPPOE_CFG
     fi
 }
 function StopPPPD ()
 {
     if IsPPPoEAlive; then
-	syslogger "info" "Stopping pppoe profile $PPPOE_CFG"
-	poff $PPPOE_CFG
+	if [ $PPPOE_KEEPUP -eq 1 ] ; then
+	    syslogger "info" "Stopping pppoe profile $PPPOE_CFG"
+	    poff $PPPOE_CFG
+	else 
+	    syslogger "info" "Keeping pppoe profile $PPPOE_CFG active"
+	fi
     fi
 }
 
@@ -76,7 +84,7 @@ function StartAndWaitForPPPD ()
     local sleeptime=1
     local reached_timeout=0
 
-    syslogger "info" "Starting PPPoE $PPPOE_DEV on $PPPOE_IF, wait for interface"
+    syslogger "info" "Starting PPPoE $PPPOE_DEV on $PPPOE_IF, waiting for interface"
     StartPPPD
     sleep $sleeptime
 
@@ -149,8 +157,7 @@ case "$cmd" in
 	    if [ $# -gt 1 ] && [ -n "$2" -a -n "$3" ]; then
 		wan_ct=${2:=127.0.0.1}
 		wan_gw=${3:=default}
-		syslogger "debug" "Pinging check target $wan_ct via $wan_gw"
-
+		syslogger "debug" "Pinging check target $wan_ct via $wan_gw on interface $PPPOE_DEV"
 		if ping_target $wan_ct $wan_gw $PPPOE_DEV; then
 		    syslogger "debug" "Ping to $wan_ct on PPPoE interface $PPPOE_DEV successful"
 		else

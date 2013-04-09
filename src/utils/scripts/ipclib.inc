@@ -45,7 +45,7 @@ readyID=4
 registeredID=5
 connected=6
 
-# Define paths to persistent status variables 
+# Define paths to persistent status variables
 COMMAND_DEVICE_FILE=$IPC_STATUSFILE_DIR/command_dev
 CONNECTION_DEVICE_FILE=$IPC_STATUSFILE_DIR/connection_dev
 MODEM_STATUS_FILE=$IPC_STATUSFILE_DIR/modem_status
@@ -91,11 +91,11 @@ fi
 function obtainlock ()
 {
 	lastlockfile=$1
-	if ( set -o noclobber; echo "$$" > "$lastlockfile") 2> /dev/null; 
+	if ( set -o noclobber; echo "$$" > "$lastlockfile") 2> /dev/null;
 	then
 		trap 'rm -f "$lastlockfile"; exit $?' INT TERM EXIT
 	else
-	   syslogger "error" "Failed to acquire lockfile: $lastlockfile." 
+	   syslogger "error" "Failed to acquire lockfile: $lastlockfile."
 	   syslogger "error" "Held by $(cat $lastlockfile)"
 	   echo "ERROR: Can't get lock. Script instance already running" 1>&2
 	   exit 0
@@ -106,7 +106,7 @@ function releaselock ()
    rm -f "$lastlockfile"
    trap - INT TERM EXIT
 }
-   
+
 #-----------------------------------------------------------------------
 # Log Funktion
 #-----------------------------------------------------------------------
@@ -114,14 +114,9 @@ function releaselock ()
 function syslogger ()
 {
 	local logDESC=${DESC:=$0[$$]}
-	# LogLevel 1
-	if [ "$1" != "debug" ]; then
+	# LogLevel =1 loging enabled, >1 includes debugging messages
+	if [ "$1" != "debug" -a $LOG_LEVEL -ge 1 ] || [ "$1" = "debug" -a $LOG_LEVEL -gt 1 ]; then
 		logger -p local0.$1 -t $DESC "$2"
-	else
-		# LogLevel 2 (Debugging)
-		if ( test $LOG_LEVEL -gt 1 ); then
-			logger -p local0.$1 -t $DESC "$2"	
-		fi
 	fi
 }
 
@@ -131,7 +126,7 @@ function syslogger ()
 
 function RefreshModemDevices ()
 {
-	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`  
+	COMMAND_DEVICE=`cat $COMMAND_DEVICE_FILE`
 	CONNECTION_DEVICE=`cat $CONNECTION_DEVICE_FILE`
 }
 
@@ -144,7 +139,7 @@ function WriteConnectionFieldStrengthFile ()
 	field_strength=$?
 
 	echo $field_strength > $CONNECTION_FS_FILE
-	ipc-set-led gsmfs $field_strength || 
+	ipc-set-led gsmfs $field_strength ||
 		syslogger "warn" "ipc-set-led gsmfs return error"
 }
 
@@ -164,13 +159,13 @@ function WriteConnectionNetworkModeFile ()
 {
 	local connectionmode
 	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
-	
+
 	# *CNTI: +CME ERROR: no network service
 	local err=`expr match "$cnti" ".*\ERROR"`
 	if [ $err -eq 0 ]; then
-		connectionmode=`echo $cnti | awk -F"," '{print $2}'`	
+		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
 	else
-		connectionmode=`echo $cnti | awk -F":" '{print $3}'`		
+		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
 	fi
 	echo $connectionmode > $CONNECTION_MODE_FILE
 }
@@ -178,10 +173,10 @@ function WriteConnectionNetworkModeFile ()
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
-	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`	
+	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`
 	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
 
-	# Write roaming info 
+	# Write roaming info
 	local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
 	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
 }
@@ -264,10 +259,10 @@ function CheckNIState ()
 }
 
 function SetConnectionRAT ()
-{	
+{
 	ratcode=`getipcoption modem.connectionmode`
 	RefreshModemDevices
-	$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null	
+	$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null
 }
 
 function InitializeModem ()
@@ -412,8 +407,8 @@ function check_ipsec_status ()
 }
 
 function check_openvpn_status ()
-{	
-    if [ $START_OVPN_ENABLED -eq 1 ]; then
+{
+	if [ $START_OVPN_ENABLED -eq 1 ]; then
 	local tunnelstate="down"
 	local checkmode=`getipcoption ovpn.monitorpeers`
 
@@ -443,7 +438,7 @@ function check_openvpn_status ()
 			$IPC_SCRIPTS_DIR/set_fp_leds vpn off
 			tunnelstate="down"
 		fi
-	else 
+	else
 		syslogger "warn" "Wrong OpenVPN monitor peer settings ($openvpnIP)"
 		tunnelstate="down"
 	fi
@@ -451,9 +446,9 @@ function check_openvpn_status ()
 	# Set Tunnel state
 	echo $tunnelstate > $VPN_STATE_FILE
 	syslogger "info" "OpenVPN monitor peer ($openvpnIP) tunnel $tunnelstate"
-    fi
-    [ "$tunnelstate" = "down" ] && return 1
-    return 0
+	fi
+	[ "$tunnelstate" = "down" ] && return 1
+	return 0
 }
 
 function check_vpn_connections ()
@@ -468,7 +463,7 @@ function check_vpn_connections ()
 	if [ $START_IPSEC_ENABLED -eq 1 ]; then
 		check_ipsec_status
 		rc=$?
-	fi	
+	fi
 	return $rc;
 }
 
@@ -476,8 +471,8 @@ function restart_vpn_connections ()
 {
 	# restart OpenVPN status
 	if [ $START_OVPN_ENABLED -eq 1 ]  && ! check_openvpn_status ; then
-		syslogger "debug" "Restarting OpenVPN connection" 
-		/etc/init.d/openvpn restart client &	
+		syslogger "debug" "Restarting OpenVPN connection"
+		/etc/init.d/openvpn restart client &
 	fi
 	# Restart ipsec
 	if [ $START_IPSEC_ENABLED -eq 1 ] && ! check_ipsec_status ; then
@@ -522,8 +517,12 @@ function valid_ip ()
 	 return $stat
 }
 #
-# Ping a target and return status RC
+# Ping a target and return status RC - Called from 'connection-*.sh check'
 #   <ip> <gw> <ifname>
+#   <gw> := IP || default
+#   A temporary host route is set to reach specific hosts behind gateways,
+#    when an IP address is specified. Otherwise routing will depend on
+#    existing routes.
 function ping_target ()
 {
 	local rc=1;
@@ -534,7 +533,7 @@ function ping_target ()
 		if ping -I $3 -c $i -W 10 -w 12 $1 >/dev/null; then
 			rc=0; break;
 		fi
-		syslogger "warn" "ping to $1 failed ($i of 3)"
+		syslogger "warn" "Watchdog ping to $1 via interface $3 failed ($i of 3)"
 	done
 	[ "$2" != "default" ] && ip route del $1/32 via $2 dev $3;
 	return $rc
