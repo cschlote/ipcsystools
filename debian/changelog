@@ -1,3 +1,15 @@
+ipcsystools (2012.10.02-2lucid5) lucid; urgency=low
+
+  * [ipcsystools] Fixed typo
+  * [ipcsystools] Created connection-pppoe.sh
+  * [ipcsystools] Moved status file in /var/run into subdirectory
+  * [ipcsystools] Moved status and PID files (part2), pppoe fixes
+  * [ipcsystools] Bugfixing for PPPoe and umts fallback
+  * [ipcsystools] Added keepup for pppoe (expermimental)
+  * [debian] Geany project file
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 10 Apr 2013 16:03:18 +0200
+
 ipcsystools (2012.10.02-2lucid4) lucid; urgency=low
 
   * [debian] Added delay of 5 seconds to init
