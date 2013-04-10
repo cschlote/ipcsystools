@@ -7,7 +7,7 @@ gps-monitor \- Monitors GPS information on suitable UMTS/GPS/LTE modules
 .SH DESCRIPTION
 .B gps-monitor
 enables and queries the GPS information available with some modems. The 
-information is stored at /var/run/.
+information is stored at /var/run/ipcsystools/.
 .SH AUTHOR
 Carsten Schlote
 

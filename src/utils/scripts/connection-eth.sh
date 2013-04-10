@@ -7,7 +7,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="connection-eth[$$]"
 
-ETH_CONNECTION_PID_FILE=/var/run/eth_connection.pid
+ETH_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/eth_connection.pid
 
 ETH_DEV=`getipcoption connection.eth.dev`
 ETH_KEEPUP=`getipcoption connection.eth.keepup`
@@ -19,9 +19,9 @@ function IsETHAlive ()
 	syslogger "error" "status - interface $ETH_DEV has no ipv4 addr"
 	return 1;
     fi
-    
+
     #TODO: Link - Überwachung einführen?
-    
+
     if ! ifconfig $ETH_DEV | grep -q UP ; then
 	syslogger "warn" "status - interface $ETH_DEV is not up"
 	return 1;
@@ -93,7 +93,7 @@ case "$cmd" in
 	    fi
 	else
 	    syslogger "error" "interface $ETH_DEV not ready"
-	    rc_code=1
+	    rc_code=2
 	fi
 	;;
     status)
@@ -106,9 +106,9 @@ case "$cmd" in
 	;;
     config)
 	if ! IsETHAlive; then
-	    echo "Interface $ETH_DEV is not active. Nothing to config anyway."	 
+	    echo "Interface $ETH_DEV is not active. Nothing to config anyway."
 	else
-	    echo "Interface $ETH_DEV is active. Won't reconfigure active modem."	    
+	    echo "Interface $ETH_DEV is active. Won't reconfigure active modem."
 	fi
 	;;
     *)	echo "Usage: $0 start|stop|check <ip> <gw>|status"

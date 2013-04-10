@@ -7,7 +7,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="connection-dip[$$]"
 
-DIP_CONNECTION_PID_FILE=/var/run/dip_connection.pid
+DIP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/dip_connection.pid
 
 DIP_DEV=`getipcoption connection.dip.dev`
 
@@ -50,7 +50,7 @@ function StopWANInterface ()
     if IsInterfaceAlive; then
 	syslogger "info" "Stopping $DIP_DEV"
 	ifdown $DIP_DEV || true
-	sleep 3
+	sleep 6
     fi
 }
 

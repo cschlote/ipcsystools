@@ -7,7 +7,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="connection-ppp[$$]"
 
-PPP_CONNECTION_PID_FILE=/var/run/ppp_connection.pid
+PPP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/ppp_connection.pid
 
 PPP_DEV=`getipcoption connection.ppp.dev`
 
@@ -229,7 +229,7 @@ status)
 	fi
 	;;
 config)
-	if IsInterfaceAlive; then
+	if IsPPPDAlive; then
 	    StopPPPD
 	fi
 	ConfigurePPPMode 
