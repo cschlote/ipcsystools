@@ -34,7 +34,7 @@
 #include "modem.h"
 
 const char* DEVICE_LOCK_FILE = "/var/lock/LCK..%s";
-const char* DEVICE_INFO_FILE = "/var/run/command_dev";
+const char* DEVICE_INFO_FILE = "/var/run/ipcsystools/command_dev";
 
 char 	CommandDevice [MAXPATHLEN];	//!< Device for the modem IO / AT-Commands
 char 	DeviceLockFile [MAXPATHLEN];

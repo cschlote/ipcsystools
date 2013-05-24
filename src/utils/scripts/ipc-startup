@@ -4,13 +4,16 @@
 #  - starting the initial connection
 echo -n "Startup IPC environment... "
 
+# Initialize modem (apn, sim, ...)
+. /usr/share/ipcsystools/ipclib.inc
+
 if which ipc-set-led  > /dev/null ; then
 	/usr/bin/ipc-set-led all-off
 fi
 
 if [ -e /etc/ptxdist_version ] ; then
 	echo -n "(init MCB2) "
-	/usr/share/ipcsystools/ipc-initsystem.sh install
+	$IPC_SCRIPTS_DIR/ipc-initsystem.sh install
 fi
 
 function start_services
@@ -19,15 +22,13 @@ function start_services
 	if [ ! -e /etc/ipcsystools.disable ] ; then
 		echo -n "(cron enabled) "
 		(startup_wan_connection &)
-		touch /var/run/ipcsystools.enabled
+		touch $IPC_STATUSFILE_DIR/ipcsystools.enabled
 	else
 		echo -n "(cron disabled) "
-		rm -f /var/run/ipcsystools.enabled
+		rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
 	fi
 }
 
-# Initialize modem (apn, sim, ...)
-. /usr/share/ipcsystools/ipclib.inc
 InitializeModem
 DetectModemCard
 if [ $? -eq 0 ]; then

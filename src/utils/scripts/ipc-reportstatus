@@ -8,8 +8,8 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 DESC="ipc-reportstatus[$$]"
 
-IPC_REPORTER_PID_FILE=/var/lock/ipc-reportstatus.pid
-IPC_REPORTER_STATUS=/var/run/ipc-reportstatus-status
+IPC_REPORTER_PID_FILE=$IPC_STATUSFILE_DIR/ipc-reportstatus.pid
+IPC_REPORTER_STATUS=$IPC_STATUSFILE_DIR/ipc-reportstatus-status
 
 REPORT_ENABLED=`getipcoption reportstatus.enable`
 REPORT_IP_TARGET=`getipcoption reportstatus.ip.target`

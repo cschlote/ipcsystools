@@ -12,7 +12,7 @@ Control files
     Create file to disable execution of ipc-monitor script 
     (debugging aid, not for regular use)
 
-/var/run/ipcsystools.enabled :
+/var/run/ipcsystools/ipcsystools.enabled :
     Created by ipc-startup and removed by ipc-shutdown. Controls the 
     execution of ipc-monitor. Ensures that modem and other interface
     hardware is setup and ready

@@ -48,11 +48,11 @@
 
 #define UMTS_MAX_FILEDLENGTH      256
 
-#define UMTS_OP_RESULTS_FILE      "/var/run/op.results"
-#define UMTS_OP_OPERATORS_FILE    "/var/run/operators"
+#define UMTS_OP_RESULTS_FILE      "/var/run/ipcsystools/op.results"
+#define UMTS_OP_OPERATORS_FILE    "/var/run/ipcsystools/operators"
 
-#define UMTS_NI_RESULTS_FILE      "/var/run/ni.results"
-#define UMTS_NI_PROVIDER_FILE     "/var/run/provider"
+#define UMTS_NI_RESULTS_FILE      "/var/run/ipcsystools/ni.results"
+#define UMTS_NI_PROVIDER_FILE     "/var/run/ipcsystools/provider"
 
 /* Global variables */
 extern int nSerFD;              //!< Serial File Handle

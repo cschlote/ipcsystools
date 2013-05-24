@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 #
@@ -14,8 +13,8 @@ GPS_STATUS_FILE=$IPC_STATUSFILE_DIR/gps_status
 GPS_LOCATION_FILE=$IPC_STATUSFILE_DIR/gps_location
 GPS_SATINFO_FILE=$IPC_STATUSFILE_DIR/gps_satinfo
 
-GPS_MONITOR_PID_FILE=/var/lock/gps-monitor.pid
-GPS_MONITOR_STATUS=/var/run/gps-monitor-status
+GPS_MONITOR_PID_FILE=$IPC_STATUSFILE_DIR/gps-monitor.pid
+GPS_MONITOR_STATUS=$IPC_STATUSFILE_DIR/gps-monitor-status
 
 GPS_ENABLE=`getipcoption monitor.gps.enable`
 GPS_FIXPREC=`getipcoption monitor.gps.fix_prec`
