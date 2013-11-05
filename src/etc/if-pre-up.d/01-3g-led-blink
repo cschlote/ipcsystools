@@ -1,11 +1,20 @@
 #!/bin/bash
+# This script will be called on connection pre-startup
+#  /etc/network/if-?.d only - Called for DIP and ETH interfaces, 
+# PPP(OE) interfaces use /etc/ppp/ip-?.d and will not process this
+# script!!!
 
-# Basis Bibliothek für die IPCs
 . /usr/share/ipcsystools/ipclib.inc
 
 if check_ifupdown_on_mobile_connection ; then 
-	syslogger "debug" "interface $IFACE : 3G led blink"
-	/usr/bin/ipc-set-led 3g timer
+	# Only DIP and ETH connections will enter here. See above.
+	if [ "$IFACE" = "wwan0" ] ; then
+		syslogger "debug" "interface $IFACE : 3G led blink"
+		/usr/bin/ipc-set-led 3g timer
+	else
+		syslogger "debug" "interface $IFACE : Option1 led on"
+		/usr/bin/ipc-set-led option1 timer
+	fi
 else
 	syslogger "debug" "interface $IFACE : no action"
 fi

@@ -1,11 +1,18 @@
 #!/bin/bash
+# This script will be called on connection startup
+# Uses  /etc/network/if-?.d and /etc/ppp/ip-?.d directories.
+#  See manual pages for differences in env variables!
 
-# Basis Bibliothek für die IPCs
 . /usr/share/ipcsystools/ipclib.inc
 
 if check_ifupdown_on_mobile_connection ; then 
-	syslogger "debug" "interface $IFACE : 3G led on"
-	/usr/bin/ipc-set-led 3g on
+	if [ "$PPP_TTYNAME" = "usbmodem-data" ] ; then
+		syslogger "debug" "interface $IFACE : 3G led on"
+		/usr/bin/ipc-set-led 3g on
+	else
+		syslogger "debug" "interface $IFACE : Option1 led on"
+		/usr/bin/ipc-set-led option1 on
+	fi
 else
 	syslogger "debug" "interface $IFACE : no action"
 fi
