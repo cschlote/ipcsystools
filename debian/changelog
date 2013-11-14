@@ -1,3 +1,17 @@
+ipcsystools (2013.11.14-1lucid1) lucid; urgency=low
+
+  * ipcsystools: Added support for extra LED for pppoe and eth
+    connections
+  * ipcsystools: Renamed files to better match purpose
+  * ipcsystools: Updated chat examples
+  * ipcsystools: Dynamically create chat scripts
+  * ipcsystools: LED handling for wwan0
+  * ipcsystools: Create chat scripts dynamically
+  * ipcsystools: Added ipc-control script
+  * Deployed ipcsystools 2013.11.14
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 14 Nov 2013 15:42:37 +0100
+
 ipcsystools (2012.10.02-2lucid5) lucid; urgency=low
 
   * [ipcsystools] Fixed typo
