@@ -8,7 +8,7 @@ bin_SCRIPTS = \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
-	ipc-startup ipc-shutdown
+	ipc-startup ipc-shutdown ipc-control
 
 DISTCLEANFILES = Makefile.in
 

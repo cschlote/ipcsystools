@@ -1,0 +1,58 @@
+#!/bin/bash
+# Control the ipcsystools
+#-----------------------------------------------------------------------
+. /usr/share/ipcsystools/ipclib.inc
+
+LOCKFILE="/var/lock/ipc-control.lock"
+RC=0
+
+#-----------------------------------------------------------------------
+# Common subroutines
+#-----------------------------------------------------------------------
+ 
+function print_usage () {
+        cat << EOT
+ipc-control <options>
+ -c <con>     Configure a connection type, or all if no argument given
+ -f           Skip conformance tests fo -t
+ -v           Verbose operation
+EOT
+}
+#-----------------------------------------------------------------------
+# Main
+#-----------------------------------------------------------------------
+
+#--- Parse options -----------------------------------------------------
+while getopts "hft:m:a:" optionName; do
+        case "$optionName" in
+        h) print_usage; exit 1;;
+        f) force=1;;
+        c) config=1; contype="$OPTARG";;
+#        t) msgtype="$OPTARG";;
+#        m) msgbody="$OPTARG";;
+#        a) msgattm="$OPTARG";;
+        v) verbose=1;;
+        [?]) print_usage; exit 1;;
+        esac
+done
+
+#--- Do mutual exlusive  operation -------------------------------------
+while ! obtainlock "$LOCKFILE" ; do
+  syslogger "debug" "Script already running, delaying execution"
+  sleep 2
+done
+
+if [ "$config" = "1" ] ; then
+  if [ "$verbose" = "1" ] ; then
+	if [ -n "$contype" ] ; then
+      echo Configure connection $contype
+    else
+      echo Configure all connections
+    fi
+  fi
+  touch /etc/ipcsystools.configmodem
+  config_wan_connections $contype
+fi
+
+releaselock 
+exit $RC
