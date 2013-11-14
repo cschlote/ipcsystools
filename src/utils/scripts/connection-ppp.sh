@@ -138,20 +138,21 @@ function CreatePPPChatScript
 REPORT CONNECT
 ABORT BUSY
 ABORT ERROR
+ABORT "NO CARRIER"
 TIMEOUT 120
-SAY "Resetting modem"
+SAY "Resetting modem\n"
 ''      ATZ
-SAY "Setting APN name for profile 1"
+SAY "Setting APN name for profile 1\n"
 EOF
 	echo "OK      AT+CGDCONT=1,\"IP\",\"`getipcoption sim.apn`\""
 	if [ `getipcoption sim.auth` -eq 1 ]; then
-	    echo "SAY \"Setup password and username for APN\""
-	    echo "OK      AT$QCPDPP=1,1,\"`getipcoption sim.passwd`\",\"`getipcoption sim.username`\""
+	    echo "SAY \"Setup password and username for APN\n\""
+	    echo "OK      AT\$QCPDPP=1,1,\"`getipcoption sim.passwd`\",\"`getipcoption sim.username`\""
 	else
-	    echo "OK      AT$QCPDPP=1,0"
+	    echo "OK      AT\$QCPDPP=1,0"
 	fi
 	cat <<EOF
-SAY "Dialout to provider APN/ppp service, 120 second timeout"
+SAY "Dialout to provider APN/ppp service, 120 second timeout\n"
 OK      ATDT*99***1#
 CONNECT ''
 EOF
