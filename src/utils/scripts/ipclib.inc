@@ -376,8 +376,10 @@ function config_wan_connections ()
 	if [ -e /etc/ipcsystools.configmodem ] ; then
 		syslogger "warn" "Found reconfigure trigger"
 		for wan_if in `getipcoption general.wan.interfaces`; do
-			syslogger "warn" "Configure WAN connection $wan_if"
-			$IPC_SCRIPTS_DIR/connection-$wan_if.sh config
+			if [ -z "$1" -o "$1" = "$wan_if" ]; then
+				syslogger "warn" "Configure WAN connection $wan_if"
+				$IPC_SCRIPTS_DIR/connection-$wan_if.sh config
+			fi 
 		done
 		syslogger "warn" "Cleared reconfigure trigger"
 		rm /etc/ipcsystools.configmodem

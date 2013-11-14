@@ -130,21 +130,53 @@ function WaitForModemBookedIntoNetwork ()
     return $reached_timeout
 }
 
+#
+# Create a chatscript (only used for configuration)
+#
+function CreateDIPChatScript
+{
+    (
+	cat <<EOF
+REPORT CONNECT
+ABORT BUSY
+ABORT ERROR
+TIMEOUT 120
+SAY "Resetting modem\n"
+''      ATZ
+SAY "Setting APN name for profile 1\n"
+EOF
+	echo "OK      AT+CGDCONT=1,\"IP\",\"`getipcoption sim.apn`\""
+	if [ `getipcoption sim.auth` -eq 1 ]; then
+	    echo "SAY \"Setup password and username for APN\n\""
+	    echo "OK      AT\$QCPDPP=1,1,\"`getipcoption sim.passwd`\",\"`getipcoption sim.username`\""
+	else
+	    echo "OK      AT\$QCPDPP=1,0"
+	fi
+	cat <<EOF
+SAY "Setup autoconnect for profile 1\n"
+OK      AT!SCPROF=1,"DEFAULT",1,0,0,0
+SAY "Activating profile 1 for APN connection\n"
+OK      AT!SCACT=1,1
+OK      ''
+EOF
+    ) >$IPC_STATUSFILE_DIR/dip-mode.chat
+}
 
 #
-# Wait until modem is booked into service provider network
+# Reconfigure modem for DIP connections
 #
 function ConfigureDIPMode ()
 {
     echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
     RefreshModemDevices
-    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+    CreateDIPChatScript
+    /usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
     sleep 2
     echo "Reseting modem for interface $DIP_DEV."	    
     umtscardtool -s 'at!greset'
     sleep 2
-    echo "Modem is now configured for Autostart DirectIP. Use ipup/updown"
-    echo "$DIP_DEV to startup interface."
+    echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
+    echo "$DIP_DEV to startup/shutdown interface."
 }
     
 #-----------------------------------------------------------------------

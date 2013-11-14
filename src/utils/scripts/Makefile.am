@@ -8,14 +8,12 @@ bin_SCRIPTS = \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
-	ipc-startup ipc-shutdown
+	ipc-startup ipc-shutdown ipc-control
 
 DISTCLEANFILES = Makefile.in
 
 nobase_dist_pkgdata_DATA = \
-	options.ppp \
-	dip-mode.chat \
-	ppp-mode.chat
+	options.ppp
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
