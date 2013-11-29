@@ -1,0 +1,13 @@
+.\"
+.TH ipc-control 1 "Nov. 2013" "Ubuntu"
+.SH NAME
+ipc-control \- Control and query the ipcsystools
+.SH SYNOPSIS
+.B ipc-control
+.SH DESCRIPTION
+.B ipc-control
+provides some options to control the behaviour of ipcsystools. It also
+allows to query parameters. See the command line help for details.
+.SH AUTHOR
+Carsten Schlote
+

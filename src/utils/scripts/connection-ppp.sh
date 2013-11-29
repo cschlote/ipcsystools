@@ -31,7 +31,8 @@ function StartPPPD ()
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat" &
+	CreatePPPChatScript
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" &
     fi
 }
 function StopPPPD ()
@@ -128,13 +129,46 @@ function WaitForModemBookedIntoNetwork ()
 }
 
 #
-# Wait until modem is booked into service provider network
+# Create a chatscript (only used for configuration)
+#
+function CreatePPPChatScript
+{
+    (
+	cat <<EOF
+REPORT CONNECT
+ABORT BUSY
+ABORT ERROR
+ABORT "NO CARRIER"
+TIMEOUT 120
+SAY "Resetting modem\n"
+''      ATZ
+SAY "Setting APN name for profile 1\n"
+EOF
+	echo "OK      AT+CGDCONT=1,\"IP\",\"`getipcoption sim.apn`\""
+	if [ `getipcoption sim.auth` -eq 1 ]; then
+	    echo "SAY \"Setup password and username for APN\n\""
+	    echo "OK      AT\$QCPDPP=1,1,\"`getipcoption sim.passwd`\",\"`getipcoption sim.username`\""
+	else
+	    echo "OK      AT\$QCPDPP=1,0"
+	fi
+	cat <<EOF
+SAY "Dialout to provider APN/ppp service, 120 second timeout\n"
+OK      ATDT*99***1#
+CONNECT ''
+EOF
+    ) >$IPC_STATUSFILE_DIR/ppp-mode.chat
+}
+
+
+#
+# Reconfigure modem for PPP mode
 #
 function ConfigurePPPMode ()
 {
     echo "Configuring modem for interface $PPP_DEV for DirectIP."	    
     RefreshModemDevices
-    /usr/sbin/chat -v -f $IPC_SCRIPTS_DIR/ppp-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
+    CreatePPPChatScript
+    /usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
     sleep 2
     echo "Reseting modem for interface $PPP_DEV."	    
     umtscardtool -s 'at!greset'
