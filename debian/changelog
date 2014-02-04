@@ -1,3 +1,12 @@
+ipcsystools (2013.11.14-2lucid1) lucid; urgency=low
+
+  * umtscardtool: Reduced timeout for modemlock and IO
+  * connection-ppp: Added invisible passing of username and pw to ppp
+  * ipc-control: cleanups, fixes
+  * connection-dip: Added dynamic reconfiguration for DIP mode
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Tue, 04 Feb 2014 14:53:24 +0100
+
 ipcsystools (2013.11.14-1lucid1) lucid; urgency=low
 
   * ipcsystools: Added support for extra LED for pppoe and eth
