@@ -36,7 +36,7 @@ const char* strAT      = "AT";
 const char* strATOK    = "OK\r\n";
 const char* strATERROR = "ERROR";
 
-#define TIMEOUTVAL 300
+#define TIMEOUTVAL 60
 
 /* Modem IO */
 

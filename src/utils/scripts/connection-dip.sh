@@ -36,6 +36,7 @@ function IsInterfaceAlive ()
 function StartWANInterface ()
 {
     if ! IsInterfaceAlive; then
+	ConfigureDIPMode
 	RefreshModemDevices
 	local device=$COMMAND_DEVICE
 	syslogger "info" "Starting $DIP_DEV (AT Commands on $device)"
@@ -163,20 +164,30 @@ EOF
 }
 
 #
-# Reconfigure modem for DIP connections
+# Reconfigure modem for DIP connections and global software reset
 #
 function ConfigureDIPMode ()
+{
+    ConfigureDIPModeModemCfg
+
+    echo "Reseting modem for interface $DIP_DEV."
+    RefreshModemDevices
+    umtscardtool -s 'at!greset'
+    sleep 8
+    echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
+    echo "$DIP_DEV to startup/shutdown interface."
+}
+
+#
+# Reconfigure modem for DIP connections - modem soft reset
+#
+function ConfigureDIPModeModemCfg ()
 {
     echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
     RefreshModemDevices
     CreateDIPChatScript
     /usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
     sleep 2
-    echo "Reseting modem for interface $DIP_DEV."	    
-    umtscardtool -s 'at!greset'
-    sleep 2
-    echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
-    echo "$DIP_DEV to startup/shutdown interface."
 }
     
 #-----------------------------------------------------------------------

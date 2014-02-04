@@ -27,12 +27,24 @@ function IsPPPDAlive ()
 
 function StartPPPD ()
 {
+    local auth=`getipcoption sim.auth`
+    local user=`getipcoption sim.username`
+    local password=`getipcoption sim.password`
+    local pppopts=
+    
     if ! IsPPPDAlive; then
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
 	CreatePPPChatScript
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" &
+	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
+	    pppopts="call $IPC_STATUSFILE_DIR/options.ppp"
+	    cat <<EOF >$IPC_STATUSFILE_DIR/options.ppp
+user $user
+password $password
+EOF
+	fi
+	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
     fi
 }
 function StopPPPD ()
