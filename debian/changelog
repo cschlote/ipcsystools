@@ -1,3 +1,14 @@
+ipcsystools (2013.11.14-3lucid1) lucid; urgency=low
+
+  * ipcsystools: connection-pppoe
+  * ipcsystools: connection-pppoe
+  * ipcsystools: connection-dip
+  * ipc-startup: ipc-shutdown:
+  * ipc-lib: shutdown_wan_connection
+  * ipc-monitor: Reworked fallback code
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 06 Feb 2014 10:52:00 +0100
+
 ipcsystools (2013.11.14-2lucid1) lucid; urgency=low
 
   * umtscardtool: Reduced timeout for modemlock and IO
