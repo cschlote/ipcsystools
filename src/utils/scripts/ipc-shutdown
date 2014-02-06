@@ -6,10 +6,11 @@ echo -n "Shutdown ipc environment... "
 
 rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
 
+set_wan_connection_current reset
+
 # Terminate possibly running PPP daemon
 PPP_PIDS=`pidof pppd`
 kill -TERM $PPP_PIDS 2> /dev/null
-
 
 DetectModemCard
 if [ $? -eq 0 ]; then

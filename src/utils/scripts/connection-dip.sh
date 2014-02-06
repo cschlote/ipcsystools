@@ -173,7 +173,7 @@ function ConfigureDIPMode ()
     echo "Reseting modem for interface $DIP_DEV."
     RefreshModemDevices
     umtscardtool -s 'at!greset'
-    sleep 8
+    sleep 15
     echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
     echo "$DIP_DEV to startup/shutdown interface."
 }
