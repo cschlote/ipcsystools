@@ -80,12 +80,13 @@ function StartAndWaitForPPPD ()
 {
     # Loop Counters
     local count_timeout=0
-    local count_timeout_max=6
+    local count_timeout_max=30
     local sleeptime=1
     local reached_timeout=0
 
     syslogger "info" "Starting PPPoE $PPPOE_DEV on $PPPOE_IF, waiting for interface"
-    StartPPPD
+    StartPPPD || return 1
+    
     sleep $sleeptime
 
     while [ true ] ; do
