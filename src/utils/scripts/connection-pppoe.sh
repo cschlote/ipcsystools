@@ -22,7 +22,7 @@ PPPOE_KEEPUP=`getipcoption connection.pppoe.keepup`
 function PPPOEProcessExists ()
 {
     ps ax | grep -v grep | grep -q "pppd call $PPPOE_CFG"
-    return$?
+    return $?
 }
 
 function IsPPPoEAlive ()
