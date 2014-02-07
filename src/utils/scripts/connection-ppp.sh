@@ -9,20 +9,42 @@ DESC="connection-ppp[$$]"
 
 PPP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/ppp_connection.pid
 
-PPP_DEV=`getipcoption connection.ppp.dev`
+PPP_DEVUNIT=`getipcoption connection.ppp.devunit`
+PPP_DEVUNIT=${PPP_DEVUNIT:=10}
+
+#PPP_DEV=`getipcoption connection.ppp.dev`
+#PPP_DEV=${PPP_DEV:=ppp$PPP_DEVUNIT}
+PPP_DEV=ppp$PPP_DEVUNIT
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
 #-----------------------------------------------------------------------
+function PPPProcessExists ()
+{
+    ps ax | grep -v grep | grep -q "pppd /dev/.*ppp-mode.chat"
+    return $?
+}
+
 function IsPPPDAlive ()
 {
-    local pids
-    local rc
+    # Check for running PPPD with given config for umts
+    if ! PPPProcessExists ; then
+	syslogger "warn" "status - PPPD for umts modem is not up"
+	return 1;
+    fi
 
-    pids="`pidof pppd`"; rc=$?
-
-    syslogger "debug" "status - pppd: $pids (rc=$rc)"
-    return $rc
+    # Test for existing ppp$PPP_DEVUNIT interface - FIXME hardwired code!!!!
+    # TODO: Find out the real name of ppp interface for connection
+    if ! ifconfig | grep -q $PPP_DEV ; then
+	syslogger "warn" "status - no $PPP_DEV interface found"
+	return 2;
+    fi
+    if ! ip addr show dev $PPP_DEV | grep -q "inet " ; then
+	syslogger "error" "status - interface $PPP_DEV has no ipv4 addr"
+	return 2;
+    fi
+    syslogger "debug" "status - ppp/umts connection ready"
+    return 0;
 }
 
 function StartPPPD ()
@@ -44,23 +66,27 @@ user $user
 password $password
 EOF
 	fi
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
+	pppd $device 460800 unit $PPP_DEVUNIT connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
     fi
 }
 function StopPPPD ()
 {
     if IsPPPDAlive; then
-		local pids=`pidof pppd`
-		syslogger "info" "Stopping pppd ($pids)"
-		if [ -z "$pids" ]; then
-			syslogger "info" "No pppd is running."
-			return 0
-		fi
+	local pid
+	local file=/var/run/$PPP_DEV.pid
+	if [ -e $file ]; then
+	    pid=`cat $file`
+	fi
+	if [ -z "$pid" ]; then
+	    syslogger "info" "No pppd is running."
+	    return 0
+	fi
 
-		kill -TERM $pids > /dev/null
-		if [ "$?" != "0" ]; then
-			rm -f /var/run/ppp*.pid > /dev/null
-		fi
+	syslogger "info" "Stopping pppd/umts ($pid)"
+	kill -TERM $pid > /dev/null
+	if [ "$?" != "0" ]; then
+	    rm -f /var/run/$PPP_DEV.pid > /dev/null
+	fi
     fi
 }
 

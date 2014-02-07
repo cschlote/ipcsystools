@@ -8,7 +8,7 @@
 
 if check_ifupdown_on_mobile_connection ; then 
 	# Only DIP and ETH connections will enter here. See above.
-	if [ "$IFACE" = "wwan0" ] ; then
+	if [ "$IFACE" = "wwan0" -o "$IFACE" = "ppp10" ] ; then
 		syslogger "debug" "interface $IFACE : 3G led blink"
 		/usr/bin/ipc-set-led 3g timer
 	else
