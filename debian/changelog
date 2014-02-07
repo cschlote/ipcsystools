@@ -1,3 +1,10 @@
+ipcsystools (2013.11.14-4lucid1) lucid; urgency=low
+
+  * ipc-set-led: Added ppp10 to list of modem devices
+  * connection-ppp: Added devunit and changed to ppp10
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Fri, 07 Feb 2014 15:41:11 +0100
+
 ipcsystools (2013.11.14-3lucid1) lucid; urgency=low
 
   * ipcsystools: connection-pppoe
