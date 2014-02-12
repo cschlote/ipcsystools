@@ -1,3 +1,10 @@
+ipcsystools (2013.11.14-6lucid1) lucid; urgency=low
+
+  * statusleds: bugfixes, reworked code
+  * name change: devunit -> dev.unit
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 12 Feb 2014 17:25:26 +0100
+
 ipcsystools (2013.11.14-5lucid1) lucid; urgency=low
 
   * configs: Bugfix, Added LED config
