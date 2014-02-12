@@ -9,7 +9,7 @@ DESC="connection-ppp[$$]"
 
 PPP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/ppp_connection.pid
 
-PPP_DEVUNIT=`getipcoption connection.ppp.devunit`
+PPP_DEVUNIT=`getipcoption connection.ppp.dev.unit`
 PPP_DEVUNIT=${PPP_DEVUNIT:=10}
 
 #PPP_DEV=`getipcoption connection.ppp.dev`
