@@ -569,3 +569,28 @@ function check_ifupdown_on_mobile_connection
 	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if"
 	return $hit
 }
+function get_on_mobile_connection_led
+{
+	local led=""
+
+	# PPP uses different environment variables, copy as needed
+	if [ -z "$IFACE" -a -n "$PPP_IFACE" ] ; then
+		IFACE=$PPP_IFACE
+	fi
+
+	if [ '$PPP_TTYNAME' = 'usbmodem-data' ] ; then
+		led="3g"
+	fi
+
+	# Check if current interface matches IPC mobile connection
+	wan_ifs="`getipcoption general.wan.interfaces`"
+	for wan_if in $wan_ifs; do
+		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+			led=`getipcoption connection.$wan_if.statusled 3g`
+			break
+		fi
+	done
+
+	syslogger "warn" "Get statusled for interface $IFACE : $led"
+	return $led
+}

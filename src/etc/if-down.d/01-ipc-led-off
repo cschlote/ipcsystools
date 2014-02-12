@@ -6,15 +6,13 @@
 . /usr/share/ipcsystools/ipclib.inc
 
 if check_ifupdown_on_mobile_connection ; then 
-	if [ '$PPP_TTYNAME' = 'usbmodem-data' -o "$IFACE" = "wwan0" -o "$IFACE" = "ppp10" ] ; then
-		syslogger "debug" "interface $IFACE : 3G led off"
-		/usr/bin/ipc-set-led 3g off
-	else
-		syslogger "debug" "interface $IFACE : Option1 led off"
-		/usr/bin/ipc-set-led option1 off
+	led=get_on_mobile_connection_led
+	if [ -n "$led" ] ; then
+		/usr/bin/ipc-set-led $led off
+		syslogger "debug" "interface $IFACE : $led LED off"
 	fi
 else
-	syslogger "debug" "interface $IFACE : no action"
+	syslogger "debug" "interface $IFACE : no if-down action"
 fi
 
 exit 0
