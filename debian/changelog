@@ -1,3 +1,11 @@
+ipcsystools (2013.11.14-5lucid1) lucid; urgency=low
+
+  * configs: Bugfix, Added LED config
+  * status leds:  Reworked scripts to be more general
+  * ping_target: Added check for localhost ip
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 12 Feb 2014 15:33:00 +0100
+
 ipcsystools (2013.11.14-4lucid1) lucid; urgency=low
 
   * ipc-set-led: Added ppp10 to list of modem devices
