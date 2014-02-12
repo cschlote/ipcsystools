@@ -528,10 +528,17 @@ function valid_ip ()
 #   A temporary host route is set to reach specific hosts behind gateways,
 #    when an IP address is specified. Otherwise routing will depend on
 #    existing routes.
+#   The localhost address 127.0.0.1 can be used to disable this test and
+#    immediately return true (rc=0)
 function ping_target ()
 {
 	local rc=1;
 	local i;
+	if [ "$1" = "127.0.0.1" -a "$3" != "lo" ] ; then
+		syslogger "debug" "Watchdog ping to $1 via interface $3 skipped - always true"
+		return 0;
+	fi
+
 	[ "$2" != "default" ] && ip route add $1/32 via $2 dev $3;
 	#bash 4.x: for $(( i=1; i<4; i++ )); do
 	for i in {1..3}; do
