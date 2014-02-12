@@ -12,6 +12,9 @@ ETH_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/eth_connection.pid
 ETH_DEV=`getipcoption connection.eth.dev`
 ETH_KEEPUP=`getipcoption connection.eth.keepup`
 
+ETH_LED=`getipcoption connection.eth.statusled`
+ETH_LED=${DIP_LED:=option1}
+
 #-----------------------------------------------------------------------
 function IsETHAlive ()
 {
@@ -48,14 +51,17 @@ function StartETH ()
 	    ifup $ETH_DEV -v
 	fi
     fi
+    $IPC_SCRIPTS_DIR/set_fp_leds $ETH_LED on
 }
+
 function StopETH ()
 {
+    syslogger "info" "Stopping $ETH_DEV"
+    if [ $ETH_KEEPUP != "1" ] && IsNotNFSRoot; then
 	syslogger "info" "Stopping $ETH_DEV"
-	if [ $ETH_KEEPUP != "1" ] && IsNotNFSRoot; then
-		syslogger "info" "Stopping $ETH_DEV"
-    		ifdown $ETH_DEV -fv
-	fi
+    	ifdown $ETH_DEV -fv
+    fi
+    $IPC_SCRIPTS_DIR/set_fp_leds $ETH_LED off
 }
 
 #-----------------------------------------------------------------------

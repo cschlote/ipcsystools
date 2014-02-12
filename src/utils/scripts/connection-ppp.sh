@@ -9,12 +9,14 @@ DESC="connection-ppp[$$]"
 
 PPP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/ppp_connection.pid
 
-PPP_DEVUNIT=`getipcoption connection.ppp.devunit`
+PPP_DEVUNIT=`getipcoption connection.ppp.dev.unit`
 PPP_DEVUNIT=${PPP_DEVUNIT:=10}
 
 #PPP_DEV=`getipcoption connection.ppp.dev`
 #PPP_DEV=${PPP_DEV:=ppp$PPP_DEVUNIT}
 PPP_DEV=ppp$PPP_DEVUNIT
+PPP_LED=`getipcoption connection.ppp.statusled`
+PPP_LED=${PPP_LED:=3g}
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
@@ -232,7 +234,7 @@ start)
 		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
 
 	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
+	    $IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -245,16 +247,17 @@ start)
 				WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
 				syslogger "debug" "ppp deamon didn't startup."
-				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+				$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED off
 				rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
+				$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED on
 				syslogger "debug" "ppp deamon is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+			$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED off
 			$UMTS_FS
 			syslogger "info" "reported fieldstrength is $?."
 			rc_code=1

@@ -17,6 +17,7 @@ if [ $? -eq 0 ]; then
 	ipc-set-led ready on
 	shutdown_wan_connection
 	ipc-set-led 3g off
+	ipc-set-led option1 off
 	# Check for config trigger and call backends, or do nothing
 	config_wan_connections
 	if [ $? -ne 0 ]; then

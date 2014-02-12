@@ -8,7 +8,7 @@
 
 if check_ifupdown_on_mobile_connection ; then 
 	# Only DIP and ETH connections will enter here. See above.
-	led=get_on_mobile_connection_led
+	led=`get_on_mobile_connection_led`
 	if [ -n "$led" ] ; then
 		/usr/bin/ipc-set-led $led timer
 		syslogger "debug" "interface $IFACE : $led LED blinking"

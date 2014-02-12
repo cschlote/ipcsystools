@@ -6,7 +6,7 @@
 . /usr/share/ipcsystools/ipclib.inc
 
 if check_ifupdown_on_mobile_connection ; then 
-	led=get_on_mobile_connection_led
+	led=`get_on_mobile_connection_led`
 	if [ -n "$led" ] ; then
 		/usr/bin/ipc-set-led $led on
 		syslogger "debug" "interface $IFACE : $led LED on"

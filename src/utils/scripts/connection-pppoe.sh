@@ -15,6 +15,8 @@ PPPOE_IF=`getipcoption connection.pppoe.if`
 PPPOE_DEV=${PPPOE_DEV:=ppp0}
 PPPOE_IF=${PPPOE_IF:=eth1}
 PPPOE_KEEPUP=`getipcoption connection.pppoe.keepup`
+PPPOE_LED=`getipcoption connection.pppoe.statusled`
+PPPOE_LED=${PPPOE_LED:=option1}
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
@@ -145,25 +147,25 @@ case "$cmd" in
     start)
 	syslogger "info" "starting connection..."
 	# LED 3g Timer blinken
-	$IPC_SCRIPTS_DIR/set_fp_leds 3g timer
+	$IPC_SCRIPTS_DIR/set_fp_leds $PPPOE_LED timer
 
 	if ! IsPPPoEAlive; then
 	    if StartAndWaitForPPPD; then
    		syslogger "debug" "pppoe connection did startup."
 	    else
 		syslogger "debug" "pppoe connection didn't startup."
-		$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+		$IPC_SCRIPTS_DIR/set_fp_leds $PPPOE_LED off
 		rc_code=1
 	    fi
 	else
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g on
+	    $IPC_SCRIPTS_DIR/set_fp_leds $PPPOE_LED on
 	    syslogger "debug" "pppoe connection is already running."
 	fi
 	;;
     stop)
 	syslogger "info" "stopping connection..."
 	StopPPPD
-	$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+	$IPC_SCRIPTS_DIR/set_fp_leds $PPPOE_LED off
 	;;
     check)
 	if IsPPPoEAlive; then

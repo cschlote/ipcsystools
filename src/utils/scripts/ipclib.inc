@@ -66,7 +66,7 @@ CONNECTION_AVAILABLE_FILE=$IPC_STATUSFILE_DIR/connection_available
 # Configuration file
 #-----------------------------------------------------------------------
 function getipcoption () {
-	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2 | cut -d"#" -f1`
+	echo `cat $IPCCTL_CONFIG | grep ^$1= | cut -d"=" -f2 | cut -d"#" -f1`
 }
 
 # Read GENERAL parameters from ipcsystools.conf
@@ -567,15 +567,18 @@ function check_ifupdown_on_mobile_connection
 
 	# Check if current interface matches IPC mobile connection
 	wan_ifs="`getipcoption general.wan.interfaces`"
+	syslogger "debug" "Is Interface $IFACE a mobile connection? wan_ifs=$wan_ifs"
 	for wan_if in $wan_ifs; do
-		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+		wan_dev=`getipcoption connection.$wan_if.dev`
+		if [ "$IFACE" = "$wan_dev" ]; then
 			hit=0; break
 		fi
 	done
 
-	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if"
+	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if wan_dev=$wan_dev"
 	return $hit
 }
+# Outputs the name of the statusled to set
 function get_on_mobile_connection_led
 {
 	local led=""
@@ -593,11 +596,11 @@ function get_on_mobile_connection_led
 	wan_ifs="`getipcoption general.wan.interfaces`"
 	for wan_if in $wan_ifs; do
 		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
-			led=`getipcoption connection.$wan_if.statusled 3g`
+			led=`getipcoption connection.$wan_if.statusled`
+			if [ -z "$led" ] ; then led="3g"; fi
 			break
 		fi
 	done
-
-	syslogger "warn" "Get statusled for interface $IFACE : $led"
-	return $led
+	syslogger "warn" "Get statusled for interface $IFACE : '$led'"
+	echo "$led"
 }

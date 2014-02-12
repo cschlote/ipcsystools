@@ -11,6 +11,9 @@ DIP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/dip_connection.pid
 
 DIP_DEV=`getipcoption connection.dip.dev`
 
+DIP_LED=`getipcoption connection.dip.statusled`
+DIP_LED=${DIP_LED:=3g}
+
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
 #-----------------------------------------------------------------------
@@ -206,7 +209,7 @@ start)
 		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
 
 	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
+	    $IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -219,16 +222,17 @@ start)
 					WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
 					syslogger "debug" "wwan interface didn't startup."
-					$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+					$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED off
 					rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
+				$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED on
 				syslogger "debug" "wwan interface is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+			$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED off
 			$UMTS_FS
 			syslogger "info" "reported fieldstrength is $?."
 			rc_code=1
