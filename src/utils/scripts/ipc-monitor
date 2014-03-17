@@ -205,8 +205,10 @@ else
 fi
 
 # Automatically start configured WAN connections
-if [ $WAN_FALLBACKMODE -eq 1 ]; then
-	syslogger "debug" "Checking active WAN connection"
+if [ $START_WAN_ENABLED -eq 1 ]; then
+	# Check current interface
+	get_wan_connect_current
+	syslogger "debug" "Checking active WAN connection $WAN_CURRENT"
 	check_wan_connection
 	if [ $? -ne 0 ]; then
 		syslogger "error" "Current WAN connection failed, trying next"
@@ -214,23 +216,36 @@ if [ $WAN_FALLBACKMODE -eq 1 ]; then
 		set_wan_connection_current next
 		reset_wan=true
 	else
-		# Fallbackmodus
-		get_wan_connect_current
-		if [ $WAN_CURRENT -ne 0 ]  ; then
-			syslogger "debug" "Checking fallback to primary WAN connection"
-			check_wan_connection 0 
-			rc=$?
-			if [ $rc -ne 0 ] ; then
-				syslogger "debug" "Primary WAN connection still failing"
-				if [ $rc -eq 2 ] ; then
-					syslogger "debug" "Primary WAN connection requested restart"
-					startup_wan_connection 0
+		# Fallbackmodus - Check for primary interface being back
+		if [ $WAN_FALLBACKMODE -eq 1 ]; then
+			get_wan_connect_current
+			if [ $WAN_CURRENT -ne 0 ]  ; then
+				syslogger "debug" "Checking fallback to primary WAN connection"
+				check_wan_connection 0
+				rc=$?
+				if [ $rc -ne 0 ] ; then
+					syslogger "debug" "... Primary WAN connection still failing"
+					if [ $rc -eq 2 ] ; then
+						syslogger "debug" "... Requested restart for primary WAN connection"
+						shutdown_wan_connection 0
+						startup_wan_connection 0
+					fi
+				fi
+				check_wan_connection 0
+				rc=$?
+				if [ $rc -ne 0 ] ; then
+					syslogger "debug" "... Requested restart for primary WAN connection failed."
+				else
+					syslogger "debug" "... Primary WAN connection available again. Switch back"
+					shutdown_wan_connection 0
+					shutdown_wan_connection
+					set_wan_connection_current reset
+					reset_wan=true
+					# At this point the primary connection might be started just again.
+					# This ensures that primary route is set correctly.
 				fi
 			else
-				syslogger "debug" "Primary WAN connection available again"
-				shutdown_wan_connection
-				set_wan_connection_current reset
-				reset_wan=true
+				syslogger "debug" "No fallback check. We are on primary WAN connection"
 			fi
 		fi
 	fi

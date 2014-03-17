@@ -9,46 +9,86 @@ DESC="connection-ppp[$$]"
 
 PPP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/ppp_connection.pid
 
-PPP_DEV=`getipcoption connection.ppp.dev`
+PPP_DEVUNIT=`getipcoption connection.ppp.dev.unit`
+PPP_DEVUNIT=${PPP_DEVUNIT:=10}
+
+#PPP_DEV=`getipcoption connection.ppp.dev`
+#PPP_DEV=${PPP_DEV:=ppp$PPP_DEVUNIT}
+PPP_DEV=ppp$PPP_DEVUNIT
+PPP_LED=`getipcoption connection.ppp.statusled`
+PPP_LED=${PPP_LED:=3g}
 
 #-----------------------------------------------------------------------
 # Check for functional pppd and pppx interface
 #-----------------------------------------------------------------------
+function PPPProcessExists ()
+{
+    ps ax | grep -v grep | grep -q "pppd /dev/.*ppp-mode.chat"
+    return $?
+}
+
 function IsPPPDAlive ()
 {
-    local pids
-    local rc
+    # Check for running PPPD with given config for umts
+    if ! PPPProcessExists ; then
+	syslogger "warn" "status - PPPD for umts modem is not up"
+	return 1;
+    fi
 
-    pids="`pidof pppd`"; rc=$?
-
-    syslogger "debug" "status - pppd: $pids (rc=$rc)"
-    return $rc
+    # Test for existing ppp$PPP_DEVUNIT interface - FIXME hardwired code!!!!
+    # TODO: Find out the real name of ppp interface for connection
+    if ! ifconfig | grep -q $PPP_DEV ; then
+	syslogger "warn" "status - no $PPP_DEV interface found"
+	return 2;
+    fi
+    if ! ip addr show dev $PPP_DEV | grep -q "inet " ; then
+	syslogger "error" "status - interface $PPP_DEV has no ipv4 addr"
+	return 2;
+    fi
+    syslogger "debug" "status - ppp/umts connection ready"
+    return 0;
 }
 
 function StartPPPD ()
 {
+    local auth=`getipcoption sim.auth`
+    local user=`getipcoption sim.username`
+    local password=`getipcoption sim.password`
+    local pppopts=
+    
     if ! IsPPPDAlive; then
 	RefreshModemDevices
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
 	CreatePPPChatScript
-	pppd $device 460800 connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" &
+	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
+	    pppopts="call $IPC_STATUSFILE_DIR/options.ppp"
+	    cat <<EOF >$IPC_STATUSFILE_DIR/options.ppp
+user $user
+password $password
+EOF
+	fi
+	pppd $device 460800 unit $PPP_DEVUNIT connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
     fi
 }
 function StopPPPD ()
 {
     if IsPPPDAlive; then
-		local pids=`pidof pppd`
-		syslogger "info" "Stopping pppd ($pids)"
-		if [ -z "$pids" ]; then
-			syslogger "info" "No pppd is running."
-			return 0
-		fi
+	local pid
+	local file=/var/run/$PPP_DEV.pid
+	if [ -e $file ]; then
+	    pid=`cat $file`
+	fi
+	if [ -z "$pid" ]; then
+	    syslogger "info" "No pppd is running."
+	    return 0
+	fi
 
-		kill -TERM $pids > /dev/null
-		if [ "$?" != "0" ]; then
-			rm -f /var/run/ppp*.pid > /dev/null
-		fi
+	syslogger "info" "Stopping pppd/umts ($pid)"
+	kill -TERM $pid > /dev/null
+	if [ "$?" != "0" ]; then
+	    rm -f /var/run/$PPP_DEV.pid > /dev/null
+	fi
     fi
 }
 
@@ -194,7 +234,7 @@ start)
 		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
 
 	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
+	    $IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -207,16 +247,17 @@ start)
 				WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
 				syslogger "debug" "ppp deamon didn't startup."
-				$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+				$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED off
 				rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
+				$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED on
 				syslogger "debug" "ppp deamon is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+			$IPC_SCRIPTS_DIR/set_fp_leds $PPP_LED off
 			$UMTS_FS
 			syslogger "info" "reported fieldstrength is $?."
 			rc_code=1

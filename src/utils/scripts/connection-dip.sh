@@ -11,6 +11,9 @@ DIP_CONNECTION_PID_FILE=$IPC_STATUSFILE_DIR/dip_connection.pid
 
 DIP_DEV=`getipcoption connection.dip.dev`
 
+DIP_LED=`getipcoption connection.dip.statusled`
+DIP_LED=${DIP_LED:=3g}
+
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
 #-----------------------------------------------------------------------
@@ -36,6 +39,7 @@ function IsInterfaceAlive ()
 function StartWANInterface ()
 {
     if ! IsInterfaceAlive; then
+	ConfigureDIPMode
 	RefreshModemDevices
 	local device=$COMMAND_DEVICE
 	syslogger "info" "Starting $DIP_DEV (AT Commands on $device)"
@@ -163,20 +167,30 @@ EOF
 }
 
 #
-# Reconfigure modem for DIP connections
+# Reconfigure modem for DIP connections and global software reset
 #
 function ConfigureDIPMode ()
+{
+    ConfigureDIPModeModemCfg
+
+    echo "Reseting modem for interface $DIP_DEV."
+    RefreshModemDevices
+    umtscardtool -s 'at!greset'
+    sleep 15
+    echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
+    echo "$DIP_DEV to startup/shutdown interface."
+}
+
+#
+# Reconfigure modem for DIP connections - modem soft reset
+#
+function ConfigureDIPModeModemCfg ()
 {
     echo "Configuring modem for interface $DIP_DEV for DirectIP."	    
     RefreshModemDevices
     CreateDIPChatScript
     /usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/dip-mode.chat <$COMMAND_DEVICE >$COMMAND_DEVICE
     sleep 2
-    echo "Reseting modem for interface $DIP_DEV."	    
-    umtscardtool -s 'at!greset'
-    sleep 2
-    echo "Modem is now configured for Autostart DirectIP. Use ipup/ifdown"
-    echo "$DIP_DEV to startup/shutdown interface."
 }
     
 #-----------------------------------------------------------------------
@@ -195,7 +209,7 @@ start)
 		[ "$MODEM_STATUS" = "${MODEM_STATES[registeredID]}" ]; then
 
 	    # LED 3g Timer blinken
-	    $IPC_SCRIPTS_DIR/set_fp_leds 3g timer
+	    $IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED timer
 
 	    # Check for modem booked into network
 	    if WaitForModemBookedIntoNetwork; then
@@ -208,16 +222,17 @@ start)
 					WriteModemStatusFile ${MODEM_STATES[connected]}
 				else
 					syslogger "debug" "wwan interface didn't startup."
-					$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+					$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED off
 					rc_code=1
 				fi
 			else
 				WriteModemStatusFile ${MODEM_STATES[connected]}
+				$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED on
 				syslogger "debug" "wwan interface is already running."
 			fi
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
-			$IPC_SCRIPTS_DIR/set_fp_leds 3g off
+			$IPC_SCRIPTS_DIR/set_fp_leds $DIP_LED off
 			$UMTS_FS
 			syslogger "info" "reported fieldstrength is $?."
 			rc_code=1

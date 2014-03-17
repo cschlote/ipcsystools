@@ -6,16 +6,18 @@ echo -n "Shutdown ipc environment... "
 
 rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
 
+set_wan_connection_current reset
+
 # Terminate possibly running PPP daemon
 PPP_PIDS=`pidof pppd`
 kill -TERM $PPP_PIDS 2> /dev/null
-
 
 DetectModemCard
 if [ $? -eq 0 ]; then
 	ipc-set-led ready on
 	shutdown_wan_connection
 	ipc-set-led 3g off
+	ipc-set-led option1 off
 	# Check for config trigger and call backends, or do nothing
 	config_wan_connections
 	if [ $? -ne 0 ]; then

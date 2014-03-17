@@ -66,7 +66,7 @@ CONNECTION_AVAILABLE_FILE=$IPC_STATUSFILE_DIR/connection_available
 # Configuration file
 #-----------------------------------------------------------------------
 function getipcoption () {
-	echo `cat $IPCCTL_CONFIG | grep ^$1 | cut -d"=" -f2 | cut -d"#" -f1`
+	echo `cat $IPCCTL_CONFIG | grep ^$1= | cut -d"=" -f2 | cut -d"#" -f1`
 }
 
 # Read GENERAL parameters from ipcsystools.conf
@@ -301,6 +301,9 @@ function shutdown_wan_connection ()
 {
 	if [ $START_WAN_ENABLED -eq 1 ]; then
 		local wan_curr=`cat $WAN_STATE_FILE`
+		if [ $# -ge 1 ]; then
+			wan_curr=$1
+		fi
 		local wan_if=${WAN_INTERFACES[$wan_curr]}
 		local wan_ct=${WAN_CHECKTARGETS[$wan_curr]}
 		syslogger "debug" "Shutdown WAN connection $wan_if"
@@ -525,10 +528,17 @@ function valid_ip ()
 #   A temporary host route is set to reach specific hosts behind gateways,
 #    when an IP address is specified. Otherwise routing will depend on
 #    existing routes.
+#   The localhost address 127.0.0.1 can be used to disable this test and
+#    immediately return true (rc=0)
 function ping_target ()
 {
 	local rc=1;
 	local i;
+	if [ "$1" = "127.0.0.1" -a "$3" != "lo" ] ; then
+		syslogger "debug" "Watchdog ping to $1 via interface $3 skipped - always true"
+		return 0;
+	fi
+
 	[ "$2" != "default" ] && ip route add $1/32 via $2 dev $3;
 	#bash 4.x: for $(( i=1; i<4; i++ )); do
 	for i in {1..3}; do
@@ -557,12 +567,40 @@ function check_ifupdown_on_mobile_connection
 
 	# Check if current interface matches IPC mobile connection
 	wan_ifs="`getipcoption general.wan.interfaces`"
+	syslogger "debug" "Is Interface $IFACE a mobile connection? wan_ifs=$wan_ifs"
 	for wan_if in $wan_ifs; do
-		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+		wan_dev=`getipcoption connection.$wan_if.dev`
+		if [ "$IFACE" = "$wan_dev" ]; then
 			hit=0; break
 		fi
 	done
 
-	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if"
+	syslogger "warn" "Is Interface $IFACE a mobile connection? rc=$hit wan_if=$wan_if wan_dev=$wan_dev"
 	return $hit
+}
+# Outputs the name of the statusled to set
+function get_on_mobile_connection_led
+{
+	local led=""
+
+	# PPP uses different environment variables, copy as needed
+	if [ -z "$IFACE" -a -n "$PPP_IFACE" ] ; then
+		IFACE=$PPP_IFACE
+	fi
+
+	if [ '$PPP_TTYNAME' = 'usbmodem-data' ] ; then
+		led="3g"
+	fi
+
+	# Check if current interface matches IPC mobile connection
+	wan_ifs="`getipcoption general.wan.interfaces`"
+	for wan_if in $wan_ifs; do
+		if [ "$IFACE" = "`getipcoption connection.$wan_if.dev`" ]; then
+			led=`getipcoption connection.$wan_if.statusled`
+			if [ -z "$led" ] ; then led="3g"; fi
+			break
+		fi
+	done
+	syslogger "warn" "Get statusled for interface $IFACE : '$led'"
+	echo "$led"
 }

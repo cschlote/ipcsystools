@@ -269,8 +269,8 @@ bool GetOptions(int argc, char* argv [])
  @param argv - Standard C main() Argument, pointers to arguments
  @callgraph
 */
-#define MAXLOCKRETRY 60
-#define LOCKRETRYDELAY 10
+#define MAXLOCKRETRY 21
+#define LOCKRETRYDELAY 3
 
 int main(int argc, char* argv [])
 {

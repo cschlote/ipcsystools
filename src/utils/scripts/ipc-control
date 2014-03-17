@@ -23,14 +23,11 @@ EOT
 #-----------------------------------------------------------------------
 
 #--- Parse options -----------------------------------------------------
-while getopts "hft:m:a:" optionName; do
+while getopts "hfc:v" optionName; do
         case "$optionName" in
         h) print_usage; exit 1;;
         f) force=1;;
         c) config=1; contype="$OPTARG";;
-#        t) msgtype="$OPTARG";;
-#        m) msgbody="$OPTARG";;
-#        a) msgattm="$OPTARG";;
         v) verbose=1;;
         [?]) print_usage; exit 1;;
         esac

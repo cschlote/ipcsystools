@@ -21,8 +21,7 @@ function start_services
 	# Startup WAN connection	
 	if [ ! -e /etc/ipcsystools.disable ] ; then
 		echo -n "(cron enabled) "
-		(startup_wan_connection &)
-		touch $IPC_STATUSFILE_DIR/ipcsystools.enabled
+		( startup_wan_connection; touch $IPC_STATUSFILE_DIR/ipcsystools.enabled ) &
 	else
 		echo -n "(cron disabled) "
 		rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
