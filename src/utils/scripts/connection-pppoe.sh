@@ -60,7 +60,7 @@ function StartPPPD ()
 {
     if ! IsPPPoEAlive; then
 	syslogger "info" "Starting pppoe profile $PPPOE_CFG"
-	ifup br0
+	ifup $PPPOE_IF
 	# Check for running PPPD with given config as started by pon/poff
 	if PPPOEProcessExists ; then
 	    syslogger "warn" "status - PPPD for config $PPPOE_CFG is up - terminate"
