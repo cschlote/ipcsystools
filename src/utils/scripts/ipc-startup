@@ -11,6 +11,11 @@ if which ipc-set-led  > /dev/null ; then
 	/usr/bin/ipc-set-led all-off
 fi
 
+# Erase error counters
+echo 0 > $PING_FAULT_FILE
+echo 0 > $CONNECTION_FAULT_FILE
+
+# MCB2 specific - init MCB2 links and cronjobs (can't use cron.d)
 if [ -e /etc/ptxdist_version ] ; then
 	echo -n "(init MCB2) "
 	$IPC_SCRIPTS_DIR/ipc-initsystem.sh install
