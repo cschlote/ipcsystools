@@ -1,3 +1,10 @@
+ipcsystools (2013.11.14-6trusty1) trusty; urgency=medium
+
+  * geany project file
+  * Recompiled for trusty for NCU with Q7 QA3 module
+
+ -- Development <buildmaster@konzeptpark.intra>  Sat, 18 Oct 2014 11:58:27 +0200
+
 ipcsystools (2013.11.14-6lucid1) lucid; urgency=low
 
   * statusleds: bugfixes, reworked code
