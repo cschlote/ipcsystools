@@ -62,11 +62,8 @@ function StartPPPD ()
 	syslogger "info" "Starting pppd on modem device $device"
 	CreatePPPChatScript
 	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
-	    pppopts="call $IPC_STATUSFILE_DIR/options.ppp"
-	    cat <<EOF >$IPC_STATUSFILE_DIR/options.ppp
-user $user
-password $password
-EOF
+	    syslogger "info" "Passing APN user and password to PPPD"
+	    pppopts="user $user password $password"
 	fi
 	pppd $device 460800 unit $PPP_DEVUNIT connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
     fi
