@@ -1,3 +1,10 @@
+ipcsystools (2013.11.14-6trusty3) trusty; urgency=medium
+
+  * connection-ppp: bugfix for MDEX authentication
+  * connection-ppp: Fixed typo whic broke MDEX auth
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Fri, 07 Nov 2014 17:49:50 +0100
+
 ipcsystools (2013.11.14-6trusty2) trusty; urgency=medium
 
   [ Carsten Schlote ]
