@@ -53,7 +53,7 @@ function StartPPPD ()
 {
     local auth=`getipcoption sim.auth`
     local user=`getipcoption sim.username`
-    local password=`getipcoption sim.password`
+    local password=`getipcoption sim.passwd`
     local pppopts=
     
     if ! IsPPPDAlive; then
