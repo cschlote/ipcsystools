@@ -1,3 +1,12 @@
+ipcsystools (2013.11.14-6trusty2) trusty; urgency=medium
+
+  [ Carsten Schlote ]
+  * ipcsystools: connection-pppoe
+  * ipcsystools: ipc-startup
+  * ipcsystools: ipc-startup
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Fri, 07 Nov 2014 15:59:57 +0100
+
 ipcsystools (2013.11.14-6trusty1) trusty; urgency=medium
 
   * geany project file
