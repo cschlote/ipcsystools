@@ -173,7 +173,7 @@ function WriteConnectionNetworkModeFile ()
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
-	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`
+	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | grep -E "(PLMN:|LAC:|Cell ID:).*"`
 	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
 
 	# Write roaming info
