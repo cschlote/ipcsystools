@@ -3,6 +3,17 @@
 # DESCRIPTION: Include file for bash scripts
 #
 
+#----------------------------------------------------------------------
+# Use this function to detect new-style systemd init
+#----------------------------------------------------------------------
+is_systemd() {
+	which systemctl 
+	if [ $? -eq -1 ] ; then return -1; fi
+	return 0 
+}
+
+#----------------------------------------------------------------------
+
 # Base directory of ipc tools
 IPC_TOOLS_DIR=/usr/bin
 
@@ -18,15 +29,28 @@ IPC_STATUSFILE_DIR=/var/run/ipcsystools
 # Base directory for lock files
 IPC_LOCKFILE_DIR=/var/lock/
 
-# Programm zur Netzidentifizierung
-UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
+#----------------------------------------------------------------------
+if is_systemd; then
+
+UMTS_RAT="mmcli -m '$COMMAND_DEVICE' | grep 'access tech:' | awk '{print $4}'"
+UMTS_COPS="mmcli -m '$COMMAND_DEVICE' --timeout=300 --3gpp-scan"
+
+# Programm für das Messen der Feldstärke
+UMTS_FS="mmcli -m '$COMMAND_DEVICE' | grep 'signal quality:' | awk '{print $4}'"
+
+# Programm zur Pin-Eingabe
+UMTS_PIN="mmcli -m '$COMMAND_DEVICE'"
+
+else
 
 # Programm für das Messen der Feldstärke
 UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
 UMTS_PIN="$IPC_TOOLS_DIR/umtscardtool -p"
+fi
 
+#----------------------------------------------------------------------
 # Create path to status files
 if ! [ -e $IPC_STATUSFILE_DIR ]; then
 	mkdir -p $IPC_STATUSFILE_DIR
@@ -135,50 +159,69 @@ function RefreshModemDevices ()
 # Write the UMTS Field strength to a file and update the LEDBAR
 function WriteConnectionFieldStrengthFile ()
 {
-	$UMTS_FS
-	field_strength=$?
-
-	echo $field_strength > $CONNECTION_FS_FILE
+	if is_systemd; then
+		echo $UMTS_FS > $CONNECTION_FS_FILE
+	else
+		$UMTS_FS
+		field_strength=$?
+		echo $field_strength > $CONNECTION_FS_FILE
+	fi
 	ipc-set-led gsmfs $field_strength ||
 		syslogger "warn" "ipc-set-led gsmfs return error"
 }
 
 function ResetModem ()
 {
-	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
+	if is_systemd; then
+		mmcli -m 0 -r
+	else
+		$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
+	fi
 }
 
 # Write the radio access technology (RAT) mode to a file
 function WriteConnectionRATModeFile ()
 {
-	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
-	echo $connectionmode > $CONNECTION_MODE_FILE
+	if is_systemd; then
+		echo $UMTS_RAT > $CONNECTION_MODE_FILE
+	else
+		local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
+		echo $connectionmode > $CONNECTION_MODE_FILE
+	fi
 }
 # Write the current network mode to a file
 function WriteConnectionNetworkModeFile ()
 {
-	local connectionmode
-	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
-
-	# *CNTI: +CME ERROR: no network service
-	local err=`expr match "$cnti" ".*\ERROR"`
-	if [ $err -eq 0 ]; then
-		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
+	if is_systemd; then
+		echo $UMTS_RAT > $CONNECTION_MODE_FILE
 	else
-		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
+		local connectionmode
+		local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
+
+		# *CNTI: +CME ERROR: no network service
+		local err=`expr match "$cnti" ".*\ERROR"`
+		if [ $err -eq 0 ]; then
+			connectionmode=`echo $cnti | awk -F"," '{print $2}'`
+		else
+			connectionmode=`echo $cnti | awk -F":" '{print $3}'`
+		fi
+		echo $connectionmode > $CONNECTION_MODE_FILE
 	fi
-	echo $connectionmode > $CONNECTION_MODE_FILE
 }
 
 function WriteGSMCellInfoFile ()
 {
-	# Write Mobile Network Code
-	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | egrep "(PLMN:|LAC:|Cell ID:).*"`
-	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
+	if is_systemd; then
+		mmcli -m 0 > $CONNECTION_GSMINFO_FILE
+	else
+		# Write Mobile Network Code
+		local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | grep -E "(PLMN:|LAC:|Cell ID:).*"`
+		echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
 
-	# Write roaming info
-	local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
-	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
+		# Write roaming info
+		local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
+		echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
+	fi
 }
 
 function WriteGSMConnectionInfoFiles ()
@@ -208,16 +251,30 @@ function WriteModemStatusFile ()
 
 function DetectModemCard ()
 {
-	# Sierra Wireless Modems
-	if lsusb -d 1199: > /dev/null; then
-		echo "/dev/usbmodem-data" > $CONNECTION_DEVICE_FILE
-		echo "/dev/usbmodem-ctrl" > $COMMAND_DEVICE_FILE
+	if is_systemd; then
+		local mmcliout="`mmcli -L | grep "^Found .* modems:" | awk '{print $2}'`"
+		if test -n "$mmcliout" && test $mmcliout -ge 1 ; then
+			echo "obsolete" > $CONNECTION_DEVICE_FILE
+			mmcli -L | grep "/org/freedesktop/ModemManager1/Modem/" | head -n 1 | awk '{print $1}' | sed 'sX/org/freedesktop/ModemManager1/Modem/XXg' > $COMMAND_DEVICE_FILE
 
-		WriteModemStatusFile ${MODEM_STATES[detectedID]}
-		return 0
+			WriteModemStatusFile ${MODEM_STATES[detectedID]}
+			return 0
+		else
+			WriteModemStatusFile ${MODEM_STATES[no_modemID]}
+			return 1
+		fi
 	else
-		WriteModemStatusFile ${MODEM_STATES[no_modemID]}
-		return 1
+		# Sierra Wireless Modems
+		if lsusb -d 1199: > /dev/null; then
+			echo "/dev/usbmodem-data" > $CONNECTION_DEVICE_FILE
+			echo "/dev/usbmodem-ctrl" > $COMMAND_DEVICE_FILE
+
+			WriteModemStatusFile ${MODEM_STATES[detectedID]}
+			return 0
+		else
+			WriteModemStatusFile ${MODEM_STATES[no_modemID]}
+			return 1
+		fi
 	fi
 }
 
@@ -225,31 +282,40 @@ function SetSIMPIN ()
 {
 	local sim_pin=`getipcoption sim.pin`
 
-	$UMTS_PIN $sim_pin
-	local pin_state=$?
+	if is_systemd; then
+		#mmcli -m $COMMAND_DEVICE --sim=$sim_pin
+		syslogger "FIXME Fix SIM handling for nmcli"
+	else
+		$UMTS_PIN $sim_pin
+		local pin_state=$?
 
-	#  1: PIN angegeben, musste aber nicht gesetzt werden
-	#  2: SIM Karte wurde nicht erkannt
-	#  3: Der PIN wird benötigt, wurde aber nicht angegeben
-	#  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
-	#  5: Die eingegebene PIN war falsch.
-	#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
-	case $pin_state in
-		0|1)
-			WriteModemStatusFile ${MODEM_STATES[readyID]} ;;
-		2)
-			WriteModemStatusFile ${MODEM_STATES[sim_not_insertedID]} ;;
-		3)
-			WriteModemStatusFile ${MODEM_STATES[sim_pinID]} ;;
-		*)
-			WriteModemStatusFile "errorcode: $pin_state" ;;
-	esac
+		#  1: PIN angegeben, musste aber nicht gesetzt werden
+		#  2: SIM Karte wurde nicht erkannt
+		#  3: Der PIN wird benötigt, wurde aber nicht angegeben
+		#  4: PUK oder SuperPIN benötigt. SIM-Karte entnehmen und mit einem Mobiltelefon entsperren.
+		#  5: Die eingegebene PIN war falsch.
+		#  6: Der AT-Befehl zum Setzen der PIN hat einen Fehler erzeugt.
+		case $pin_state in
+			0|1)
+				WriteModemStatusFile ${MODEM_STATES[readyID]} ;;
+			2)
+				WriteModemStatusFile ${MODEM_STATES[sim_not_insertedID]} ;;
+			3)
+				WriteModemStatusFile ${MODEM_STATES[sim_pinID]} ;;
+			*)
+				WriteModemStatusFile "errorcode: $pin_state" ;;
+		esac
+	fi
 }
 
 # Ist die Karte eingebucht?
 function CheckNIState ()
 {
-	$UMTS_NI
+	if is_systemd; then
+		test `mmcli -m $COMMAND_DEVICE | grep 'state:' | head -n 1 | awk '{print $3}'` = 'registered'
+	else
+		$IPC_TOOLS_DIR/umtscardtool -i
+	fi
 	local ni=$?
 	if [ $ni -eq 0 ]; then
 		WriteModemStatusFile ${MODEM_STATES[registeredID]}
@@ -260,9 +326,13 @@ function CheckNIState ()
 
 function SetConnectionRAT ()
 {
-	ratcode=`getipcoption modem.connectionmode`
-	RefreshModemDevices
-	$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null
+	if is_systemd; then
+		syslogger "FIXME: Set radio technology not implemented."
+	else
+		ratcode=`getipcoption modem.connectionmode`
+		RefreshModemDevices
+		$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null
+	fi
 }
 
 function InitializeModem ()
