@@ -1,4 +1,4 @@
-AC_PREREQ(2.64)
+AC_PREREQ([2.69])
 
 esyscmd([echo "define(myversion, $(cat ipcsystools-release))"])
 
