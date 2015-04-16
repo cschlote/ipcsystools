@@ -1,0 +1,12 @@
+[Unit]
+Description=Supervise and manage network and VPN connections for routing
+
+[Service]
+#Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ipc-startup 
+ExecStop=/usr/bin/ipc-shutdown
+
+[Install]
+WantedBy=multi-user.target
+

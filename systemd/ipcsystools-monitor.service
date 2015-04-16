@@ -1,0 +1,6 @@
+[Unit]
+Description=Supervise and manage network and VPN connections for routing
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ipc-monitor
