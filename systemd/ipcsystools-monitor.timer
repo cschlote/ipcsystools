@@ -1,0 +1,13 @@
+[Unit]
+Description=Supervise and manage network and VPN connections for routing
+
+[Timer]
+OnBootSec=30
+OnUnitInactiveSec=100
+
+#OnCalendar=daily
+#AccuracySec=12h
+#Persistent=true
+
+[Install]
+WantedBy=multi-user.target
