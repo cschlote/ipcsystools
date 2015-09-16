@@ -14,3 +14,5 @@ config.log
 config.status
 libtool
 stamp-h1
+src/utils/binblob/binblob
+src/utils/umtscardtool/umtscardtool
