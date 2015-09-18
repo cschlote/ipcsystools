@@ -1,3 +1,35 @@
+ipcsystools (2013.11.14-6vivid2ubuntu1~1.gbp2837f0) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @2837f019e0243ff5dc23a1dce5ab9337dfc52b8f **
+
+  [ Buildmaster ]
+  * geany file
+
+  [ Carsten Schlote ]
+  * autogen.sh: Updated file from ArchLinux mono-git package
+  * automake: Updated the automake files
+  * systemd: Added unit files for ipcsystools.
+  * etc/Makefile.am: Bugfix for install path, udev custom rule
+  * ipclib.inc: replaced egrep by grep -E
+  * udev: Added entry for mc7304 modem
+
+  [ buildmaster ]
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 30 Apr 2015 16:05:59 +0200
+
+ipcsystools (2013.11.14-6vivid2) vivid; urgency=medium
+
+  [ Carsten Schlote ]
+  * autogen.sh: Updated file from ArchLinux mono-git package
+  * automake: Updated the automake files
+  * systemd: Added unit files for ipcsystools.
+  * etc/Makefile.am: Bugfix for install path, udev custom rule
+  * ipclib.inc: replaced egrep by grep -E
+  * udev: Added entry for mc7304 modem
+  * geany file
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 16 Apr 2015 15:44:01 +0200
+
 ipcsystools (2013.11.14-6trusty4) trusty; urgency=medium
 
   * connection-ppp: bugfix for MDEX authentication
