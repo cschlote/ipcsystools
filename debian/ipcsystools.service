@@ -1,0 +1,12 @@
+[Unit]
+Description=konzeptpark routing und control daemon
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/ipc-startup 
+ExecStop=/usr/bin/ipc-shutdown
+
+[Install]
+WantedBy=multi-user.target
+
