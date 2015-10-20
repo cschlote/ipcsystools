@@ -1,11 +1,11 @@
 [Unit]
-Description=Supervise and manage network and VPN connections for routing
+Description=konzeptpark routing und control daemon
 
 [Service]
-#Type=oneshot
+Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/bin/ipc-startup 
-ExecStop=/usr/bin/ipc-shutdown
+ExecStart=/usr/sbin/ipc-startup 
+ExecStop=/usr/sbin/ipc-shutdown
 
 [Install]
 WantedBy=multi-user.target
