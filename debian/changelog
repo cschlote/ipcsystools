@@ -1,4 +1,6 @@
-ipcsystools (2013.11.14-7wily1~1.gbp2837f0ubuntu1) wily; urgency=medium
+ipcsystools (2013.11.14-7wily1~2.gbpc2a231) wily; urgency=medium
+
+  ** SNAPSHOT build @c2a2315fb65b8725037d46268df7b932f077ce0c **
 
   [ Carsten Schlote ]
   * debian-vivid: Added systemd rules
@@ -15,44 +17,8 @@ ipcsystools (2013.11.14-7wily1~1.gbp2837f0ubuntu1) wily; urgency=medium
   * Moved monitor and report script to /usr/sbin
   * debian: systemd service file updated
   * debian-changelog: Updated
-
-  [ buildmaster ]
-
- -- Carsten Schlote <schlote@vahanus.net>  Tue, 20 Oct 2015 16:01:44 +0200
-
-ipcsystools (2013.11.14-7wily1~1.gbp2837f0) wily; urgency=medium
-
-  ** SNAPSHOT build @2837f019e0243ff5dc23a1dce5ab9337dfc52b8f **
-
-  [ Buildmaster ]
-  * geany file
-
-  [ Carsten Schlote ]
-  * autogen.sh: Updated file from ArchLinux mono-git package
-  * automake: Updated the automake files
-  * systemd: Added unit files for ipcsystools.
-  * etc/Makefile.am: Bugfix for install path, udev custom rule
-  * ipclib.inc: replaced egrep by grep -E
-  * udev: Added entry for mc7304 modem
-
-  [ buildmaster ]
-
-  [ Carsten Schlote ]
-  * debian-vivid: Added systemd rules
-  * debian-vivid: Added systemd files
-  * geany file
-  * debian: Added systemd rules
-  * geany: Fixed paths
-  * wip
-  * ipc-reportstatus: Cleanups
-  * ipc-monitor: Cleanups
-  * gps-monitor: Cleanups
-  * ipsec-monitor: Cleanups
-  * connection-mmgr: Added script to control modemmanager modems
-  * Moved monitor and report script to /usr/sbin
-  * debian: systemd service file updated
-
-  [ buildmaster ]
+  * Added momdemmanger script to automake file for installation
+  * debian changelog update
 
  -- Buildmaster <buildmaster@konzeptpark.intra>  Thu, 30 Apr 2015 16:05:59 +0200
 
