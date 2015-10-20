@@ -1,3 +1,13 @@
+ipcsystools (2013.11.14-7wily1~2.gbpc2a231ubuntu1) wily; urgency=medium
+
+  [ Carsten Schlote ]
+  * changelog
+  * debian: systemd.service
+
+  [ buildmaster ]
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Tue, 20 Oct 2015 16:32:51 +0200
+
 ipcsystools (2013.11.14-7wily1~2.gbpc2a231) wily; urgency=medium
 
   ** SNAPSHOT build @c2a2315fb65b8725037d46268df7b932f077ce0c **
