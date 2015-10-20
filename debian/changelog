@@ -1,4 +1,4 @@
-ipcsystools (2013.11.14-7wily1~1.gbp2837f0) UNRELEASED; urgency=medium
+ipcsystools (2013.11.14-7wily1~1.gbp2837f0) wily; urgency=medium
 
   ** SNAPSHOT build @2837f019e0243ff5dc23a1dce5ab9337dfc52b8f **
 
@@ -12,6 +12,23 @@ ipcsystools (2013.11.14-7wily1~1.gbp2837f0) UNRELEASED; urgency=medium
   * etc/Makefile.am: Bugfix for install path, udev custom rule
   * ipclib.inc: replaced egrep by grep -E
   * udev: Added entry for mc7304 modem
+
+  [ buildmaster ]
+
+  [ Carsten Schlote ]
+  * debian-vivid: Added systemd rules
+  * debian-vivid: Added systemd files
+  * geany file
+  * debian: Added systemd rules
+  * geany: Fixed paths
+  * wip
+  * ipc-reportstatus: Cleanups
+  * ipc-monitor: Cleanups
+  * gps-monitor: Cleanups
+  * ipsec-monitor: Cleanups
+  * connection-mmgr: Added script to control modemmanager modems
+  * Moved monitor and report script to /usr/sbin
+  * debian: systemd service file updated
 
   [ buildmaster ]
 
