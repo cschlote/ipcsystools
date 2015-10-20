@@ -17,13 +17,12 @@ REPORT_IP_PORT=`getipcoption reportstatus.ip.port`
 REPORT_LEVEL=`getipcoption reportstatus.level`
 REPORT_INTERVAL=`getipcoption reportstatus.interval`
 
-
-obtainlock $IPC_REPORTER_PID_FILE
-syslogger "debug" "Started ipc report (`date`)"
-
 #-- Start of script ------------------------------------------------------
 
 if [ "$REPORT_ENABLED" = "1" ]; then
+	obtainlock $IPC_REPORTER_PID_FILE
+	syslogger "debug" "Started ipc report (`date`)"
+
 	cd $IPC_SCRIPTS_DIR
 
 	if [ ! -e $IPC_REPORTER_STATUS ]; then
@@ -45,11 +44,12 @@ if [ "$REPORT_ENABLED" = "1" ]; then
 	else
 		syslogger "debug" "Reporting next ipc status in $tdiff seconds"
 	fi
+
+	syslogger "debug" "Finished ipc report (`date`)"
+	releaselock
 else
     syslogger "debug" "ipc-reportstatus disabled"
 fi
 
 #-- End of script ------------------------------------------------------
 
-syslogger "debug" "Finished ipc report (`date`)"
-releaselock
