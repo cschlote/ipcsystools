@@ -19,6 +19,7 @@ nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
 	connection-dip.sh \
 	connection-eth.sh \
+	connection-mmgr.sh \
 	connection-ppp.sh \
 	connection-pppoe.sh \
 	ipc-initsystem.sh \
