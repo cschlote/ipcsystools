@@ -1,3 +1,25 @@
+ipcsystools (2013.11.14-7wily1~1.gbp2837f0ubuntu1) wily; urgency=medium
+
+  [ Carsten Schlote ]
+  * debian-vivid: Added systemd rules
+  * debian-vivid: Added systemd files
+  * geany file
+  * debian: Added systemd rules
+  * geany: Fixed paths
+  * wip
+  * ipc-reportstatus: Cleanups
+  * ipc-monitor: Cleanups
+  * gps-monitor: Cleanups
+  * ipsec-monitor: Cleanups
+  * connection-mmgr: Added script to control modemmanager modems
+  * Moved monitor and report script to /usr/sbin
+  * debian: systemd service file updated
+  * debian-changelog: Updated
+
+  [ buildmaster ]
+
+ -- Carsten Schlote <schlote@vahanus.net>  Tue, 20 Oct 2015 16:01:44 +0200
+
 ipcsystools (2013.11.14-7wily1~1.gbp2837f0) wily; urgency=medium
 
   ** SNAPSHOT build @2837f019e0243ff5dc23a1dce5ab9337dfc52b8f **
