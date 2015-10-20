@@ -8,17 +8,17 @@
 #      AUTHOR:  Dipl. Math. (FH) Andreas Ascheneller, a.ascheneller@konzeptpark.de
 #     COMPANY:  konzeptpark GmbH, 35633 Lahnau
 #
-#       USAGE:  
+#       USAGE:
 #
-#         Die Datei "/etc/ipcsystools.conf" muss um einen Eintrag in der Sektion 
+#         Die Datei "/etc/ipcsystools.conf" muss um einen Eintrag in der Sektion
 #         #[WATCHDOG-VPN]
-#         "vpn.monitorpeers=..." 
+#         "vpn.monitorpeers=..."
 #         erweitert werden. In dem Eintrag stehen dann die Peer Informationen.
-#    
+#
 #         Aufbau
 #         ------
 #           Zupruefende Connection, IP-Adresse zur Ueberwachtung
-#              
+#
 #         Beispiel
 #         --------
 #           In der ipsec.conf existiert eine "connection": conn kp-net-1722510
@@ -36,14 +36,14 @@ CHECK_STATE_TIME=60
 
 IPC_SCRIPTS_DIR=/usr/share/ipcsystools/
 
-# only applicable when ipsec is running  
+# only applicable when ipsec is running
 [ -e /var/run/pluto.pid ] || exit 1
 
 # Restart the ipsec tunnel
 # void RestartIPSecTunnel (char *connname)
 function RestartIPSecTunnel ()
-{	
-  /usr/sbin/ipsec down $1 >& /dev/null	
+{
+  /usr/sbin/ipsec down $1 >& /dev/null
   sleep 1
   /usr/sbin/ipsec up $1 >& /dev/null
 }
@@ -57,19 +57,19 @@ function CheckPeerAddress ()
 
 	# Check time intervall
   if ( test $[$timestamp - $LAST_CHECK_TIME] -gt $CHECK_STATE_TIME ); then
-    # dump timestamp
-    echo `date +%s` > $LAST_CHECK_FILE
+	# dump timestamp
+	echo `date +%s` > $LAST_CHECK_FILE
 
-    # Check external ip-addr.
-    if ping -c 1 -W 10 -s 8 $pingaddr >& /dev/null ; then
-		# reset ping fault counter 	
+	# Check external ip-addr.
+	if ping -c 1 -W 10 -s 8 $pingaddr >& /dev/null ; then
+		# reset ping fault counter
 	  	CHECK_FAULT=0
-      echo $CHECK_FAULT > $CHECK_FAULT_FILE	 
-    else
-      # inc ping fault counter
-      CHECK_FAULT=$[$CHECK_FAULT+1]
-      echo $CHECK_FAULT > $CHECK_FAULT_FILE
-    fi
+	  echo $CHECK_FAULT > $CHECK_FAULT_FILE
+	else
+	  # inc ping fault counter
+	  CHECK_FAULT=$[$CHECK_FAULT+1]
+	  echo $CHECK_FAULT > $CHECK_FAULT_FILE
+	fi
   fi
 }
 
@@ -81,8 +81,8 @@ function CheckTunnelSAState ()
 
 	# Check time intervall
   	if ( test $[$timestamp - $LAST_CHECK_TIME] -gt $CHECK_STATE_TIME ); then
-    	# dump timestamp
-    	echo `date +%s` > $LAST_CHECK_FILE
+		# dump timestamp
+		echo `date +%s` > $LAST_CHECK_FILE
 
 		# Check for IPSec SA
 		if ipsec status | grep $1'.*STATE_QUICK_I2.*IPsec SA established' >& /dev/null ; then
@@ -90,7 +90,7 @@ function CheckTunnelSAState ()
 		else
 			# inc ping fault counter
 		  	CHECK_FAULT=$[$CHECK_FAULT+1]
-		  	echo $CHECK_FAULT > $CHECK_FAULT_FILE	
+		  	echo $CHECK_FAULT > $CHECK_FAULT_FILE
 		fi
 	fi
 }
@@ -121,7 +121,7 @@ ProcessPeerAddress()
 		echo `date +%s` > $LAST_CHECK_FILE
 		# Fake tunnel up
 		TUNNEL_UP_COUNT=$[$TUNNEL_UP_COUNT+1]
-	else	
+	else
 		LAST_CHECK_TIME=`cat $LAST_CHECK_FILE`
 
 		# Read last ping fault result
@@ -139,21 +139,21 @@ ProcessPeerAddress()
 			CheckPeerAddress "$checkip"
 			loggertxt="peer $checkip"
 		fi
-		
+
 		if [ $CHECK_FAULT -gt 0 ]; then
 
 			logger -p local0.info -t $DESC "\"$connname\": check $loggertxt - tunnel down"
-	
+
 			# Wenn n mal nicht erreicht Befehle ausführen
 			if [ $CHECK_FAULT -ge $RESTART_COUNT ]; then
 				logger -p local0.info -t $DESC "\"$connname\": | check $loggertxt failed $CHECK_FAULT times"
 				logger -p local0.warn -t $DESC "\"$connname\": | restart tunnel..."
-						
+
 				# restart tunnel connection
 				RestartIPSecTunnel "$connname"
 
 				# reset ping fault counter
-      			echo 0 > $CHECK_FAULT_FILE
+				echo 0 > $CHECK_FAULT_FILE
 			fi
 		else
 			# inc tunnel up counter
@@ -180,7 +180,7 @@ case "$cmd" in
 		if ( test ${#monitor_peers[*]} -gt 0 ); then
 			# Check peeraddresses
 			for peer in "${monitor_peers[@]}"
-			do 	
+			do
 				ProcessPeerAddress $peer
 			done
 
@@ -204,9 +204,9 @@ case "$cmd" in
 			rc_code=1
 		fi
 	;;
-	*)	
+	*)
 		echo "Usage: $0 check|status"
-		rc_code=1;	
+		rc_code=1;
 	;;
 esac
 

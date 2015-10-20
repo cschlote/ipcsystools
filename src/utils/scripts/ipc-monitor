@@ -180,11 +180,11 @@ function check_connection_maxlost () {
 #-----------------------------------------------------------------------
 
 if [ -e /etc/ipcsystools.disable ] ; then
-    syslogger "debug" "ipcsystools disabled"
+	syslogger "debug" "ipcsystools disabled"
 	exit 0
 fi
 if [ ! -e $IPC_STATUSFILE_DIR/ipcsystools.enabled ] ; then
-    syslogger "debug" "ipcsystools not started/initialized yet."
+	syslogger "debug" "ipcsystools not started/initialized yet."
 	exit 0
 fi
 
@@ -259,17 +259,17 @@ fi
 
 #--- Ping a remote target and count faults eventually rebooting
 
-syslogger "info" "Run Remote ping test..."
+syslogger "debug" "Run Remote ping test..."
 if ! check_connection_maxping; then
-    syslogger "info" "... remote ping test reported failure!"
+    syslogger "error" "... remote ping test reported failure!"
 else
-    syslogger "info" "... remote ping test ok."
+    syslogger "debug" "... remote ping test ok."
 fi
 
 #--- Check for connection status and PING_FAULT==0 and trigger reboot
 #--- when no valid connection after n times OR n seconds.
 
-syslogger "info" "Run connection status test..."
+syslogger "debug" "Run connection status test..."
 if ! check_connection_maxlost; then
     syslogger "warn" "... remote connection test failed!"
 else
@@ -296,7 +296,7 @@ else
 fi
 
 #-- End of script ------------------------------------------------------
-syslogger "info" "Finished monitor (`date`)"
+syslogger "debug" "Finished monitor (`date`)"
 releaselock
 
 exit 0

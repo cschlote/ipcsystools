@@ -1,13 +1,13 @@
 ## Process this file with automake to produce Makefile.in
 
 bin_SCRIPTS = \
-	gps-monitor \
-	ipc-monitor \
-	ipsec-monitor \
-	ipc-reportstatus \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
+	gps-monitor \
+	ipc-monitor \
+	ipc-reportstatus \
+	ipsec-monitor \
 	ipc-startup ipc-shutdown ipc-control
 
 DISTCLEANFILES = Makefile.in
