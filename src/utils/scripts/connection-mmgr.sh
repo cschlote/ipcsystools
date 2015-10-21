@@ -1,4 +1,5 @@
 #!/bin/bash
+#-----------------------------------------------------------------------
 # DESCRIPTION: Script starts the ModemManager Connection
 #       USAGE: $0 start | stop | check <ip> <gw> | status
 
@@ -14,6 +15,24 @@ MMGR_DEV=${MMGR_DEV:=wwan0}
 MMGR_LED=`getipcoption connection.mmgr.statusled`
 MMGR_LED=${MMGR_LED:=3g}
 
+MMGR_PATH=
+
+#-----------------------------------------------------------------------
+# Get the first modem path from modemmanger. Return error RC when
+# no modem ist found
+#-----------------------------------------------------------------------
+function GetModemPath ()
+{
+    local tmp=`mmcli -L | grep -E "/org/.*" | cut -d" " -f1 | cut -f2`
+    if [ -n 'tmp' ]; then
+	MMGR_PATH=$tmp
+    else
+	syslogger "error" "No modem found by modemmanager."
+	return 1
+    fi
+    return 0
+}
+
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
 #-----------------------------------------------------------------------
@@ -21,14 +40,16 @@ MMGR_LED=${MMGR_LED:=3g}
 function IsInterfaceAlive ()
 {
     local ifstatus
-    local rc
-    ifstatus="`mmcli -m 0 --simple-status`"
-    echo $ifstatus | grep -q "connected"; rc=$?
-    syslogger "debug" "status - wwan if: $MMGR_DEV  bearer up? (rc=$rc)"
-    if [ $rc = 0 ]; then
-	ifstatus="`ip addr show $MMGR_DEV`"
-	echo $ifstatus | grep -q "inet "; rc=$?
-	syslogger "debug" "status - wwan if: $MMGR_DEV  has ip? (rc=$rc)"
+    local rc=1
+    if GetModemPath; then
+	ifstatus="`mmcli -m $MMGR_PATH --simple-status`"
+	echo $ifstatus | grep -q "connected"; rc=$?
+	syslogger "debug" "status - wwan if: $MMGR_DEV  bearer up? (rc=$rc)"
+	if [ $rc = 0 ]; then
+	    ifstatus="`ip addr show $MMGR_DEV`"
+	    echo $ifstatus | grep -q "inet "; rc=$?
+	    syslogger "debug" "status - wwan if: $MMGR_DEV  has ip? (rc=$rc)"
+	fi
     fi
     return $rc
 }
@@ -39,8 +60,8 @@ function IsInterfaceAlive ()
 # - Requires entry in /etc/network/interfaces for configuration!!!!
 function StartWANInterface ()
 {
-    if ! IsInterfaceAlive; then
-	echo "Starting $MMGR_DEV"
+    if GetModemPath && ! IsInterfaceAlive; then
+	echo "Starting $MMGR_DEV on $MMGR_PATH"
 	syslogger "info" "Starting $MMGR_DEV"
 	ifdown $MMGR_DEV || true
 	sleep 3
@@ -54,8 +75,8 @@ function StartWANInterface ()
 }
 function StopWANInterface ()
 {
-    if IsInterfaceAlive; then
-	echo "Stopping $MMGR_DEV"
+    if GetModemPath && IsInterfaceAlive; then
+	echo "Stopping $MMGR_DEV on $MMGR_PATH"
 	syslogger "info" "Stopping $MMGR_DEV"
 	ifdown $MMGR_DEV || true
 	sleep 6
@@ -103,7 +124,7 @@ function MMgrSetSIMPIN ()
 {
 	local sim_pin=`getipcoption sim.pin`
 
-	#FIXME $UMTS_PIN $sim_pin
+#FIXME $UMTS_PIN $sim_pin
 	mmcli -i 0
 	local pin_state=$?
 
@@ -126,13 +147,13 @@ function MMgrSetSIMPIN ()
 }
 function MMgrCheckNIState ()
 {
-	#$UMTS_NI
+#FIXME 	$UMTS_NI
 	qmicli -d /dev/cdc-wdm0 -p --nas-get-home-network | grep "Successfully"
 	local ni=$?
-	#if [ $ni -eq 0 ]; then
-		WriteModemStatusFile ${MODEM_STATES[registeredID]}
-	#FIXME	WriteGSMConnectionInfoFiles
-	#fi
+	if [ $ni -eq 0 ]; then
+	    WriteModemStatusFile ${MODEM_STATES[registeredID]}
+#FIXME	WriteGSMConnectionInfoFiles
+	fi
 	return $ni
 }
 
@@ -183,22 +204,22 @@ function WaitForModemBookedIntoNetwork ()
 function StartModemManagerConnection
 {
     echo "Resetting modem"
-    # mmcli -m 0 -r
+    # mmcli -m $MMGR_PATH -r
     echo "Enabling modem"
-    mmcli -m 0 -e
+    mmcli -m $MMGR_PATH -e
     echo "Setting APN name, and user/pw if needed. Startup connection."
     if [ `getipcoption sim.auth` -eq 1 ]; then
-	mmcli -m 0 --simple-connect="apn=`getipcoption sim.apn`,user=`getipcoption sim.username`,password=`getipcoption sim.passwd`"
+	mmcli -m $MMGR_PATH --simple-connect="apn=`getipcoption sim.apn`,user=`getipcoption sim.username`,password=`getipcoption sim.passwd`"
     else
-	mmcli -m 0 --simple-connect="apn=`getipcoption sim.apn`"
+	mmcli -m $MMGR_PATH --simple-connect="apn=`getipcoption sim.apn`"
     fi
 }
 function StopModemManagerConnection
 {
     echo "Stop Connection"
-    mmcli -m 0 --simple-disconnect
+    mmcli -m $MMGR_PATH --simple-disconnect
     echo "Disabling modem"
-    mmcli -m 0 -d
+    mmcli -m $MMGR_PATH -d
 }
 
 #
@@ -208,8 +229,8 @@ function ConfigureMMGRMode ()
 {
     echo "Reseting modem for interface $MMGR_DEV."
     RefreshModemDevices
-    mmcli -m 0 -d
-    # mmcli -m 0 -r
+    mmcli -m $MMGR_PATH -d
+    # mmcli -m $MMGR_PATH -r
     # umtscardtool -s 'at!greset'
     # sleep 15
     echo "Modem is now configured for QMI. Use ModemManger and ipup/ifdown"
@@ -220,6 +241,7 @@ function ConfigureMMGRMode ()
 #-----------------------------------------------------------------------
 # Main
 #-----------------------------------------------------------------------
+
 rc_code=0
 obtainlock $MMGR_CONNECTION_PID_FILE
 
@@ -236,7 +258,7 @@ start)
 	    $IPC_SCRIPTS_DIR/set_fp_leds $MMGR_LED timer
 
 	    # Check for modem booked into network
-	    if WaitForModemBookedIntoNetwork; then
+	    if GetModemPath && WaitForModemBookedIntoNetwork; then
 			sleep 1
 #FIXME			WriteConnectionFieldStrengthFile
 #FIXME			WriteConnectionNetworkModeFile
@@ -258,7 +280,7 @@ start)
 	    else
 			syslogger "error" "Could not initialize datacard (timeout)"
 			$IPC_SCRIPTS_DIR/set_fp_leds $MMGR_LED off
-			$UMTS_FS
+#FIXME			$UMTS_FS
 			syslogger "info" "reported fieldstrength is $?."
 			rc_code=1
 	    fi
@@ -269,7 +291,7 @@ start)
 stop)
 	syslogger "info" "stopping connection..."
 	StopWANInterface
-	# mmcli -m 0 -r
+	# mmcli -m $MMGR_PATH -r
 	MMgrCheckNIState
 	$IPC_SCRIPTS_DIR/set_fp_leds $MMGR_LED off
     ;;
