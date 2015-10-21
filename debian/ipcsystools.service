@@ -1,11 +1,15 @@
 [Unit]
 Description=konzeptpark routing und control daemon
+After=ModemManager.service
+After=network.target
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
-ExecStart=/usr/sbin/ipc-startup 
-ExecStop=/usr/sbin/ipc-shutdown
+#Type=oneshot
+#RemainAfterExit=yes
+#ExecStart=/usr/sbin/ipc-startup 
+#ExecStop=/usr/sbin/ipc-shutdown
+
+ExecStart=/usr/sbin/ipc-service
 
 [Install]
 WantedBy=multi-user.target
