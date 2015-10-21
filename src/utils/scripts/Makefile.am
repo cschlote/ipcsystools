@@ -4,6 +4,7 @@ bin_SCRIPTS = \
 	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
+	ipc-service \
 	gps-monitor \
 	ipc-monitor \
 	ipc-reportstatus \
