@@ -1,35 +1,15 @@
-ipcsystools (2013.11.14-7wily1~2.gbpc2a231ubuntu2) wily; urgency=medium
+ipcsystools (2013.11.14-7wily1) wily; urgency=medium
 
   [ Carsten Schlote ]
-  * systemd-service: Changed service file from one-shot to ipc-service
+  * Added support for ModemManger modems (BETA)
+  * ipc-service: Cleanups and fixes
+  * ipc-cronjobs.sh: Cleanups
+  * connection-mmgr: Added support for SIM pin, general fixes
   * systemd-service: Changed service file from one-shot to ipc-service
   * connection-mmgr: Added patch detection for mmgr modem
-
-  [ buildmaster ]
-
- -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 21 Oct 2015 10:39:04 +0200
-
-ipcsystools (2013.11.14-7wily1~2.gbpc2a231ubuntu1) wily; urgency=medium
-
-  [ Carsten Schlote ]
-  * changelog
-  * debian: systemd.service
-
-  [ buildmaster ]
-
- -- Buildmaster <buildmaster@konzeptpark.intra>  Tue, 20 Oct 2015 16:32:51 +0200
-
-ipcsystools (2013.11.14-7wily1~2.gbpc2a231) wily; urgency=medium
-
-  ** SNAPSHOT build @c2a2315fb65b8725037d46268df7b932f077ce0c **
-
-  [ Carsten Schlote ]
-  * debian-vivid: Added systemd rules
   * debian-vivid: Added systemd files
-  * geany file
   * debian: Added systemd rules
   * geany: Fixed paths
-  * wip
   * ipc-reportstatus: Cleanups
   * ipc-monitor: Cleanups
   * gps-monitor: Cleanups
