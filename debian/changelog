@@ -1,3 +1,14 @@
+ipcsystools (2013.11.14-7wily1~2.gbpc2a231ubuntu2) wily; urgency=medium
+
+  [ Carsten Schlote ]
+  * systemd-service: Changed service file from one-shot to ipc-service
+  * systemd-service: Changed service file from one-shot to ipc-service
+  * connection-mmgr: Added patch detection for mmgr modem
+
+  [ buildmaster ]
+
+ -- Buildmaster <buildmaster@konzeptpark.intra>  Wed, 21 Oct 2015 10:39:04 +0200
+
 ipcsystools (2013.11.14-7wily1~2.gbpc2a231ubuntu1) wily; urgency=medium
 
   [ Carsten Schlote ]
