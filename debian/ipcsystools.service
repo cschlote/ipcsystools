@@ -2,6 +2,7 @@
 Description=konzeptpark routing und control daemon
 After=ModemManager.service
 After=network.target
+Conflicts=shutdown.target
 
 [Service]
 #Type=oneshot
@@ -10,6 +11,8 @@ After=network.target
 #ExecStop=/usr/sbin/ipc-shutdown
 
 ExecStart=/usr/sbin/ipc-service
+KillSignal=SIGHUP
+TimeoutStopSec=90
 
 [Install]
 WantedBy=multi-user.target
