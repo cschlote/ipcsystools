@@ -1,0 +1,17 @@
+.\"
+.TH ipc-service 1 "Oct. 2015" "Ubuntu"
+.SH NAME
+ipc-service \- SystemD Service to Monitor and control the network interfaces
+.SH SYNOPSIS
+.B ipc-service
+.SH DESCRIPTION
+.B ipc-service
+is a systemd service, which starts and monitors LAN and WWAN connections. 
+Watchdogs can be used to restart network interfaces or reboot the system 
+as desired.
+This script uses variables in ipcsystools.conf to determine service loop
+interval. It also checks for some global enable flag to disable the 
+service independant from systemd.
+.SH AUTHOR
+Carsten Schlote
+
