@@ -22,7 +22,7 @@ case "$1" in
     configure)
 		# Update init scripts links
 		if dpkg --compare-versions "$2" lt "2012.10.02-1precise1"; then
-		update-rc.d -f ipcsystools remove
+			update-rc.d -f ipcsystools remove
 		fi
     ;;
 
