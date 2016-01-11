@@ -68,7 +68,7 @@ function IsInterfaceAlive ()
 	if [ $rc = 0 ]; then
 	    # Check for assigned ip
 	    ifstatus="`ip addr show $MMGR_DEV`"
-	    echo $ifstatus | grep -q "inet "; rc=$?
+	    echo $ifstatus | grep -v "inet 169.254." |grep -q "inet "; rc=$?
 	    syslogger "debug" "(rc=$rc) Is a ip defined for $MMGR_DEV"
 	fi
     fi
