@@ -1,3 +1,11 @@
+ipcsystools (2013.11.14-7wily2) wily; urgency=medium
+
+  [ Carsten Schlote ]
+  * postinst: Cleanups
+  * connection-mmgr.sh: Filter broadcast config for alive check
+
+ -- buildmaster <buildmaster@konzeptpark.intra>  Wed, 13 Jan 2016 10:26:21 +0100
+
 ipcsystools (2013.11.14-7wily1) wily; urgency=medium
 
   [ Carsten Schlote ]
