@@ -14,7 +14,7 @@ description=konzeptpark firmware tool chain for MCB and mIPC
 run_cmd=git-buildpackage --git-ignore-new -tc
 
 [files]
-current_page=16
+current_page=25
 FILE_NAME_0=2063;None;0;EUTF-8;1;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2FREADME;0;4
 FILE_NAME_1=0;None;0;EUTF-8;1;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2FAUTHORS;0;4
 FILE_NAME_2=386;None;0;EUTF-8;1;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fdebian%2Fchangelog;0;4
@@ -40,6 +40,7 @@ FILE_NAME_21=0;Sh;0;EUTF-8;2;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fs
 FILE_NAME_22=0;Sh;0;EUTF-8;2;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fsrc%2Futils%2Fscripts%2Fconnection-pppoe.sh;0;4
 FILE_NAME_23=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fsrc%2Futils%2Fscripts%2Fset_fp_leds;0;4
 FILE_NAME_24=0;Sh;0;EUTF-8;1;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fsrc%2Futils%2Fscripts%2Fipclib.inc;0;4
+FILE_NAME_25=0;Sh;0;EUTF-8;2;1;0;%2Fhome%2Fbuildmaster%2Fbuild%2Fipcsystools%2Fsrc%2Futils%2Fscripts%2Fconnection-mmgr.sh;0;4
 
 [file_prefs]
 final_new_line=true
@@ -53,3 +54,8 @@ long_line_column=72
 
 [VTE]
 last_dir=/home/buildmaster
+
+[editor]
+line_wrapping=false
+line_break_column=72
+auto_continue_multiline=true
