@@ -1,3 +1,9 @@
+ipcsystools (2013.11.14-8xenial1) xenial; urgency=medium
+
+  * UUpdated to Xenial Xerus
+
+ -- buildmaster <buildmaster@konzeptpark.intra>  Fri, 15 Jan 2016 15:01:59 +0100
+
 ipcsystools (2013.11.14-7wily2) wily; urgency=medium
 
   [ Carsten Schlote ]
