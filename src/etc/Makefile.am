@@ -34,9 +34,9 @@ install-data-local:
 	$(INSTALL_PROGRAM) $(srcdir)/if-down.d/50_openvpn-down $(DESTDIR)/etc/network/if-down.d/50_openvpn-down
 	$(INSTALL_PROGRAM) $(srcdir)/if-down.d/50_ipsec-down $(DESTDIR)/etc/network/if-down.d/50_ipsec-down
 #	# Add alias udev rules for usbmodem-ctrl and usbmodem-data
-	#$(mkinstalldirs) $(DESTDIR)/$(libdir)/udev/rules.d
-	#$(INSTALL_DATA) $(srcdir)/udev/rules.d/40-sierra-modem.rules $(DESTDIR)/$(libdir)/udev/rules.d/40-sierra-modem.rules
-	# MOVED TO debian/<packagename>.udev file.
+#	#$(mkinstalldirs) $(DESTDIR)/$(libdir)/udev/rules.d
+#	#$(INSTALL_DATA) $(srcdir)/udev/rules.d/40-sierra-modem.rules $(DESTDIR)/$(libdir)/udev/rules.d/40-sierra-modem.rules
+#	# MOVED TO debian/<packagename>.udev file.
 #	# Add cron fragment to cron.d system
 	$(mkinstalldirs) $(DESTDIR)/etc/cron.d/
 	$(INSTALL_DATA)  $(srcdir)/cron.d/ipcsystools $(DESTDIR)/etc/cron.d/ipcsystools
