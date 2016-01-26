@@ -3,11 +3,26 @@
 
 set -e
 
+#-- prerequistes -------------------------------------------------------
+
+if ! which pristine-tar ; then
+	echo "This script requires pristine-tar installed!"
+	sudo apt-get install pristine-tar
+fi
+if ! which gbp ; then
+	echo "This script requires git-buildpackage installed!"
+	sudo apt-get install git-buildpackage
+fi
+
+#--  Last warning ------------------------------------------------------
+
 DEPLOYDATE=`date +%Y.%m.%d`
 echo ""
 echo "CAUTION: Dangerous script"
 echo "  You should have a clean working copy and branches pushed to"
 echo "  master repository before you continue!"
+echo ""
+echo "DEPLOYDATE will be set to $DEPLOYDATE"
 echo ""
 echo "Enter 'Yes' to continue"
 read a
@@ -16,23 +31,15 @@ if ! test "Yes" = "$a" ; then
 	exit
 fi
 
-if ! which pristine-tar ; then
-	echo "This script requires pristine-tar installed!"
-	sudo apt-get install pristine-tar
-fi
-if ! which git-dch ; then
-	echo "This script requires git-buildpackage installed!"
-	sudo apt-get install git-buildpackage
-fi
+#-- Checkout master and update release tags ----------------------------
 
-#-- Checkout master and update release tags
 echo "Checkout master and update release tag"
 git checkout master
 git clean -df
-echo $DEPLOYDATE > ipcsystools-release
 ./autogen.sh
-git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release configure
 git citool || true
+echo $DEPLOYDATE > ipcsystools-release
+git commit -m "Deployed ipcsystools $DEPLOYDATE" ipcsystools-release
 
 echo "Switching to upstream branch, merge master"
 git checkout upstream
@@ -53,8 +60,8 @@ git checkout debian
 git merge master
 
 export DEPLOYDATE=`cat ipcsystools-release`;
-git tag -f -a -m "Debian release $DEPLOYDATE" debian/$DEPLOYDATE-1lucid1
-git-dch --git-author --verbose -N $DEPLOYDATE-1lucid1
+git tag -f -a -m "Debian release $DEPLOYDATE" debian/$DEPLOYDATE-1ubuntu1
+git-dch --git-author --verbose -N $DEPLOYDATE-1ubuntu1
 
 joe debian/changelog
 

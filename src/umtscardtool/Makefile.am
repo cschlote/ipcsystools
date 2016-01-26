@@ -12,7 +12,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
 AM_LDFLAGS = \
-	-L$(top_srcdir)/src/commonlib \
+	-L$(top_srcdir)/src/lib \
 	-Wl,-rpath-link -Wl,$(top_srcdir)/src/lib/.libs/ \
 	-lbstrlib -linifile -lipctoolset
 
@@ -27,7 +27,7 @@ sbin_PROGRAMS =
 ## -------------------------------------------------------------------
 
 umtscardtool_SOURCES = umtscardtool.c setop.c fs.c ni.c pin.c customcmd.c
-umtscardtool_LDFLAGS = -L$(abs_top_builddir)/src/commonlib -lipctoolset
+umtscardtool_LDFLAGS = -L$(abs_top_builddir)/src/lib -lipctoolset
 
 install-data-hook :
 	chmod +s $(DESTDIR)$(bindir)/umtscardtool
