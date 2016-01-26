@@ -61,7 +61,7 @@ git merge master
 
 export DEPLOYDATE=`cat ipcsystools-release`;
 git tag -f -a -m "Debian release $DEPLOYDATE" debian/$DEPLOYDATE-1ubuntu1
-git-dch --git-author --verbose -N $DEPLOYDATE-1ubuntu1
+gbp dch --git-author --verbose -N $DEPLOYDATE-1ubuntu1
 
 joe debian/changelog
 
