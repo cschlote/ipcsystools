@@ -31,6 +31,7 @@ AC_SUBST(LT_AGE)
 # Checks for programs.
 #
 AC_PROG_CC
+AM_PROG_LIBTOOL
 LT_INIT
 
 AM_INIT_AUTOMAKE([foreign no-exeext dist-bzip2])
@@ -68,13 +69,11 @@ fi
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
-	src/commonlib/Makefile
-	src/utils/Makefile
+	src/etc/Makefile
+	src/lib/Makefile
 	src/utils/scripts/Makefile
 	src/utils/umtscardtool/Makefile
-	src/utils/binblob/Makefile
-	src/utils/binblob/scripts/Makefile
-	src/etc/Makefile
+	src/utils/ipcsystools/Makefile
 ])
 AC_OUTPUT
 
