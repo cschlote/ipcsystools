@@ -1,0 +1,11 @@
+
+Aktuelles Ziel:
+- Reduktion auf das Notwendige, nämlich den ipc-service und Steuerung
+  von Fallback und mobiler Verbindung inklusive der WatchDogs
+- Sonstige Funktionen wandern in eigene Packete (binblob, bstrptr)
+  und können bei Bedarf mitinstalliert werden.
+- Eleminierung von umtscardtool und Wechsel auf ModemManager
+
+Erledigt:
+
+Offen:

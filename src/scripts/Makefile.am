@@ -17,15 +17,15 @@ bin_SCRIPTS = \
 
 DISTCLEANFILES = Makefile.in
 
-nobase_dist_pkgdata_DATA = \
-	asciimsg.script \
-	mcb2msg1.script \
-	mcb2msg2.script \
-	mcb2msg3.script \
-	mcb2msg4.script \
-	mcb2msg5.script
+#nobase_dist_pkgdata_DATA = \
+#	asciimsg.script \
+#	mcb2msg1.script \
+#	mcb2msg2.script \
+#	mcb2msg3.script \
+#	mcb2msg4.script \
+#	mcb2msg5.script
+#devel:	statusmsg.script 
 
 man1_MANS = \
 	$(addsuffix .man,$(bin_SCRIPTS))
 
-#devel:	statusmsg.script 

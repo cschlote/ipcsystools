@@ -102,13 +102,13 @@ for PARAM; do
     fi
 done
 
-if test x$has_ext_mod = xtrue; then
-	pushd ../mono-extensions/scripts
-	sh ./prepare-repo.sh $ext_mod_args || exit 1
-	popd
-else
-	cat mono/mini/Makefile.am.in > mono/mini/Makefile.am
-fi
+#if test x$has_ext_mod = xtrue; then
+#	pushd ../mono-extensions/scripts
+#	sh ./prepare-repo.sh $ext_mod_args || exit 1
+#	popd
+#else
+#	cat mono/mini/Makefile.am.in > mono/mini/Makefile.am
+#fi
 
 
 echo "Running aclocal -I m4 -I . $ACLOCAL_FLAGS ..."
