@@ -1,9 +1,13 @@
 
 # Special Rules für the NCU Hardware
 
-# Rules for the internal USB Ports of MC7304 Sierra Wireless Modem (new)
+# Rules for the internal USB Ports of MC7304 Sierra Wireless Modem (on older kernel, pre-xenial)
 SUBSYSTEMS=="usb", DRIVERS=="qcserial", ATTRS{bInterfaceNumber}=="02", SYMLINK+="usbmodem-ctrl"
 SUBSYSTEMS=="usb", DRIVERS=="qcserial", ATTRS{bInterfaceNumber}=="03", SYMLINK+="usbmodem-data"
+
+# Rules for the internal USB Ports of MC7304 Sierra Wireless Modem (on 4.x kernel, xenial)
+SUBSYSTEMS=="usb", DRIVERS=="option", ATTRS{bInterfaceNumber}=="03", SYMLINK+="usbmodem-ctrl1"
+SUBSYSTEMS=="usb", DRIVERS=="option", ATTRS{bInterfaceNumber}=="02", SYMLINK+="usbmodem-data1"
 
 # Rules for the internal USB Port - Sierra Wireless Modem
 SUBSYSTEMS=="usb", DRIVERS=="sierra", ATTRS{bInterfaceNumber}=="03", SYMLINK+="usbmodem-ctrl"
