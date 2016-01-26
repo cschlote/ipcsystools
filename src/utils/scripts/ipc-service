@@ -18,8 +18,10 @@ IPC_SERVICE_INTERVAL=${IPC_SERVICE_INTERVAL:=90}
 syslogger "debug" "Service interval set to $IPC_SERVICE_INTERVAL seconds"
 
 running=true
+forcedrun=false
 trap "running=false; syslogger 'debug' 'Got HUP signal'" SIGHUP
-trap "syslogger 'info' 'Catched SIGUSR1'" SIGUSR1
+trap "syslogger 'info' 'Catched SIGUSR1 - do nothing'" SIGUSR1
+trap "forcedrun=true; syslogger 'info' 'Catched SIGUSR2 - Forced run'" SIGUSR2
 
 #-- Start of script ----------------------------------------------------
 
@@ -37,12 +39,13 @@ if [ "$IPC_SERVICE_ENABLED" = "1" ]; then
 	while $running; do
 		let tdiff=`date +%s`-`cat $IPC_SERVICE_STATUS`
 		let tdiff=$IPC_SERVICE_INTERVAL-$tdiff
-		if [ $tdiff -gt 2 ]; then
+		if ! $forcedrun && [ $tdiff -gt 2 ]; then
 			sleep 2
 		else
 			date +%s > $IPC_SERVICE_STATUS
 			syslogger "debug" "Executing ipc service loop"
 			$IPC_SCRIPTS_DIR/ipc-cronjobs.sh
+			forcedrun=false
 		fi
 	done
 
