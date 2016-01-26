@@ -9,22 +9,19 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/include $(all_includes) \
    @CPPFLAGS@ 
 AM_CFLAGS = -Wall -Werror
 AM_CXXFLAGS = -Wall -Werror
-AM_LDFLAGS = -L$(top_srcdir)/src/commonlib
+AM_LDFLAGS = -L$(top_srcdir)/src/lib
 
 DISTCLEANFILES = Makefile.in
 
 ## -- Build a static/shared library for the ipcsystools binaries ------
 
 #lib_LTLIBRARIES = \
-# libbinblob.la
-
-libbinblob_la_SOURCES = libbinblob.c libbinblob.h
+# libXYZ.la
 
 pkglib_LTLIBRARIES = \
  libipctoolset.la \
  libinifile.la \
- libbstrlib.la \
- libbinblob.la
+ libbstrlib.la 
 
 libipctoolset_la_SOURCES = \
  lockfile.c lockfile.h \

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = commonlib utils etc
+SUBDIRS = lib utils etc
 
 AM_CPPFLAGS =  \
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
