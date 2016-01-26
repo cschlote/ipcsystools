@@ -2,7 +2,7 @@
 ## Process this file with automake to produce Makefile.in
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src/commonlib \
+	-I$(top_srcdir)/src/lib \
 	-I$(top_srcdir)/src/include $(all_includes) \
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
@@ -13,7 +13,7 @@ AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
 AM_LDFLAGS = \
 	-L$(top_srcdir)/src/commonlib \
-	-Wl,-rpath-link -Wl,$(top_srcdir)/src/commonlib/.libs/ \
+	-Wl,-rpath-link -Wl,$(top_srcdir)/src/lib/.libs/ \
 	-lbstrlib -linifile -lipctoolset
 
 DISTCLEANFILES = Makefile.in
