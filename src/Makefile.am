@@ -5,7 +5,7 @@ SUBDIRS = \
  lib \
  scripts \
  umtscardtool \
- ipcsystools
+ service
 
 DISTCLEANFILES = Makefile.in
 
