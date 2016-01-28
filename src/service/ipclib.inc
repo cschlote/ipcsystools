@@ -135,7 +135,9 @@ function RefreshModemDevices ()
 # Write the UMTS Field strength to a file and update the LEDBAR
 function WriteConnectionFieldStrengthFile ()
 {
-	$UMTS_FS
+#	$UMTS_FS
+	syslogger "debug" "FIXME Get fieldstreng via modemmanager"
+	
 	field_strength=$?
 
 	echo $field_strength > $CONNECTION_FS_FILE
@@ -145,40 +147,47 @@ function WriteConnectionFieldStrengthFile ()
 
 function ResetModem ()
 {
-	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
+#	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
+	syslogger "debug" "FIXME Reseting modem via modemmanager"
 }
 
 # Write the radio access technology (RAT) mode to a file
 function WriteConnectionRATModeFile ()
 {
-	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
-	echo $connectionmode > $CONNECTION_MODE_FILE
+#	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
+#	echo $connectionmode > $CONNECTION_MODE_FILE
+	syslogger "error" "FIXME Get radio technology from modemmanager"
 }
 # Write the current network mode to a file
 function WriteConnectionNetworkModeFile ()
 {
-	local connectionmode
-	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
+#	local connectionmode
+#	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
 
 	# *CNTI: +CME ERROR: no network service
-	local err=`expr match "$cnti" ".*\ERROR"`
-	if [ $err -eq 0 ]; then
-		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
-	else
-		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
-	fi
-	echo $connectionmode > $CONNECTION_MODE_FILE
+#	local err=`expr match "$cnti" ".*\ERROR"`
+#	if [ $err -eq 0 ]; then
+#		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
+#	else
+#		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
+#	fi
+#	echo $connectionmode > $CONNECTION_MODE_FILE
+
+	syslogger "error" "FIXME Get connection mode from modemmanager"
 }
 
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
-	local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | grep -E "(PLMN:|LAC:|Cell ID:).*"`
-	echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
+	#local gsminfo=`$IPC_TOOLS_DIR/umtscardtool -s AT!GSMINFO? | grep -E "(PLMN:|LAC:|Cell ID:).*"`
+	#echo "$gsminfo" > $CONNECTION_GSMINFO_FILE
+	syslogger "error" "FIXME Get GSM generic info from modemmanager"
+
 
 	# Write roaming info
-	local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
-	echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
+	#local roaming=`$IPC_TOOLS_DIR/umtscardtool -s AT^SYSINFO | grep SYSINFO | awk -F"," '{print $3}'`
+	#echo -e "ROAMING:\t$roaming" >> $CONNECTION_GSMINFO_FILE
+	syslogger "error" "FIXME Get GSM roaming info from modemmanager"
 }
 
 function WriteGSMConnectionInfoFiles ()
@@ -225,7 +234,8 @@ function SetSIMPIN ()
 {
 	local sim_pin=`getipcoption sim.pin`
 
-	$UMTS_PIN $sim_pin
+#	$UMTS_PIN $sim_pin
+	syslogger "debug" "FIXME Set SIM PIN and get state via modemmanager"
 	local pin_state=$?
 
 	#  1: PIN angegeben, musste aber nicht gesetzt werden
@@ -249,7 +259,9 @@ function SetSIMPIN ()
 # Ist die Karte eingebucht?
 function CheckNIState ()
 {
-	$UMTS_NI
+#	$UMTS_NI
+	syslogger "debug" "FIXME Check for network booked in via modemmanager"
+
 	local ni=$?
 	if [ $ni -eq 0 ]; then
 		WriteModemStatusFile ${MODEM_STATES[registeredID]}
@@ -262,7 +274,8 @@ function SetConnectionRAT ()
 {
 	ratcode=`getipcoption modem.connectionmode`
 	RefreshModemDevices
-	$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null
+	#$IPC_TOOLS_DIR/umtscardtool -d $COMMAND_DEVICE -s AT!SELRAT=$ratcode >& /dev/null
+	syslogger "error" "FIXME Set the radio technology via modemmanager"
 }
 
 function InitializeModem ()
