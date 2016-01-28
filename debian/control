@@ -8,7 +8,9 @@ Homepage: http://www.konzeptpark.de
 
 Package: ipcsystools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, cron
-Description: Tool to operate umts modems with sophisticated network environments
+Depends: ${shlibs:Depends}, ${misc:Depends}, 
+	modemmanager, libqmi-utils
+Recommends: openvpn, strongswan
+Description: Tool to operate umts/lte modems in network environments
  This package provides a set of tools and services for the
  the konzeptpark firmware
