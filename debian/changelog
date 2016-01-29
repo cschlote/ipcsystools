@@ -1,3 +1,13 @@
+ipcsystools (2016.01.26-1ubuntu3) xenial; urgency=medium
+
+  [ Carsten Schlote ]
+  * changelog
+  * Changed priority of debug output to error
+  * Removed umtscardtool and related libs and scripts
+  * Removed last remains of umtscardtool
+
+ -- buildmaster <buildmaster@konzeptpark.intra>  Fri, 29 Jan 2016 16:05:02 +0100
+
 ipcsystools (2016.01.26-1ubuntu2) xenial; urgency=medium
 
   * Set execute flag on shell script
