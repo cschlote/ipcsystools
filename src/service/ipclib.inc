@@ -136,7 +136,7 @@ function RefreshModemDevices ()
 function WriteConnectionFieldStrengthFile ()
 {
 #	$UMTS_FS
-	syslogger "debug" "FIXME Get fieldstreng via modemmanager"
+	syslogger "error" "FIXME Get fieldstreng via modemmanager"
 	
 	field_strength=$?
 
