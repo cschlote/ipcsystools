@@ -2,9 +2,7 @@
 
 SUBDIRS = \
  etc \
- lib \
  scripts \
- umtscardtool \
  service
 
 DISTCLEANFILES = Makefile.in
