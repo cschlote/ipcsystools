@@ -1,4 +1,4 @@
-ipcsystools (2016.01.26-1ubuntu2) UNRELEASED; urgency=medium
+ipcsystools (2016.01.26-1ubuntu2) xenial; urgency=medium
 
   * Set execute flag on shell script
   * Renamed directory
