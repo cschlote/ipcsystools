@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
-bin_SCRIPTS = \
-	ipc-umts-fs ipc-umts-op ipc-umts-ni
+#bin_SCRIPTS = \
+#	ipc-umts-fs ipc-umts-op ipc-umts-ni
 
 sbin_SCRIPTS = \
 	ipc-service \
@@ -18,10 +18,8 @@ nobase_dist_pkgdata_DATA = \
 
 nobase_pkgdata_SCRIPTS = \
 	ipclib.inc \
-	connection-dip.sh \
 	connection-eth.sh \
 	connection-mmgr.sh \
-	connection-ppp.sh \
 	connection-pppoe.sh \
 	ipc-initsystem.sh \
 	ipc-cronjobs.sh \
@@ -31,5 +29,6 @@ nobase_pkgdata_SCRIPTS = \
 #	msvpn_updown
 
 man1_MANS = \
-	$(addsuffix .man,$(bin_SCRIPTS)) \
 	$(addsuffix .man,$(sbin_SCRIPTS))
+
+#	$(addsuffix .man,$(bin_SCRIPTS))

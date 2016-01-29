@@ -70,9 +70,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/etc/Makefile
-	src/lib/Makefile
 	src/scripts/Makefile
-	src/umtscardtool/Makefile
 	src/service/Makefile
 ])
 AC_OUTPUT
