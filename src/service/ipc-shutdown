@@ -4,8 +4,10 @@ echo -n "Shutdown ipc environment... "
 # Initialize modem (apn, sim, ...)
 . /usr/share/ipcsystools/ipclib.inc
 
+# Remove flag FIXME Remove this flag
 rm -f $IPC_STATUSFILE_DIR/ipcsystools.enabled
 
+# Reset the current interface
 set_wan_connection_current reset
 
 # Terminate possibly running PPP daemon
@@ -21,7 +23,8 @@ if [ $? -eq 0 ]; then
 	# Check for config trigger and call backends, or do nothing
 	config_wan_connections
 	if [ $? -ne 0 ]; then
-		umtscardtool -s 'at!greset' > /dev/null && sleep 1
+# FIXME	umtscardtool -s 'at!greset' > /dev/null && sleep 1
+		syslogger "error" "FIXME Use modem-manager for reset op"
 	fi
 fi
 

@@ -19,13 +19,13 @@ IPC_STATUSFILE_DIR=/var/run/ipcsystools
 IPC_LOCKFILE_DIR=/var/lock/
 
 # Programm zur Netzidentifizierung
-UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
+#OBSOLETE UMTS_NI="$IPC_TOOLS_DIR/umtscardtool -i"
 
 # Programm für das Messen der Feldstärke
-UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
+#OBSOLETE UMTS_FS="$IPC_TOOLS_DIR/umtscardtool -f"
 
 # Programm zur Pin-Eingabe
-UMTS_PIN="$IPC_TOOLS_DIR/umtscardtool -p"
+#OBSOLETE UMTS_PIN="$IPC_TOOLS_DIR/umtscardtool -p"
 
 # Create path to status files
 if ! [ -e $IPC_STATUSFILE_DIR ]; then
