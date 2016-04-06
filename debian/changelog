@@ -1,15 +1,20 @@
+ipcsystools (2016.04.01-2) xenial; urgency=medium
+
+  * BUgfixes, Detection of modem device for pppd added.
+  * Autotools: removed obsolete file
+
+ -- buildmaster <buildmaster@konzeptpark.intra>  Wed, 06 Apr 2016 16:13:59 +0200
+
 ipcsystools (2016.04.01-1) xenial; urgency=medium
 
   * Autoconf Tools - Removed old files
   * PPP device support on ModemManager
   * Updated TODO
 
- -- buildmaster <buildmaster@konzeptpark.intra>  Wed, 06 Apr 2016 11:15:20 +0200
+ -- buildmaster <buildmaster@konzeptpark.intra>  Wed, 06 Apr 2016 16:13:18 +0200
 
 ipcsystools (2016.01.26-1ubuntu3) xenial; urgency=medium
 
-  [ Carsten Schlote ]
-  * changelog
   * Changed priority of debug output to error
   * Removed umtscardtool and related libs and scripts
   * Removed last remains of umtscardtool
