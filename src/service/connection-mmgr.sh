@@ -19,6 +19,118 @@ MMGR_PATH=
 MMGR_SIM_PATH=
 
 #-----------------------------------------------------------------------
+# Check for functional pppd and pppx interface
+#-----------------------------------------------------------------------
+
+PPP_DEVUNIT=`getipcoption connection.ppp.dev.unit`
+PPP_DEVUNIT=${PPP_DEVUNIT:=10}
+PPP_DEV=ppp$PPP_DEVUNIT
+
+function PPPProcessExists ()
+{
+    ps ax | grep -v grep | grep -q "pppd /dev/.*ppp-mode.chat"
+    return $?
+}
+
+function IsPPPDAlive ()
+{
+    # Check for running PPPD with given config for umts
+    if ! PPPProcessExists ; then
+	syslogger "warn" "status - PPPD for umts modem is not up"
+	return 1;
+    fi
+
+    # Test for existing ppp$PPP_DEVUNIT interface - FIXME hardwired code!!!!
+    # TODO: Find out the real name of ppp interface for connection
+    if ! ifconfig | grep -q $PPP_DEV ; then
+	syslogger "warn" "status - no $PPP_DEV interface found"
+	return 2;
+    fi
+    if ! ip addr show dev $PPP_DEV | grep -q "inet " ; then
+	syslogger "error" "status - interface $PPP_DEV has no ipv4 addr"
+	return 2;
+    fi
+    syslogger "debug" "status - ppp/umts connection ready"
+    return 0;
+}
+
+function StartPPPD ()
+{
+    local auth=`getipcoption sim.auth`
+    local user=`getipcoption sim.username`
+    local password=`getipcoption sim.passwd`
+    local pppopts=
+
+    if ! IsPPPDAlive; then
+	RefreshModemDevices
+	local device=$CONNECTION_DEVICE
+	syslogger "info" "Starting pppd on modem device $device"
+	CreatePPPChatScript
+	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
+	    syslogger "info" "Passing APN user and password to PPPD"
+	    pppopts="user $user password $password"
+	fi
+	pppd $device 460800 unit $PPP_DEVUNIT connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
+    fi
+}
+function StopPPPD ()
+{
+    if IsPPPDAlive; then
+	local pid
+	local file=/var/run/$PPP_DEV.pid
+	if [ -e $file ]; then
+	    pid=`cat $file`
+	fi
+	if [ -z "$pid" ]; then
+	    syslogger "info" "No pppd is running."
+	    return 0
+	fi
+
+	syslogger "info" "Stopping pppd/umts ($pid)"
+	kill -TERM $pid > /dev/null
+	if [ "$?" != "0" ]; then
+	    rm -f /var/run/$PPP_DEV.pid > /dev/null
+	fi
+    fi
+}
+
+#
+# Start the PPPD connection and retry if it fails
+#
+function StartAndWaitForPPPD ()
+{
+    # Loop Counters
+    local count_timeout=0
+    local count_timeout_max=12
+    local sleeptime=5
+    local reached_timeout=0
+
+    syslogger "info" "$PPP_DEV startet, wait for interface"
+    StartPPPD
+    sleep $sleeptime
+
+    while [ true ] ; do
+	#TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
+	if systool -c net | grep -q $PPP_DEV; then
+	    syslogger "info" "$PPP_DEV available"
+	    break
+	fi
+
+	if [ $count_timeout -ge $count_timeout_max ]; then
+	    reached_timeout=1
+	    break
+	fi
+
+	syslogger "debug" "Waiting $PPP_DEV coming up"
+	sleep $sleeptime
+	count_timeout=$[count_timeout+1]
+    done
+
+    return $reached_timeout
+}
+
+
+#-----------------------------------------------------------------------
 # Get the first modem path from modemmanger. Return error RC when
 # no modem ist found
 #-----------------------------------------------------------------------
@@ -56,6 +168,7 @@ function GetModemSIMPath ()
 # Check for functional wwan0 interface
 #-----------------------------------------------------------------------
 # Query 'ip addr $MMGR_DEV', check for UP and IPV4 address attributes
+#  The range 169.254.*/16 is not considered to be a valid ipv4
 function IsInterfaceAlive ()
 {
     local ifstatus
@@ -89,7 +202,12 @@ function StartWANInterface ()
 	syslogger "debug" " Startup modem on path $MMGR_PATH"
 	StartModemManagerConnection
 	syslogger "debug" " Startup $MMGR_DEV and dhcp client"
-	ifup $MMGR_DEV
+#FIXME
+	if [ "$MMGR_DEV" == "$PPP_DEV" ] ; then
+	    StartAndWaitForPPPD
+	else
+	    ifup $MMGR_DEV
+	fi
 	syslogger "debug" " Setup default route to interface $MMGR_DEV"
 	route del default
 	route add default dev wwan0
@@ -101,7 +219,12 @@ function StopWANInterface ()
 	echo "Stopping $MMGR_DEV on $MMGR_PATH"
 	syslogger "info" "Stopping $MMGR_DEV"
 	syslogger "debug" " Shutdown $MMGR_DEV and dhcp client"
-	ifdown $MMGR_DEV || true
+#FIXME
+	if [ "$MMGR_DEV" == "$PPP_DEV" ] ; then
+	    StopPPPD
+	else
+	    ifdown $MMGR_DEV || true
+	fi
 	syslogger "debug" " Stop modem on path $MMGR_PATH"
 	StopModemManagerConnection
 	syslogger "debug" " Clear default route to interface $MMGR_DEV"
