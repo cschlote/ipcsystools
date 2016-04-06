@@ -62,17 +62,17 @@ function StartPPPD ()
     local pppopts=
 
     if ! IsPPPDAlive; then
-	RefreshModemDevices
+	if ! GetPPPModemDevice; then RefreshModemDevices; fi
 	local device=$CONNECTION_DEVICE
 	syslogger "info" "Starting pppd on modem device $device"
-	CreatePPPChatScript
 	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
 	    syslogger "info" "Passing APN user and password to PPPD"
 	    pppopts="user $user password $password"
 	fi
-	pppd $device 460800 unit $PPP_DEVUNIT connect "/usr/sbin/chat -v -f $IPC_STATUSFILE_DIR/ppp-mode.chat" $pppopts &
+	pppd $device 460800 unit $PPP_DEVUNIT $pppopts &
     fi
 }
+
 function StopPPPD ()
 {
     if IsPPPDAlive; then
@@ -93,6 +93,7 @@ function StopPPPD ()
 	fi
     fi
 }
+
 
 #
 # Start the PPPD connection and retry if it fails
@@ -129,6 +130,27 @@ function StartAndWaitForPPPD ()
     return $reached_timeout
 }
 
+#-----------------------------------------------------------------------
+# Get the serial device for PPP deamon from modemmanager
+#-----------------------------------------------------------------------
+
+function GetPPPModemDevice ()
+{
+    local ifstatus
+    local rc=1
+    if GetModemPath; then
+	# Check for connected modem
+	mdmdev=`mmcli -m $MMGR_PATH | grep "primary port:" | cut -d ":" -f 2  | sed "s/'//g"`
+	if [ -n '$mdmdev' ]; then
+	    CONNECTION_DEVICE=$mdmdev
+	    syslogger "debug" "PPP Mdm Device '$mdmdev'"
+	    rc=0
+	else
+	    syslogger "error" "PPP Mdm Device not found"
+	fi
+    fi
+    return $rc
+}
 
 #-----------------------------------------------------------------------
 # Get the first modem path from modemmanger. Return error RC when
@@ -204,7 +226,8 @@ function StartWANInterface ()
 	syslogger "debug" " Startup $MMGR_DEV and dhcp client"
 #FIXME
 	if [ "$MMGR_DEV" == "$PPP_DEV" ] ; then
-	    StartAndWaitForPPPD
+	    #StartAndWaitForPPPD
+	    StartPPPD
 	else
 	    ifup $MMGR_DEV
 	fi
