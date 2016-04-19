@@ -204,10 +204,17 @@ function WriteConnectionFieldStrengthFile ()
 		syslogger "warn" "ipc-set-led gsmfs return error"
 }
 
+#-----------------------------------------------------------------------
+# Reset the modem via modemmanager, if possible
+#-----------------------------------------------------------------------
 function ResetModem ()
 {
-#	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
-	syslogger "debug" "FIXME Reseting modem via modemmanager"
+    if GetModemPath; then
+		syslogger "debug" "Reseting modem via modemmanager"
+		mmcli -m $MMGR_PATH -r || true
+    else
+		syslogger "error" "Can reset modem via modemmanager"
+	fi
 }
 
 # Write the radio access technology (RAT) mode to a file
