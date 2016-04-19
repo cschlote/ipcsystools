@@ -187,16 +187,19 @@ function GetModemSIMPath ()
 }
 
 #-----------------------------------------------------------------------
-
 # Write the UMTS Field strength to a file and update the LEDBAR
+#-----------------------------------------------------------------------
 function WriteConnectionFieldStrengthFile ()
 {
-#	$UMTS_FS
-	syslogger "error" "FIXME Get fieldstreng via modemmanager"
-	
-	field_strength=$?
-
-	echo $field_strength > $CONNECTION_FS_FILE
+	local field_strength=0
+	if GetModemPath; then
+		field_strength="`mmcli -m $MMGR_PATH | grep "signal quality:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$field_strength" ] ; then
+		syslogger "error" "Can't get fieldstreng via modemmanager, set dummy"
+	else
+		echo $field_strength > $CONNECTION_FS_FILE
+	fi
 	ipc-set-led gsmfs $field_strength ||
 		syslogger "warn" "ipc-set-led gsmfs return error"
 }
