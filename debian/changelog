@@ -1,3 +1,17 @@
+ipcsystools (2016.04.01-3) xenial; urgency=medium
+
+  [ Carsten Schlote ]
+  * Geany file
+  * Moved generic modemmanager code to library file
+  * Added possible ipv6 options to ppp config (commented out yet)
+  * Fixed code to query field strength form modemmanager
+  * Fixed code to reset modem via modemmanager
+  * Fixed code to query RAT from modem manager
+  * Fixed code to query network operator from modemmanager
+  * Reenabled calls to fixed code.
+
+ -- buildmaster <buildmaster@konzeptpark.intra>  Tue, 19 Apr 2016 15:32:19 +0200
+
 ipcsystools (2016.04.01-2) xenial; urgency=medium
 
   * BUgfixes, Detection of modem device for pppd added.
