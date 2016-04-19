@@ -130,61 +130,6 @@ function StartAndWaitForPPPD ()
     return $reached_timeout
 }
 
-#-----------------------------------------------------------------------
-# Get the serial device for PPP deamon from modemmanager
-#-----------------------------------------------------------------------
-
-function GetPPPModemDevice ()
-{
-    local ifstatus
-    local rc=1
-    if GetModemPath; then
-	# Check for connected modem
-	mdmdev=`mmcli -m $MMGR_PATH | grep "primary port:" | cut -d ":" -f 2  | sed "s/'//g"`
-	if [ -n '$mdmdev' ]; then
-	    CONNECTION_DEVICE=$mdmdev
-	    syslogger "debug" "PPP Mdm Device '$mdmdev'"
-	    rc=0
-	else
-	    syslogger "error" "PPP Mdm Device not found"
-	fi
-    fi
-    return $rc
-}
-
-#-----------------------------------------------------------------------
-# Get the first modem path from modemmanger. Return error RC when
-# no modem ist found
-#-----------------------------------------------------------------------
-function GetModemPath ()
-{
-    local tmp=`mmcli -L | grep -E "/org/.*" | cut -d" " -f1 | cut -f2`
-    if [ -n 'tmp' ]; then
-	MMGR_PATH=$tmp
-	syslogger "debug" "Found modem on path path $MMGR_PATH."
-    else
-	syslogger "error" "No modem found by modemmanager."
-	return 1
-    fi
-    return 0
-}
-
-#-----------------------------------------------------------------------
-# Get the first modem path from modemmanger. Return error RC when
-# no modem ist found
-#-----------------------------------------------------------------------
-function GetModemSIMPath ()
-{
-    local tmp=`mmcli -m $MMGR_PATH | grep -o -E "SIM.*|.*path: (.*)" | grep -o "/org/.*" | sed "s/'//g"`
-    if [ -n 'tmp' ]; then
-	MMGR_SIM_PATH=$tmp
-	syslogger "debug" "Found modem SIM on path path $MMGR_SIM_PATH."
-    else
-	syslogger "error" "No modem found by modemmanager."
-	return 1
-    fi
-    return 0
-}
 
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
