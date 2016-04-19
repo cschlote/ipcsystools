@@ -49,6 +49,7 @@ connected=6
 COMMAND_DEVICE_FILE=$IPC_STATUSFILE_DIR/command_dev
 CONNECTION_DEVICE_FILE=$IPC_STATUSFILE_DIR/connection_dev
 MODEM_STATUS_FILE=$IPC_STATUSFILE_DIR/modem_status
+CONNECTION_RAT_FILE=$IPC_STATUSFILE_DIR/connection_rat
 CONNECTION_MODE_FILE=$IPC_STATUSFILE_DIR/connection_mode
 CONNECTION_FS_FILE=$IPC_STATUSFILE_DIR/connection_fs
 CONNECTION_GSMINFO_FILE=$IPC_STATUSFILE_DIR/connection_gsminfo
@@ -217,13 +218,24 @@ function ResetModem ()
 	fi
 }
 
+#-----------------------------------------------------------------------
 # Write the radio access technology (RAT) mode to a file
+#-----------------------------------------------------------------------
 function WriteConnectionRATModeFile ()
 {
-#	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
-#	echo $connectionmode > $CONNECTION_MODE_FILE
-	syslogger "error" "FIXME Get radio technology from modemmanager"
+	syslogger "debug" "Getting radio technology from modemmanager"
+	local rat=unknown
+	if GetModemPath; then
+		rat="`mmcli -m $MMGR_PATH | head -n 10 | grep "current:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$rat" ] ; then
+		syslogger "error" "Can't get RAT via modemmanager"
+	else
+		syslogger "debug" "Current radio technology is $rat"
+	fi
+	echo $rat > $CONNECTION_RAT_FILE
 }
+
 # Write the current network mode to a file
 function WriteConnectionNetworkModeFile ()
 {
@@ -260,6 +272,9 @@ function WriteGSMConnectionInfoFiles ()
 {
 	# Update field strength
 	WriteConnectionFieldStrengthFile
+
+	# Write Network RAT Mode
+	WriteConnectionRATModeFile
 
 	# Write Network Mode
 	WriteConnectionNetworkModeFile
