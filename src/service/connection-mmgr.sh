@@ -40,8 +40,7 @@ function IsPPPDAlive ()
 	return 1;
     fi
 
-    # Test for existing ppp$PPP_DEVUNIT interface - FIXME hardwired code!!!!
-    # TODO: Find out the real name of ppp interface for connection
+    # Test for existing ppp$PPP_DEVUNIT interface
     if ! ifconfig | grep -q $PPP_DEV ; then
 	syslogger "warn" "status - no $PPP_DEV interface found"
 	return 2;
@@ -56,6 +55,7 @@ function IsPPPDAlive ()
 
 function StartPPPD ()
 {
+    local rc=0
     local auth=`getipcoption sim.auth`
     local user=`getipcoption sim.username`
     local password=`getipcoption sim.passwd`
@@ -64,13 +64,19 @@ function StartPPPD ()
     if ! IsPPPDAlive; then
 	if ! GetPPPModemDevice; then RefreshModemDevices; fi
 	local device=$CONNECTION_DEVICE
-	syslogger "info" "Starting pppd on modem device $device"
-	if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
-	    syslogger "info" "Passing APN user and password to PPPD"
-	    pppopts="user $user password $password"
+	if [ -z "$device" ] ; then 
+	    syslogger "error" "No modem device for PPPd found!"
+	    rc=1
+	else
+	    syslogger "info" "Starting pppd on modem device $device"
+	    if [ "$auth" -eq 1 -a -n "$user" -a -n "$password" ] ; then
+		syslogger "info" "Passing APN user and password to PPPD"
+		pppopts="user $user password $password"
+	    fi
+	    pppd $device 460800 unit $PPP_DEVUNIT $pppopts &
 	fi
-	pppd $device 460800 unit $PPP_DEVUNIT $pppopts &
     fi
+    return $rc
 }
 
 function StopPPPD ()
@@ -107,84 +113,31 @@ function StartAndWaitForPPPD ()
     local reached_timeout=0
 
     syslogger "info" "$PPP_DEV startet, wait for interface"
-    StartPPPD
-    sleep $sleeptime
-
-    while [ true ] ; do
-	#TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
-	if systool -c net | grep -q $PPP_DEV; then
-	    syslogger "info" "$PPP_DEV available"
-	    break
-	fi
-
-	if [ $count_timeout -ge $count_timeout_max ]; then
-	    reached_timeout=1
-	    break
-	fi
-
-	syslogger "debug" "Waiting $PPP_DEV coming up"
+    if StartPPPD; then
 	sleep $sleeptime
-	count_timeout=$[count_timeout+1]
-    done
 
+	while [ true ] ; do
+	    #TODO: ppp.ip-up.d run-parts zur Signalisierung nutzen?
+	    if systool -c net | grep -q $PPP_DEV; then
+		syslogger "info" "$PPP_DEV available"
+		break
+	    fi
+
+	    if [ $count_timeout -ge $count_timeout_max ]; then
+		reached_timeout=1
+		break
+	    fi
+
+	    syslogger "debug" "Waiting $PPP_DEV coming up"
+	    sleep $sleeptime
+	    count_timeout=$[count_timeout+1]
+	done
+    else
+	reached_timeout=1
+    fi
     return $reached_timeout
 }
 
-#-----------------------------------------------------------------------
-# Get the serial device for PPP deamon from modemmanager
-#-----------------------------------------------------------------------
-
-function GetPPPModemDevice ()
-{
-    local ifstatus
-    local rc=1
-    if GetModemPath; then
-	# Check for connected modem
-	mdmdev=`mmcli -m $MMGR_PATH | grep "primary port:" | cut -d ":" -f 2  | sed "s/'//g"`
-	if [ -n '$mdmdev' ]; then
-	    CONNECTION_DEVICE=$mdmdev
-	    syslogger "debug" "PPP Mdm Device '$mdmdev'"
-	    rc=0
-	else
-	    syslogger "error" "PPP Mdm Device not found"
-	fi
-    fi
-    return $rc
-}
-
-#-----------------------------------------------------------------------
-# Get the first modem path from modemmanger. Return error RC when
-# no modem ist found
-#-----------------------------------------------------------------------
-function GetModemPath ()
-{
-    local tmp=`mmcli -L | grep -E "/org/.*" | cut -d" " -f1 | cut -f2`
-    if [ -n 'tmp' ]; then
-	MMGR_PATH=$tmp
-	syslogger "debug" "Found modem on path path $MMGR_PATH."
-    else
-	syslogger "error" "No modem found by modemmanager."
-	return 1
-    fi
-    return 0
-}
-
-#-----------------------------------------------------------------------
-# Get the first modem path from modemmanger. Return error RC when
-# no modem ist found
-#-----------------------------------------------------------------------
-function GetModemSIMPath ()
-{
-    local tmp=`mmcli -m $MMGR_PATH | grep -o -E "SIM.*|.*path: (.*)" | grep -o "/org/.*" | sed "s/'//g"`
-    if [ -n 'tmp' ]; then
-	MMGR_SIM_PATH=$tmp
-	syslogger "debug" "Found modem SIM on path path $MMGR_SIM_PATH."
-    else
-	syslogger "error" "No modem found by modemmanager."
-	return 1
-    fi
-    return 0
-}
 
 #-----------------------------------------------------------------------
 # Check for functional wwan0 interface
@@ -223,26 +176,27 @@ function StartWANInterface ()
 	ifdown $MMGR_DEV || true
 	syslogger "debug" " Startup modem on path $MMGR_PATH"
 	StartModemManagerConnection
-	syslogger "debug" " Startup $MMGR_DEV and dhcp client"
-#FIXME
+	syslogger "debug" " Startup $MMGR_DEV and aquire IP"
 	if [ "$MMGR_DEV" == "$PPP_DEV" ] ; then
-	    #StartAndWaitForPPPD
-	    StartPPPD
+	    StartAndWaitForPPPD
 	else
-	    ifup $MMGR_DEV
+	    ifup $MMGR_DEV || true
 	fi
 	syslogger "debug" " Setup default route to interface $MMGR_DEV"
 	route del default
 	route add default dev wwan0
     fi
 }
+
+#-----------------------------------------------------------------------
+# Stop the interface or PPPd for the modemmanager interface
+#-----------------------------------------------------------------------
 function StopWANInterface ()
 {
     if GetModemPath && IsInterfaceAlive; then
 	echo "Stopping $MMGR_DEV on $MMGR_PATH"
 	syslogger "info" "Stopping $MMGR_DEV"
-	syslogger "debug" " Shutdown $MMGR_DEV and dhcp client"
-#FIXME
+	syslogger "debug" " Shutdown $MMGR_DEV and release IP"
 	if [ "$MMGR_DEV" == "$PPP_DEV" ] ; then
 	    StopPPPD
 	else
@@ -255,9 +209,9 @@ function StopWANInterface ()
     fi
 }
 
-#
+#-----------------------------------------------------------------------
 # Start the wwan0 connection and retry if it fails
-#
+#-----------------------------------------------------------------------
 function StartAndWaitForWANInterface ()
 {
     # Loop Counters
@@ -290,6 +244,9 @@ function StartAndWaitForWANInterface ()
     return $reached_timeout
 }
 
+#-----------------------------------------------------------------------
+# Set the PIN
+#-----------------------------------------------------------------------
 function MMgrSetSIMPIN ()
 {
 	local sim_pin=`getipcoption sim.pin`
@@ -323,6 +280,10 @@ function MMgrSetSIMPIN ()
 			WriteModemStatusFile "errorcode: $pin_state" ;;
 	esac
 }
+
+#-----------------------------------------------------------------------
+# Check the network info
+#-----------------------------------------------------------------------
 function MMgrCheckNIState ()
 {
 	# Check for disabled modem and enable
@@ -450,8 +411,8 @@ start)
 	    # Check for modem booked into network
 	    if GetModemPath && WaitForModemBookedIntoNetwork; then
 		sleep 1
-#FIXME		WriteConnectionFieldStrengthFile
-#FIXME		WriteConnectionNetworkModeFile
+		WriteConnectionFieldStrengthFile
+		WriteConnectionRATModeFile
 
 		if ! IsInterfaceAlive; then
 		    if StartAndWaitForWANInterface; then
@@ -470,8 +431,8 @@ start)
 	    else
 		syslogger "error" "Could not initialize datacard (timeout)"
 		$IPC_SCRIPTS_DIR/set_fp_leds $MMGR_LED off
-#FIXME		$UMTS_FS
-		syslogger "info" "reported fieldstrength is $?."
+		WriteConnectionFieldStrengthFile
+		syslogger "info" "reported fieldstrength is `cat $CONNECTION_FS_FILE`."
 		rc_code=1
 	    fi
 	else

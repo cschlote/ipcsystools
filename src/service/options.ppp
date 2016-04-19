@@ -13,6 +13,10 @@ ipcp-accept-local
 lcp-echo-interval 20
 lcp-echo-failure 2
 
+#+ipv6
+#ipv6
+#ipv6cp-use-ipaddr
+
 #usepeerdns
 #kdebug 1
 dump

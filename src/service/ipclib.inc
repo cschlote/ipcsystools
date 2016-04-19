@@ -49,6 +49,7 @@ connected=6
 COMMAND_DEVICE_FILE=$IPC_STATUSFILE_DIR/command_dev
 CONNECTION_DEVICE_FILE=$IPC_STATUSFILE_DIR/connection_dev
 MODEM_STATUS_FILE=$IPC_STATUSFILE_DIR/modem_status
+CONNECTION_RAT_FILE=$IPC_STATUSFILE_DIR/connection_rat
 CONNECTION_MODE_FILE=$IPC_STATUSFILE_DIR/connection_mode
 CONNECTION_FS_FILE=$IPC_STATUSFILE_DIR/connection_fs
 CONNECTION_GSMINFO_FILE=$IPC_STATUSFILE_DIR/connection_gsminfo
@@ -131,51 +132,131 @@ function RefreshModemDevices ()
 }
 
 #-----------------------------------------------------------------------
+# Get the serial device for PPP deamon from modemmanager
+#-----------------------------------------------------------------------
 
+function GetPPPModemDevice ()
+{
+    local ifstatus
+    local rc=1
+    if GetModemPath; then
+	# Check for connected modem
+	mdmdev=`mmcli -m $MMGR_PATH | grep "primary port:" | cut -d ":" -f 2  | sed "s/'//g"`
+	if [ -n '$mdmdev' ]; then
+	    CONNECTION_DEVICE=$mdmdev
+	    syslogger "debug" "PPP Mdm Device '$mdmdev'"
+	    rc=0
+	else
+	    syslogger "error" "PPP Mdm Device not found"
+	fi
+    fi
+    return $rc
+}
+
+#-----------------------------------------------------------------------
+# Get the first modem path from modemmanger. Return error RC when
+# no modem ist found
+#-----------------------------------------------------------------------
+function GetModemPath ()
+{
+    local tmp=`mmcli -L | grep -E "/org/.*" | cut -d" " -f1 | cut -f2`
+    if [ -n 'tmp' ]; then
+	MMGR_PATH=$tmp
+	syslogger "debug" "Found modem on path path $MMGR_PATH."
+    else
+	syslogger "error" "No modem found by modemmanager."
+	return 1
+    fi
+    return 0
+}
+
+#-----------------------------------------------------------------------
+# Get the first modem path from modemmanger. Return error RC when
+# no modem ist found
+#-----------------------------------------------------------------------
+function GetModemSIMPath ()
+{
+    local tmp=`mmcli -m $MMGR_PATH | grep -o -E "SIM.*|.*path: (.*)" | grep -o "/org/.*" | sed "s/'//g"`
+    if [ -n 'tmp' ]; then
+	MMGR_SIM_PATH=$tmp
+	syslogger "debug" "Found modem SIM on path path $MMGR_SIM_PATH."
+    else
+	syslogger "error" "No modem found by modemmanager."
+	return 1
+    fi
+    return 0
+}
+
+#-----------------------------------------------------------------------
 # Write the UMTS Field strength to a file and update the LEDBAR
+#-----------------------------------------------------------------------
 function WriteConnectionFieldStrengthFile ()
 {
-#	$UMTS_FS
-	syslogger "error" "FIXME Get fieldstreng via modemmanager"
-	
-	field_strength=$?
-
-	echo $field_strength > $CONNECTION_FS_FILE
+	local field_strength=0
+	if GetModemPath; then
+		field_strength="`mmcli -m $MMGR_PATH | grep "signal quality:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$field_strength" ] ; then
+		syslogger "error" "Can't get fieldstreng via modemmanager, set dummy"
+	else
+		echo $field_strength > $CONNECTION_FS_FILE
+	fi
 	ipc-set-led gsmfs $field_strength ||
 		syslogger "warn" "ipc-set-led gsmfs return error"
 }
 
+#-----------------------------------------------------------------------
+# Reset the modem via modemmanager, if possible
+#-----------------------------------------------------------------------
 function ResetModem ()
 {
-#	$IPC_TOOLS_DIR/umtscardtool -s ATZ >/dev/null
-	syslogger "debug" "FIXME Reseting modem via modemmanager"
+    if GetModemPath; then
+		syslogger "debug" "Reseting modem via modemmanager"
+		mmcli -m $MMGR_PATH -r || true
+    else
+		syslogger "error" "Can reset modem via modemmanager"
+	fi
 }
 
+#-----------------------------------------------------------------------
 # Write the radio access technology (RAT) mode to a file
+#-----------------------------------------------------------------------
 function WriteConnectionRATModeFile ()
 {
-#	local connectionmode=`$IPC_TOOLS_DIR/umtscardtool -s AT!GETRAT? | grep !GETRAT: | awk -F": " '{print $2}'`
-#	echo $connectionmode > $CONNECTION_MODE_FILE
-	syslogger "error" "FIXME Get radio technology from modemmanager"
+	syslogger "debug" "Getting radio technology from modemmanager"
+	local rat=unknown
+	if GetModemPath; then
+		rat="`mmcli -m $MMGR_PATH | head -n 10 | grep "current:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$rat" ] ; then
+		syslogger "error" "Can't get RAT via modemmanager"
+	else
+		syslogger "debug" "Current radio technology is $rat"
+	fi
+	echo $rat > $CONNECTION_RAT_FILE
 }
+
+#-----------------------------------------------------------------------
 # Write the current network mode to a file
+#-----------------------------------------------------------------------
 function WriteConnectionNetworkModeFile ()
 {
-#	local connectionmode
-#	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
-
-	# *CNTI: +CME ERROR: no network service
-#	local err=`expr match "$cnti" ".*\ERROR"`
-#	if [ $err -eq 0 ]; then
-#		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
-#	else
-#		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
-#	fi
-#	echo $connectionmode > $CONNECTION_MODE_FILE
-
-	syslogger "error" "FIXME Get connection mode from modemmanager"
+	syslogger "debug" "Getting current network from modemmanager"
+	local operator=unknown
+	if GetModemPath; then
+		operator="`mmcli -m $MMGR_PATH | grep "operator name:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$operator" ] ; then
+		syslogger "error" "Can't get operator via modemmanager"
+	else
+		syslogger "debug" "Current radio operator is $operator"
+	fi
+	echo $operator > $CONNECTION_MODE_FILE
 }
 
+#-----------------------------------------------------------------------
+# Get GSM Info for PLMN, LAX, CELL and roaming
+#-----------------------------------------------------------------------
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
@@ -190,10 +271,14 @@ function WriteGSMCellInfoFile ()
 	syslogger "error" "FIXME Get GSM roaming info from modemmanager"
 }
 
+#-----------------------------------------------------------------------
 function WriteGSMConnectionInfoFiles ()
 {
 	# Update field strength
 	WriteConnectionFieldStrengthFile
+
+	# Write Network RAT Mode
+	WriteConnectionRATModeFile
 
 	# Write Network Mode
 	WriteConnectionNetworkModeFile
@@ -201,6 +286,7 @@ function WriteGSMConnectionInfoFiles ()
 	# Write GSM Information
 	WriteGSMCellInfoFile
 }
+
 #-----------------------------------------------------------------------
 
 function ReadModemStatusFile ()
