@@ -236,24 +236,27 @@ function WriteConnectionRATModeFile ()
 	echo $rat > $CONNECTION_RAT_FILE
 }
 
+#-----------------------------------------------------------------------
 # Write the current network mode to a file
+#-----------------------------------------------------------------------
 function WriteConnectionNetworkModeFile ()
 {
-#	local connectionmode
-#	local cnti=`umtscardtool -s AT*CNTI=0 | grep *CNTI:`
-
-	# *CNTI: +CME ERROR: no network service
-#	local err=`expr match "$cnti" ".*\ERROR"`
-#	if [ $err -eq 0 ]; then
-#		connectionmode=`echo $cnti | awk -F"," '{print $2}'`
-#	else
-#		connectionmode=`echo $cnti | awk -F":" '{print $3}'`
-#	fi
-#	echo $connectionmode > $CONNECTION_MODE_FILE
-
-	syslogger "error" "FIXME Get connection mode from modemmanager"
+	syslogger "debug" "Getting current network from modemmanager"
+	local operator=unknown
+	if GetModemPath; then
+		operator="`mmcli -m $MMGR_PATH | grep "operator name:" | cut -d ":" -f 2  | cut -d "'" -f 2`"
+	fi
+	if [ -z "$operator" ] ; then
+		syslogger "error" "Can't get operator via modemmanager"
+	else
+		syslogger "debug" "Current radio operator is $operator"
+	fi
+	echo $operator > $CONNECTION_MODE_FILE
 }
 
+#-----------------------------------------------------------------------
+# Get GSM Info for PLMN, LAX, CELL and roaming
+#-----------------------------------------------------------------------
 function WriteGSMCellInfoFile ()
 {
 	# Write Mobile Network Code
@@ -268,6 +271,7 @@ function WriteGSMCellInfoFile ()
 	syslogger "error" "FIXME Get GSM roaming info from modemmanager"
 }
 
+#-----------------------------------------------------------------------
 function WriteGSMConnectionInfoFiles ()
 {
 	# Update field strength
@@ -282,6 +286,7 @@ function WriteGSMConnectionInfoFiles ()
 	# Write GSM Information
 	WriteGSMCellInfoFile
 }
+
 #-----------------------------------------------------------------------
 
 function ReadModemStatusFile ()
