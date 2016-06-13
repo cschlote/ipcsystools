@@ -7,7 +7,7 @@ AM_CPPFLAGS = \
 	-DPKGLIBDIR=\"$(pkglibdir)/\" \
 	-DPKGDATADIR=\"$(pkgdatadir)/\" \
 	-DPKGBLDDATE=\"`date +%F-%R`\" \
-	-DPKGBLDREV=\"$(strip $(shell git describe))\" \
+	-DPKGBLDREV=\"`cat $(top_srcdir)/ipcsystools.release`\" \
 	@CPPFLAGS@
 AM_CFLAGS = -Wall
 AM_CXXFLAGS = -Wall
